@@ -1,0 +1,61 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdk 34
+    namespace 'com.winlator'
+    defaultConfig {
+        applicationId 'com.winlator'
+        minSdkVersion 26
+        targetSdkVersion 28
+        versionCode 27
+        versionName "11.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+
+            ndk {
+                abiFilters 'arm64-v8a'
+            }
+        }
+        debug {
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+
+            ndk {
+                abiFilters 'arm64-v8a'
+            }
+        }
+    }
+
+
+    ndkVersion '24.0.8215888'
+
+    externalNativeBuild {
+        cmake {
+            version '3.22.1'
+            path 'src/main/cpp/CMakeLists.txt'
+        }
+    }
+    packagingOptions {
+        jniLibs {
+            pickFirsts += ['lib/arm64-v8a/libFLAC.so', 'lib/arm64-v8a/libc++_shared.so', 'lib/arm64-v8a/libfluidsynth.so', 'lib/arm64-v8a/libfluidsynth-assetloader.so', 'lib/arm64-v8a/libgio-2.0.so', 'lib/arm64-v8a/libglib-2.0.so', 'lib/arm64-v8a/libgmodule-2.0.so', 'lib/arm64-v8a/libgobject-2.0.so', 'lib/arm64-v8a/libgthread-2.0.so', 'lib/arm64-v8a/libinstpatch-1.0.so', 'lib/arm64-v8a/liboboe.so', 'lib/arm64-v8a/libogg.so', 'lib/arm64-v8a/libopus.so', 'lib/arm64-v8a/libpcre.so', 'lib/arm64-v8a/libpcreposix.so', 'lib/arm64-v8a/libsndfile.so', 'lib/arm64-v8a/libvorbis.so', 'lib/arm64-v8a/libvorbisenc.so', 'lib/arm64-v8a/libvorbisfile.so']
+            useLegacyPackaging true
+        }
+    }
+
+    lint {
+        checkReleaseBuilds false
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'androidx.appcompat:appcompat:1.7.1'
+    implementation 'androidx.preference:preference:1.2.1'
+    implementation 'com.google.android.material:material:1.13.0'
+    implementation 'com.github.luben:zstd-jni:1.5.7-7@aar'
+    implementation 'org.tukaani:xz:1.9'
+    implementation 'org.apache.commons:commons-compress:1.28.0'
+}
