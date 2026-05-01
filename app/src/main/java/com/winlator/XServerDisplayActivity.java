@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -139,6 +140,8 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
     private Win32AppWorkarounds win32AppWorkarounds;
     private String screenEffectProfile;
 
+    private boolean navigationFocused = false;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         AppUtils.setActivityTheme(this);
@@ -165,6 +168,15 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         Menu menu = navigationView.getMenu();
         menu.findItem(R.id.menu_item_logs).setVisible(enableLogs);
         navigationView.setNavigationItemSelectedListener(this);
+
+        navigationView.setOnFocusChangeListener((v, hasFocus) -> navigationFocused  = hasFocus);
+        drawerLayout.addDrawerListener(new DrawerLayout.SimpleDrawerListener() {
+            @Override
+            public void onDrawerOpened(View drawerView) {
+                super.onDrawerOpened(drawerView);
+                navigationView.requestFocus();
+            }
+        });
 
         rootFS = RootFS.find(this);
 
@@ -328,7 +340,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
-
+        Log.d("wfocus", "windows-focus");
         if (hasFocus) {
             if (capturePointerOnExternalMouse) touchpadView.requestPointerCapture();
 
@@ -829,7 +841,8 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
 
     @Override
     public boolean dispatchGenericMotionEvent(MotionEvent event) {
-        return !winHandler.onGenericMotionEvent(event) && !touchpadView.onExternalMouseEvent(event) && super.dispatchGenericMotionEvent(event);
+        Log.d("motion-event", "generic event");
+        return winHandler.onGenericMotionEvent(event) || (!navigationFocused && touchpadView.onExternalMouseEvent(event)) || super.dispatchGenericMotionEvent(event);
     }
 
     @Override

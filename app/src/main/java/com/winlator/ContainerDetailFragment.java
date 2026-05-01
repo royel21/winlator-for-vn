@@ -612,10 +612,6 @@ public class ContainerDetailFragment extends Fragment {
         Menu menu = popupMenu.getMenu();
         SubMenu subMenu = menu.findItem(R.id.menu_item_locations).getSubMenu();
         ArrayList<Container> containers = manager.getContainers();
-        for (int i = 0; i < containers.size(); i++) {
-            Container container = containers.get(i);
-            subMenu.add(0, 0, container.id, container.getName()+" (Drive C:)");
-        }
 
         ArrayList<String> externalPaths = FileUtils.getExternalStoragePaths(activity);
         for (int i = 0; i < externalPaths.size(); i++) {
