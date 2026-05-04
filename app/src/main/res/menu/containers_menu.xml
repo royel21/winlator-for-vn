@@ -7,4 +7,14 @@
         android:id="@+id/menu_item_add"
         android:title="@string/add"
         app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/menu_item_export_all"
+        android:title="@string/export_all"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_item_import_all"
+        android:title="@string/import_all"
+        app:showAsAction="never" />
 </menu>

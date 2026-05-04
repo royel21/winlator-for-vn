@@ -70,6 +70,20 @@ public class DXWrapperPicker {
         return dxwrapperConfig.toString();
     }
 
+    public void setDXWrapper(String selectedDXWrapper, String dxwrapperConfig) {
+        KeyValueSet[] configs = DXWrappers.parseConfigs(selectedDXWrapper, dxwrapperConfig);
+        selectedDXWrapper = DXWrappers.parseIdentifier(selectedDXWrapper);
+        for (int i = 0; i < container.getChildCount(); i++) {
+            TaggedSelectionBox taggedSelectionBox = (TaggedSelectionBox)container.getChildAt(i);
+            if (i == 0) {
+                if (selectedDXWrapper.equals(DXWrappers.WINED3D) || selectedDXWrapper.equals(DXWrappers.DXVK)) {
+                    taggedSelectionBox.setSelectedItem(DXWrappers.getName(selectedDXWrapper));
+                }
+            }
+            taggedSelectionBox.setTag(configs[i].toString());
+        }
+    }
+
     private static void showDXWrapperConfigDialog(String dxwrapper, String graphicsDriver, View anchor) {
         switch (dxwrapper) {
             case DXWrappers.DXVK:

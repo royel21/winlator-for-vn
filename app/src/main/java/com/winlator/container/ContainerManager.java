@@ -8,6 +8,7 @@ import com.winlator.core.Callback;
 import com.winlator.core.FileUtils;
 import com.winlator.core.TarCompressorUtils;
 import com.winlator.core.WineInfo;
+import com.winlator.core.WineRegistryEditor;
 import com.winlator.xenvironment.RootFS;
 
 import org.json.JSONArray;
@@ -17,6 +18,7 @@ import org.json.JSONObject;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.concurrent.Executors;
 
 public class ContainerManager {
@@ -71,30 +73,6 @@ public class ContainerManager {
         FileUtils.symlink(RootFS.USER+"-"+container.id, file.getPath());
     }
 
-    public void createContainerAsync(final JSONObject data, Callback<Container> callback) {
-        final Handler handler = new Handler();
-        Executors.newSingleThreadExecutor().execute(() -> {
-            final Container container = createContainer(data);
-            handler.post(() -> callback.call(container));
-        });
-    }
-
-    public void duplicateContainerAsync(Container container, Runnable callback) {
-        final Handler handler = new Handler();
-        Executors.newSingleThreadExecutor().execute(() -> {
-            duplicateContainer(container);
-            handler.post(callback);
-        });
-    }
-
-    public void removeContainerAsync(Container container, Runnable callback) {
-        final Handler handler = new Handler();
-        Executors.newSingleThreadExecutor().execute(() -> {
-            removeContainer(container);
-            handler.post(callback);
-        });
-    }
-
     private Container createContainer(JSONObject data) {
         try {
             int id = maxContainerId + 1;
@@ -115,12 +93,39 @@ public class ContainerManager {
             }
 
             container.saveData();
+
+            // 将注册表相关的设置应用到新容器
+            File userRegFile = new File(containerDir, ".wine/user.reg");
+            try (WineRegistryEditor registryEditor = new WineRegistryEditor(userRegFile)) {
+                registryEditor.setDwordValue("Control Panel\\Desktop", "LogPixels", container.getLogPixels());
+                registryEditor.setStringValue("Software\\Wine\\DirectInput", "MouseWarpOverride", container.getMouseWarpOverride());
+                registryEditor.setStringValue("Software\\Wine\\Direct3D", "shader_backend", "glsl");
+                registryEditor.setStringValue("Software\\Wine\\Direct3D", "UseGLSL", "enabled");
+            }
+
+            com.winlator.win32.WinVersions.WinVersion[] winVersions = com.winlator.win32.WinVersions.getWinVersions();
+            for (int i = 0; i < winVersions.length; i++) {
+                if (winVersions[i].version.equals(container.getWinVersion())) {
+                    com.winlator.core.WineUtils.setWinVersion(container, i);
+                    break;
+                }
+            }
+
             maxContainerId++;
             containers.add(container);
+
             return container;
         }
         catch (JSONException e) {}
         return null;
+    }
+
+    public void createContainerAsync(final JSONObject data, Callback<Container> callback) {
+        final Handler handler = new Handler();
+        Executors.newSingleThreadExecutor().execute(() -> {
+            final Container container = createContainer(data);
+            handler.post(() -> callback.call(container));
+        });
     }
 
     private void duplicateContainer(Container srcContainer) {
@@ -134,34 +139,224 @@ public class ContainerManager {
             return;
         }
 
-        Container dstContainer = new Container(id);
-        dstContainer.setRootDir(dstDir);
-        dstContainer.setName(srcContainer.getName()+" ("+context.getString(R.string.copy)+")");
-        dstContainer.setScreenSize(srcContainer.getScreenSize());
-        dstContainer.setScreenOrientation(srcContainer.getScreenOrientation());
-        dstContainer.setSwapResolution(srcContainer.isSwapResolution());
-        dstContainer.setEnvVars(srcContainer.getEnvVars());
-        dstContainer.setCPUList(srcContainer.getCPUList());
-        dstContainer.setCPUListWoW64(srcContainer.getCPUListWoW64());
-        dstContainer.setGraphicsDriver(srcContainer.getGraphicsDriver());
-        dstContainer.setGraphicsDriverConfig(srcContainer.getGraphicsDriverConfig());
-        dstContainer.setDXWrapper(srcContainer.getDXWrapper());
-        dstContainer.setDXWrapperConfig(srcContainer.getDXWrapperConfig());
-        dstContainer.setAudioDriver(srcContainer.getAudioDriver());
-        dstContainer.setAudioDriverConfig(srcContainer.getAudioDriverConfig());
-        dstContainer.setWinComponents(srcContainer.getWinComponents());
-        dstContainer.setDrives(srcContainer.getDrives());
-        dstContainer.setHUDMode(srcContainer.getHUDMode());
-        dstContainer.setStartupSelection(srcContainer.getStartupSelection());
-        dstContainer.setBox64Preset(srcContainer.getBox64Preset());
-        dstContainer.setBox64Version(srcContainer.getBox64Version());
-        dstContainer.setDesktopTheme(srcContainer.getDesktopTheme());
-        dstContainer.saveData();
+        try {
+            Container dstContainer = new Container(id);
+            dstContainer.setRootDir(dstDir);
+            dstContainer.loadData(srcContainer.getData());
+            dstContainer.setName(srcContainer.getName()+" ("+context.getString(R.string.copy)+")");
+            dstContainer.saveData();
 
-        maxContainerId++;
-        containers.add(dstContainer);
+            maxContainerId++;
+            containers.add(dstContainer);
+        }
+        catch (JSONException e) {}
     }
 
+    public void duplicateContainerAsync(Container container, Runnable callback) {
+        final Handler handler = new Handler();
+        Executors.newSingleThreadExecutor().execute(() -> {
+            duplicateContainer(container);
+            handler.post(callback);
+        });
+    }
+
+    public void exportShortcutConfigAsync(Shortcut shortcut, File file, Runnable callback) {
+        final Handler handler = new Handler();
+        Executors.newSingleThreadExecutor().execute(() -> {
+            try {
+                FileUtils.writeString(file, shortcut.getData().toString(4));
+            }
+            catch (JSONException e) {}
+            handler.post(callback);
+        });
+    }
+
+    public void importShortcutConfigAsync(Shortcut shortcut, File file, Runnable callback) {
+        final Handler handler = new Handler();
+        Executors.newSingleThreadExecutor().execute(() -> {
+            try {
+                JSONObject data = new JSONObject(FileUtils.readString(file));
+                createShortcut(shortcut.container, data);
+            }
+            catch (JSONException e) {}
+            handler.post(callback);
+        });
+    }
+
+    private void exportConfig(Container container, File file) {
+        try {
+            JSONObject containerData = container.getData();
+            JSONArray shortcutsArray = new JSONArray();
+            for (Shortcut shortcut : getShortcuts(container)) {
+                shortcutsArray.put(shortcut.getData());
+            }
+            containerData.put("shortcuts", shortcutsArray);
+            FileUtils.writeString(file, containerData.toString(4));
+        }
+        catch (JSONException e) {}
+    }
+
+    public void exportConfigAsync(Container container, File file, Runnable callback) {
+        final Handler handler = new Handler();
+        Executors.newSingleThreadExecutor().execute(() -> {
+            exportConfig(container, file);
+            handler.post(callback);
+        });
+    }
+
+    private void importConfig(Container container, File file) {
+        try {
+            String jsonContent = FileUtils.readString(file);
+            if (jsonContent.isEmpty()) return;
+            
+            JSONObject containerData;
+            if (jsonContent.trim().startsWith("[")) {
+                JSONArray array = new JSONArray(jsonContent);
+                if (array.length() > 0) containerData = array.getJSONObject(0);
+                else return;
+            }
+            else containerData = new JSONObject(jsonContent);
+
+            container.loadData(containerData);
+            container.putExtra("wineprefixNeedsUpdate", "t");
+            container.saveData();
+
+            JSONArray shortcutsArray = containerData.optJSONArray("shortcuts");
+            if (shortcutsArray != null) {
+                for (int i = 0; i < shortcutsArray.length(); i++) {
+                    createShortcut(container, shortcutsArray.getJSONObject(i));
+                }
+            }
+        }
+        catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void importConfigAsync(Container container, File file, Runnable callback) {
+        final Handler handler = new Handler();
+        Executors.newSingleThreadExecutor().execute(() -> {
+            importConfig(container, file);
+            handler.post(callback);
+        });
+    }
+
+    public void exportAllConfigAsync(File file, Runnable callback) {
+        final Handler handler = new Handler();
+        Executors.newSingleThreadExecutor().execute(() -> {
+            exportAllConfig(file);
+            handler.post(callback);
+        });
+    }
+
+
+    private void importAllConfig(File file) {
+        try {
+            String jsonContent = FileUtils.readString(file);
+            if (jsonContent.isEmpty()) return;
+            
+            JSONArray containersArray;
+            if (jsonContent.trim().startsWith("{")) {
+                containersArray = new JSONArray();
+                containersArray.put(new JSONObject(jsonContent));
+            }
+            else{
+                return;
+            }
+
+            for (int i = 0; i < containersArray.length(); i++) {
+                try {
+                    JSONObject containerData = containersArray.getJSONObject(i);
+                    Container container = createContainer(containerData);
+                    if (container != null) {
+                        container.putExtra("wineprefixNeedsUpdate", "t");
+                        container.saveData();
+                    }
+                }
+                catch (JSONException e) {}
+            }
+        }
+        catch (JSONException e) {}
+    }
+
+    public void importAllConfigAsync(File file, Runnable callback) {
+        final Handler handler = new Handler();
+        Executors.newSingleThreadExecutor().execute(() -> {
+            importAllConfig(file);
+            handler.post(callback);
+        });
+    }
+
+    private void exportAllConfig(File file) {
+        try {
+            JSONArray containersArray = new JSONArray();
+            for (Container container : containers) {
+                JSONObject containerData = container.getData();
+                JSONArray shortcutsArray = new JSONArray();
+                for (Shortcut shortcut : getShortcuts(container)) {
+                    shortcutsArray.put(shortcut.getData());
+                }
+                containerData.put("shortcuts", shortcutsArray);
+                containersArray.put(containerData);
+            }
+            FileUtils.writeString(file, containersArray.toString(4));
+        }
+        catch (JSONException e) {}
+    }
+
+    public ArrayList<Shortcut> getShortcuts(Container container) {
+        ArrayList<Shortcut> shortcuts = new ArrayList<>();
+        File desktopDir = new File(container.getUserDir(), "Desktop");
+        File[] files = desktopDir.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.getName().endsWith(".desktop")) {
+                    shortcuts.add(new Shortcut(container, file));
+                }
+            }
+        }
+        return shortcuts;
+    }
+
+    private void createShortcut(Container container, JSONObject data) {
+        try {
+            String name = data.getString("name");
+            String path = data.getString("path");
+            String wmClass = data.optString("wmClass", "");
+            JSONObject extraData = data.optJSONObject("extraData");
+
+            File desktopDir = new File(container.getUserDir(), "Desktop");
+            if (!desktopDir.exists()) desktopDir.mkdirs();
+
+            File file = new File(desktopDir, name + ".desktop");
+            StringBuilder sb = new StringBuilder();
+            sb.append("[Desktop Entry]\n")
+              .append("Type=Application\n")
+              .append("Name=").append(name).append("\n")
+              .append("Exec=wine ").append(path).append("\n")
+              .append("StartupWMClass=").append(wmClass).append("\n");
+
+            if (extraData != null && extraData.length() > 0) {
+                sb.append("\n[Extra Data]\n");
+                Iterator<String> keys = extraData.keys();
+                while (keys.hasNext()) {
+                    String key = keys.next();
+                    sb.append(key).append("=").append(extraData.getString(key)).append("\n");
+                }
+            }
+            FileUtils.writeString(file, sb.toString());
+        }
+        catch (JSONException e) {}
+    }
+
+    public void removeContainerAsync(Container container, Runnable callback) {
+        final Handler handler = new Handler();
+        Executors.newSingleThreadExecutor().execute(() -> {
+            removeContainer(container);
+            handler.post(callback);
+        });
+    }
+    
     private void removeContainer(Container container) {
         if (FileUtils.delete(container.getRootDir())) containers.remove(container);
     }

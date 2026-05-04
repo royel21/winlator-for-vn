@@ -404,4 +404,9 @@
     <string name="terminal_output_exported">Terminal output exported to</string>
     <string name="export_failed">Export failed</string>
     <string name="clear">Clear</string>
+    <string name="export_all">Export All</string>
+    <string name="import_all">Import All</string>
+    <string name="import_config">Import</string>
+    <string name="importing_container">Importing Container...</string>
+    <string name="imported_successfully">Imported successfully</string>
 </resources>

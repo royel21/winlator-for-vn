@@ -38,7 +38,12 @@ public class StringUtils {
     }
 
     public static String parseIdentifier(Object text) {
-        return text.toString().toLowerCase(Locale.ENGLISH).replaceAll(" *\\(([^\\)]+)\\)$", "").replaceAll("( \\+ )+| +", "-");
+        try {
+            return text.getClass().getMethod("identifier").invoke(text).toString();
+        }
+        catch (Exception e) {
+            return text.toString().toLowerCase(Locale.ENGLISH).replaceAll(" *\\(([^\\)]+)\\)$", "").replaceAll("( \\+ )+| +", "-");
+        }
     }
 
     public static String parseNumber(Object text) {

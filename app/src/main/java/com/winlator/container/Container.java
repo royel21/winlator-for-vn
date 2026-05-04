@@ -8,6 +8,7 @@ import com.winlator.core.FileUtils;
 import com.winlator.core.KeyValueSet;
 import com.winlator.core.WineInfo;
 import com.winlator.core.WineThemeManager;
+import com.winlator.win32.WinVersions;
 import com.winlator.widget.FrameRating;
 import com.winlator.xenvironment.RootFS;
 
@@ -18,7 +19,7 @@ import java.io.File;
 import java.util.Iterator;
 
 public class Container {
-    public static final String DEFAULT_ENV_VARS = "LC_ALL=zh_CN.utf8 ZINK_DESCRIPTORS=lazy ZINK_DEBUG=compact MESA_SHADER_CACHE_MAX_SIZE=512MB TU_DEBUG=sysmem,noconform,nofsdt,gmem MESA_GL_VERSION_OVERRIDE=3.1 TZ=Asia/Shanghai MESA_VK_WSI_DEBUG=-sw MESA_EXTENSION_MAX_YEAR=2025 BOX64_DYNAREC_WEAKBARRIER=-1 mesa_glthread=true WINEESYNC=1 MESA_SHADER_CACHE_DISABLE=false DXVK_ASYNC=1 BOX64_MMAP32=1 LIBGL_ALWAYS_SOFTWARE=0 DRAW_USE_LLVM=0 GST_DEBUG=0 MANGOHUD=1 MANGOHUD_CONFIG=fps,frame_timing=0,ram,gpu_name,vulkan_driver,cpu_mhz,arch,exec_name,swap,font_size=24,engine_version,position=top-left,background_alpha=0.0,hud_no_margin";
+    public static final String DEFAULT_ENV_VARS = "LC_ALL=ja_JP.utf8 ZINK_DESCRIPTORS=lazy ZINK_DEBUG=compact MESA_SHADER_CACHE_MAX_SIZE=512MB TU_DEBUG=sysmem,noconform,nofsdt,gmem MESA_GL_VERSION_OVERRIDE=3.1 TZ=Asia/Tokyo MESA_VK_WSI_DEBUG=-sw MESA_EXTENSION_MAX_YEAR=2025 BOX64_DYNAREC_WEAKBARRIER=-1 mesa_glthread=true WINEESYNC=1 MESA_SHADER_CACHE_DISABLE=false DXVK_ASYNC=1 BOX64_MMAP32=1 LIBGL_ALWAYS_SOFTWARE=0 DRAW_USE_LLVM=0 GST_DEBUG=0 MANGOHUD=1 MANGOHUD_CONFIG=fps,frame_timing=0,ram,gpu_name,vulkan_driver,cpu_mhz,arch,exec_name,swap,font_size=24,engine_version,position=top-left,background_alpha=0.0,hud_no_margin";
     public static final String DEFAULT_SCREEN_SIZE = "1280x720";
     public static final String DEFAULT_SCREEN_ORIENTATION = "landscape";
     public static final boolean DEFAULT_SWAP_RESOLUTION = false;
@@ -51,6 +52,9 @@ public class Container {
     private String cpuList;
     private String cpuListWoW64;
     private String desktopTheme = WineThemeManager.DEFAULT_DESKTOP_THEME;
+    private String winVersion = WinVersions.DEFAULT_VERSION;
+    private int logPixels = 96;
+    private String mouseWarpOverride = "disable";
     private String box64Preset = Box64Preset.DEFAULT;
     private String box64Version = DefaultVersion.BOX64;
     private String fexVersion = "FEX-2603";
@@ -62,6 +66,11 @@ public class Container {
     public Container(int id) {
         this.id = id;
         this.name = "Container-"+id;
+    }
+
+    public Container(int id, String name) {
+        this.id = id;
+        this.name = name;
     }
 
     public String getName() {
@@ -316,6 +325,30 @@ public class Container {
         this.desktopTheme = desktopTheme;
     }
 
+    public String getWinVersion() {
+        return winVersion;
+    }
+
+    public void setWinVersion(String winVersion) {
+        this.winVersion = winVersion;
+    }
+
+    public int getLogPixels() {
+        return logPixels;
+    }
+
+    public void setLogPixels(int logPixels) {
+        this.logPixels = logPixels;
+    }
+
+    public String getMouseWarpOverride() {
+        return mouseWarpOverride;
+    }
+
+    public void setMouseWarpOverride(String mouseWarpOverride) {
+        this.mouseWarpOverride = mouseWarpOverride;
+    }
+
     public Iterable<Drive> drivesIterator() {
         return drivesIterator(drives);
     }
@@ -339,7 +372,7 @@ public class Container {
         };
     }
 
-    public void saveData() {
+    public JSONObject getData() {
         try {
             JSONObject data = new JSONObject();
             data.put("id", id);
@@ -366,109 +399,123 @@ public class Container {
             data.put("fexPreset", fexPreset);
             data.put("fexPresetCustom", fexPresetCustom);
             data.put("desktopTheme", desktopTheme);
+            data.put("winVersion", winVersion);
+            data.put("logPixels", logPixels);
+            data.put("mouseWarpOverride", mouseWarpOverride);
             data.put("extraData", extraData);
 
-            // 始终保存 wineVersion，包括默认 Wine（x86_64 和 arm64ec）
             if (wineVersion != null && !wineVersion.isEmpty()) {
                 data.put("wineVersion", wineVersion);
             }
-            
-            FileUtils.writeString(getConfigFile(), data.toString());
+            return data;
         }
-        catch (JSONException e) {}
+        catch (JSONException e) {
+            return null;
+        }
+    }
+
+    public void saveData() {
+        JSONObject data = getData();
+        if (data != null) FileUtils.writeString(getConfigFile(), data.toString());
     }
 
     public void loadData(JSONObject data) throws JSONException {
-        wineVersion = WineInfo.MAIN_WINE_VERSION.identifier();
-        dxwrapperConfig = "";
-        graphicsDriverConfig = "";
-        audioDriverConfig = "";
-
         checkObsoleteOrMissingProperties(data);
 
         for (Iterator<String> it = data.keys(); it.hasNext(); ) {
             String key = it.next();
             switch (key) {
                 case "name" :
-                    setName(data.getString(key));
+                    setName(data.optString(key, getName()));
                     break;
                 case "screenSize" :
-                    setScreenSize(data.getString(key));
+                    setScreenSize(data.optString(key, getScreenSize()));
                     break;
                 case "screenOrientation" :
-                    setScreenOrientation(data.getString(key));
+                    setScreenOrientation(data.optString(key, getScreenOrientation()));
                     break;
                 case "swapResolution" :
-                    setSwapResolution(data.getBoolean(key));
+                    setSwapResolution(data.optBoolean(key, isSwapResolution()));
                     break;
                 case "envVars" :
-                    setEnvVars(data.getString(key));
+                    setEnvVars(data.optString(key, getEnvVars()));
                     break;
                 case "cpuList" :
-                    setCPUList(data.getString(key));
+                    setCPUList(data.optString(key, getCPUList()));
                     break;
                 case "cpuListWoW64" :
-                    setCPUListWoW64(data.getString(key));
+                    setCPUListWoW64(data.optString(key, getCPUListWoW64()));
                     break;
                 case "graphicsDriver" :
-                    setGraphicsDriver(data.getString(key));
+                    setGraphicsDriver(data.optString(key, getGraphicsDriver()));
                     break;
                 case "wincomponents" :
-                    setWinComponents(data.getString(key));
+                    setWinComponents(data.optString(key, getWinComponents()));
                     break;
                 case "dxwrapper" :
-                    setDXWrapper(data.getString(key));
+                    setDXWrapper(data.optString(key, getDXWrapper()));
                     break;
                 case "dxwrapperConfig" :
-                    setDXWrapperConfig(data.getString(key));
+                    setDXWrapperConfig(data.optString(key, getDXWrapperConfig()));
                     break;
                 case "graphicsDriverConfig" :
-                    setGraphicsDriverConfig(data.getString(key));
+                    setGraphicsDriverConfig(data.optString(key, getGraphicsDriverConfig()));
+                    break;
+                case "audioDriver" :
+                    setAudioDriver(data.optString(key, getAudioDriver()));
                     break;
                 case "audioDriverConfig" :
-                    setAudioDriverConfig(data.getString(key));
+                    setAudioDriverConfig(data.optString(key, getAudioDriverConfig()));
                     break;
                 case "drives" :
-                    setDrives(data.getString(key));
+                    setDrives(data.optString(key, getDrives()));
                     break;
                 case "showFPS" :
-                    setHUDMode((byte)(data.getBoolean(key) ? FrameRating.Mode.SIMPLE.ordinal() : FrameRating.Mode.DISABLED.ordinal()));
+                    setHUDMode((byte)(data.optBoolean(key) ? FrameRating.Mode.SIMPLE.ordinal() : FrameRating.Mode.DISABLED.ordinal()));
                     break;
                 case "hudMode" :
-                    setHUDMode((byte)data.getInt(key));
+                    setHUDMode((byte)data.optInt(key, getHUDMode()));
                     break;
                 case "startupSelection" :
-                    setStartupSelection((byte)data.getInt(key));
+                    setStartupSelection((byte)data.optInt(key, getStartupSelection()));
                     break;
                 case "extraData" : {
-                    JSONObject extraData = data.getJSONObject(key);
-                    checkObsoleteOrMissingProperties(extraData);
-                    setExtraData(extraData);
+                    JSONObject extraData = data.optJSONObject(key);
+                    if (extraData != null) {
+                        checkObsoleteOrMissingProperties(extraData);
+                        setExtraData(extraData);
+                    }
                     break;
                 }
                 case "wineVersion" :
-                    setWineVersion(data.getString(key));
+                    setWineVersion(data.optString(key, getWineVersion()));
                     break;
                 case "box64Preset" :
-                    setBox64Preset(data.getString(key));
+                    setBox64Preset(data.optString(key, getBox64Preset()));
                     break;
                 case "box64Version" :
-                    setBox64Version(data.getString(key));
+                    setBox64Version(data.optString(key, getBox64Version()));
                     break;
                 case "fexVersion" :
-                    setFexVersion(data.getString(key));
+                    setFexVersion(data.optString(key, getFexVersion()));
                     break;
                 case "fexPreset" :
-                    setFexPreset(data.getInt(key));
+                    setFexPreset(data.optInt(key, getFexPreset()));
                     break;
                 case "fexPresetCustom" :
-                    setFexPresetCustom(data.getString(key));
-                    break;
-                case "audioDriver" :
-                    setAudioDriver(data.getString(key));
+                    setFexPresetCustom(data.optString(key, getFexPresetCustom()));
                     break;
                 case "desktopTheme" :
-                    setDesktopTheme(data.getString(key));
+                    setDesktopTheme(data.optString(key, getDesktopTheme()));
+                    break;
+                case "winVersion" :
+                    setWinVersion(data.optString(key, getWinVersion()));
+                    break;
+                case "logPixels" :
+                    setLogPixels(data.optInt(key, getLogPixels()));
+                    break;
+                case "mouseWarpOverride" :
+                    setMouseWarpOverride(data.optString(key, getMouseWarpOverride()));
                     break;
             }
         }
@@ -489,23 +536,21 @@ public class Container {
             }
 
             KeyValueSet wincomponents1 = new KeyValueSet(DEFAULT_WINCOMPONENTS);
-            KeyValueSet wincomponents2 = new KeyValueSet(data.getString("wincomponents"));
-            String result = "";
-
-            for (String[] wincomponent1 : wincomponents1) {
-                String value = wincomponent1[1];
-
-                for (String[] wincomponent2 : wincomponents2) {
-                    if (wincomponent1[0].equals(wincomponent2[0])) {
-                        value = wincomponent2[1];
-                        break;
+            KeyValueSet wincomponents2 = new KeyValueSet(data.optString("wincomponents", ""));
+            if (wincomponents2.iterator().hasNext()) {
+                StringBuilder sb = new StringBuilder();
+                for (String[] wincomponent1 : wincomponents1) {
+                    String value = wincomponent1[1];
+                    for (String[] wincomponent2 : wincomponents2) {
+                        if (wincomponent1[0].equals(wincomponent2[0])) {
+                            value = wincomponent2[1];
+                            break;
+                        }
                     }
+                    sb.append(!sb.toString().isEmpty() ? "," : "").append(wincomponent1[0]).append("=").append(value);
                 }
-
-                result += (!result.isEmpty() ? "," : "")+wincomponent1[0]+"="+value;
+                data.put("wincomponents", sb.toString());
             }
-
-            data.put("wincomponents", result);
         }
         catch (JSONException e) {}
     }

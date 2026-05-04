@@ -56,6 +56,16 @@ public class GraphicsDriverPicker {
         return graphicsDriverConfig.toString();
     }
 
+    public void setGraphicsDriver(String selectedGraphicsDriver, String graphicsDriverConfig) {
+        String[] identifiers = GraphicsDrivers.parseIdentifiers(selectedGraphicsDriver);
+        KeyValueSet[] configs = GraphicsDrivers.parseConfigs(selectedGraphicsDriver, graphicsDriverConfig);
+        for (int i = 0; i < container.getChildCount(); i++) {
+            TaggedSelectionBox taggedSelectionBox = (TaggedSelectionBox)container.getChildAt(i);
+            taggedSelectionBox.setSelectedItem(GraphicsDrivers.getName(identifiers[i]));
+            taggedSelectionBox.setTag(configs[i].toString());
+        }
+    }
+
     private static void showGraphicsDriverConfigDialog(String graphicsDriver, View anchor) {
         switch (graphicsDriver) {
             case GraphicsDrivers.TURNIP:

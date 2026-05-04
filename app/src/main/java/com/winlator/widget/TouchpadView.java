@@ -1,5 +1,6 @@
 package com.winlator.widget;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -36,6 +37,7 @@ public class TouchpadView extends View implements View.OnCapturedPointerListener
     private boolean pointerButtonLeftEnabled = true;
     private boolean pointerButtonRightEnabled = true;
     private boolean moveCursorToTouchpoint = false;
+    private final boolean capturePointerOnExternalMouse;
     private Finger fingerPointerButtonLeft;
     private Finger fingerPointerButtonRight;
     private float scrollAccumY = 0;
@@ -47,11 +49,12 @@ public class TouchpadView extends View implements View.OnCapturedPointerListener
     public TouchpadView(Context context, XServer xServer, boolean capturePointerOnExternalMouse) {
         super(context);
         this.xServer = xServer;
+        this.capturePointerOnExternalMouse = capturePointerOnExternalMouse;
         setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         setBackground(createTransparentBackground());
         setClickable(true);
         setFocusable(true);
-        setFocusableInTouchMode(false);
+        setFocusableInTouchMode(true);
         updateXform(AppUtils.getScreenWidth(), AppUtils.getScreenHeight(), xServer.screenInfo.width, xServer.screenInfo.height);
 
         setPointerIcon(PointerIcon.load(getResources(), R.drawable.hidden_pointer_arrow)); // 隐藏系统指针
@@ -59,8 +62,17 @@ public class TouchpadView extends View implements View.OnCapturedPointerListener
             setOnCapturedPointerListener(this);
             setOnClickListener(view -> {
                 Log.d("wfocus", "touch-click");
+                requestFocus();
                 requestPointerCapture();
             });
+        }
+    }
+
+    @Override
+    public void onPointerCaptureChange(boolean hasCapture) {
+        super.onPointerCaptureChange(hasCapture);
+        if (!hasCapture && capturePointerOnExternalMouse && isFocused() && ((Activity)getContext()).hasWindowFocus()) {
+            requestPointerCapture();
         }
     }
 
@@ -143,6 +155,21 @@ public class TouchpadView extends View implements View.OnCapturedPointerListener
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        if (event.isFromSource(InputDevice.SOURCE_MOUSE)) {
+            if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+                if (capturePointerOnExternalMouse && !hasPointerCapture()) {
+                    requestFocus();
+                    requestPointerCapture();
+                }
+            }
+            else if (event.getActionMasked() == MotionEvent.ACTION_MOVE) {
+                float[] transformedPoint = XForm.transformPoint(xform, event.getX(), event.getY());
+                if (isEnabled()) xServer.injectPointerMove((int)transformedPoint[0], (int)transformedPoint[1]);
+            }
+            super.onTouchEvent(event);
+            return true;
+        }
+
         int actionIndex = event.getActionIndex();
         int pointerId = event.getPointerId(actionIndex);
         int actionMasked = event.getActionMasked();
@@ -151,30 +178,23 @@ public class TouchpadView extends View implements View.OnCapturedPointerListener
         switch (actionMasked) {
             case MotionEvent.ACTION_DOWN:
             case MotionEvent.ACTION_POINTER_DOWN:
-                if (event.isFromSource(InputDevice.SOURCE_MOUSE)) return true;
                 scrollAccumY = 0;
                 scrolling = false;
                 fingers[pointerId] = new Finger(event.getX(actionIndex), event.getY(actionIndex));
                 numFingers++;
                 break;
             case MotionEvent.ACTION_MOVE:
-                if (event.isFromSource(InputDevice.SOURCE_MOUSE)) {
-                    float[] transformedPoint = XForm.transformPoint(xform, event.getX(), event.getY());
-                    if (isEnabled()) xServer.injectPointerMove((int)transformedPoint[0], (int)transformedPoint[1]);
-                }
-                else {
-                    for (byte i = 0; i < MAX_FINGERS; i++) {
-                        if (fingers[i] != null) {
-                            int pointerIndex = event.findPointerIndex(i);
-                            if (pointerIndex >= 0) {
-                                fingers[i].update(event.getX(pointerIndex), event.getY(pointerIndex));
-                                handleFingerMove(fingers[i]);
-                            }
-                            else {
-                                handleFingerUp(fingers[i]);
-                                fingers[i] = null;
-                                numFingers--;
-                            }
+                for (byte i = 0; i < MAX_FINGERS; i++) {
+                    if (fingers[i] != null) {
+                        int pointerIndex = event.findPointerIndex(i);
+                        if (pointerIndex >= 0) {
+                            fingers[i].update(event.getX(pointerIndex), event.getY(pointerIndex));
+                            handleFingerMove(fingers[i]);
+                        }
+                        else {
+                            handleFingerUp(fingers[i]);
+                            fingers[i] = null;
+                            numFingers--;
                         }
                     }
                 }

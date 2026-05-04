@@ -13,4 +13,10 @@
         android:id="@+id/menu_item_view_style"
         android:title="@string/view_style"
         app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/menu_item_import"
+        android:title="@string/import_config"
+        android:icon="@drawable/icon_import_rotated"
+        app:showAsAction="never" />
 </menu>

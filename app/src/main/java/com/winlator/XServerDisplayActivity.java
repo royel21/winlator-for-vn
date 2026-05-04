@@ -176,6 +176,18 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
                 super.onDrawerOpened(drawerView);
                 navigationView.requestFocus();
             }
+
+            @Override
+            public void onDrawerClosed(View drawerView) {
+                super.onDrawerClosed(drawerView);
+                if (capturePointerOnExternalMouse) {
+                    View focusTarget = inputControlsView != null && inputControlsView.getVisibility() == View.VISIBLE ? inputControlsView : touchpadView;
+                    if (focusTarget != null) {
+                        focusTarget.requestFocus();
+                        focusTarget.requestPointerCapture();
+                    }
+                }
+            }
         });
 
         rootFS = RootFS.find(this);
@@ -340,9 +352,15 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
-        Log.d("wfocus", "windows-focus");
+        Log.d("wfocus", "windows-focus: " + hasFocus);
         if (hasFocus) {
-            if (capturePointerOnExternalMouse) touchpadView.requestPointerCapture();
+            if (capturePointerOnExternalMouse) {
+                View focusTarget = inputControlsView != null && inputControlsView.getVisibility() == View.VISIBLE ? inputControlsView : touchpadView;
+                if (focusTarget != null) {
+                    focusTarget.requestFocus();
+                    focusTarget.requestPointerCapture();
+                }
+            }
 
             if (winHandler != null && clipboardManager != null && clipboardManager.hasPrimaryClip()) {
                 ClipData primaryClip = clipboardManager.getPrimaryClip();
@@ -359,6 +377,14 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         if (environment != null) {
             xServerView.onResume();
             environment.onResume();
+        }
+
+        if (capturePointerOnExternalMouse) {
+            View focusTarget = inputControlsView != null && inputControlsView.getVisibility() == View.VISIBLE ? inputControlsView : touchpadView;
+            if (focusTarget != null) {
+                focusTarget.requestFocus();
+                focusTarget.requestPointerCapture();
+            }
         }
     }
 
@@ -445,6 +471,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             drawerLayout.closeDrawers();
         } else if (itemId == R.id.menu_item_touchpad_help) {
             showTouchpadHelpDialog();
+            drawerLayout.closeDrawers();
         } else if (itemId == R.id.menu_item_exit) {
             exit();
         }
@@ -490,6 +517,12 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         boolean containerDataChanged = false;
 
         boolean wineprefixWasUpdated = WineUtils.isWineprefixWasUpdated(container);
+        if (container.getExtra("wineprefixNeedsUpdate").equals("t")) {
+            wineprefixWasUpdated = true;
+            container.putExtra("wineprefixNeedsUpdate", null);
+            containerDataChanged = true;
+        }
+
         if (!container.getExtra("appVersion").equals(appVersion) || !container.getExtra("rfsVersion").equals(rfsVersion) || wineprefixWasUpdated) {
             applyGeneralPatches(container);
             container.putExtra("appVersion", appVersion);
@@ -653,6 +686,13 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         inputControlsView.setTouchpadView(touchpadView);
         inputControlsView.setXServer(xServer);
         inputControlsView.setVisibility(View.GONE);
+        if (capturePointerOnExternalMouse) {
+            inputControlsView.setOnCapturedPointerListener(touchpadView);
+            inputControlsView.setOnClickListener(view -> {
+                inputControlsView.requestFocus();
+                inputControlsView.requestPointerCapture();
+            });
+        }
         rootView.addView(inputControlsView);
 
         if (container != null && container.getHUDMode() != FrameRating.Mode.DISABLED.ordinal()) {
@@ -764,6 +804,11 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             xServerView.getRenderer().setCursorVisible(true);
         }
 
+        if (capturePointerOnExternalMouse && touchpadView != null) {
+            touchpadView.requestFocus();
+            touchpadView.requestPointerCapture();
+        }
+
         inputControlsView.invalidate();
     }
 
@@ -841,14 +886,13 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
 
     @Override
     public boolean dispatchGenericMotionEvent(MotionEvent event) {
-        Log.d("motion-event", "generic event");
         return winHandler.onGenericMotionEvent(event) || (!navigationFocused && touchpadView.onExternalMouseEvent(event)) || super.dispatchGenericMotionEvent(event);
     }
 
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         return (!inputControlsView.onKeyEvent(event) && !winHandler.onKeyEvent(event) && xServer.keyboard.onKeyEvent(event)) ||
-               (!ExternalController.isGameController(event.getDevice()) && super.dispatchKeyEvent(event));
+                (!ExternalController.isGameController(event.getDevice()) && super.dispatchKeyEvent(event));
     }
 
     public InputControlsView getInputControlsView() {

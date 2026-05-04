@@ -34,6 +34,10 @@ public abstract class WinVersions {
             this.csdVersion = csdVersion;
         }
 
+        public String identifier() {
+            return version;
+        }
+
         @NonNull
         @Override
         public String toString() {
@@ -62,9 +66,10 @@ public abstract class WinVersions {
         final Context context = sWinVersion.getContext();
         final WinVersions.WinVersion[] winVersions = WinVersions.getWinVersions();
 
+        String selectedVersion = container != null ? container.getWinVersion() : WinVersions.DEFAULT_VERSION;
         byte oldPosition = 0;
         for (int i = 0; i < winVersions.length; i++) {
-            if (winVersions[i].version.equals(WinVersions.DEFAULT_VERSION)) {
+            if (winVersions[i].version.equals(selectedVersion)) {
                 oldPosition = (byte)i;
                 break;
             }

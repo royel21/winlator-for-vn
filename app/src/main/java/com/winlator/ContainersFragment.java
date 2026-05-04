@@ -3,7 +3,10 @@ package com.winlator;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.ParcelFileDescriptor;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -30,8 +33,13 @@ import com.winlator.container.ContainerManager;
 import com.winlator.contentdialog.ContentDialog;
 import com.winlator.contentdialog.StorageInfoDialog;
 import com.winlator.core.PreloaderDialog;
+import com.winlator.core.AppUtils;
 import com.winlator.xenvironment.RootFS;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -74,7 +82,7 @@ public class ContainersFragment extends Fragment {
     private void loadContainersList() {
         ArrayList<Container> containers = manager.getContainers();
         recyclerView.setAdapter(new ContainersAdapter(containers));
-        if (containers.isEmpty()) emptyTextView.setVisibility(View.VISIBLE);
+        emptyTextView.setVisibility(containers.isEmpty() ? View.VISIBLE : View.GONE);
     }
 
     @Override
@@ -91,6 +99,74 @@ public class ContainersFragment extends Fragment {
                 .addToBackStack(null)
                 .replace(R.id.FLFragmentContainer, new ContainerDetailFragment())
                 .commit();
+            return true;
+        }
+        else if (menuItem.getItemId() == R.id.menu_item_export_all) {
+            MainActivity activity = (MainActivity)getActivity();
+            Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            intent.setType("application/json");
+            intent.putExtra(Intent.EXTRA_TITLE, "winlator_containers.json");
+            if (activity != null) {
+                activity.setCreateFileCallback((uri) -> {
+                    if (uri != null) {
+                        File cacheDir = getContext().getCacheDir();
+                        if (cacheDir != null) {
+                            File tempFile = new File(cacheDir, "export.json");
+                            manager.exportAllConfigAsync(tempFile, () -> {
+                                try (ParcelFileDescriptor pfd = getContext().getContentResolver().openFileDescriptor(uri, "w");
+                                     FileOutputStream fos = new FileOutputStream(pfd.getFileDescriptor());
+                                     FileInputStream fis = new FileInputStream(tempFile)) {
+                                    byte[] buffer = new byte[4096];
+                                    int len;
+                                    while ((len = fis.read(buffer)) > 0) fos.write(buffer, 0, len);
+                                    AppUtils.showToast(getContext(), "Exported all containers successfully");
+                                }
+                                catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            });
+                        }
+                    }
+                });
+                activity.startActivityForResult(intent, MainActivity.CREATE_FILE_REQUEST_CODE);
+            }
+            return true;
+        }
+        else if (menuItem.getItemId() == R.id.menu_item_import_all) {
+            MainActivity activity = (MainActivity)getActivity();
+            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            intent.setType("application/json");
+            if (activity != null) {
+                activity.setOpenFileCallback((uri) -> {
+                    if (uri != null) {
+                        File cacheDir = getContext().getCacheDir();
+                        if (cacheDir != null) {
+                            File tempFile = new File(cacheDir, "import.json");
+                            try (ParcelFileDescriptor pfd = getContext().getContentResolver().openFileDescriptor(uri, "r");
+                                 FileInputStream fis = new FileInputStream(pfd.getFileDescriptor());
+                                 FileOutputStream fos = new FileOutputStream(tempFile)) {
+                                byte[] buffer = new byte[4096];
+                                int len;
+                                while ((len = fis.read(buffer)) > 0) fos.write(buffer, 0, len);
+                                fos.close();
+
+                                preloaderDialog.show(R.string.importing_container);
+                                manager.importAllConfigAsync(tempFile, () -> {
+                                    preloaderDialog.close();
+                                    loadContainersList();
+                                    AppUtils.showToast(getContext(), R.string.imported_successfully);
+                                });
+                            }
+                            catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                });
+                activity.startActivityForResult(intent, MainActivity.OPEN_FILE_REQUEST_CODE);
+            }
             return true;
         }
         else return super.onOptionsItemSelected(menuItem);
@@ -141,8 +217,6 @@ public class ContainersFragment extends Fragment {
             MainActivity activity = (MainActivity)getActivity();
             PopupMenu listItemMenu = new PopupMenu(activity, anchorView);
             listItemMenu.inflate(R.menu.container_popup_menu);
-            
-            listItemMenu.getMenu().removeItem(R.id.menu_item_backup);
 
             listItemMenu.setOnMenuItemClickListener((menuItem) -> {
                 int itemId = menuItem.getItemId();
@@ -166,6 +240,64 @@ public class ContainersFragment extends Fragment {
                             loadContainersList();
                         });
                     });
+                } else if (itemId == R.id.menu_item_export) {
+                    Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                    intent.addCategory(Intent.CATEGORY_OPENABLE);
+                    intent.setType("application/json");
+                    intent.putExtra(Intent.EXTRA_TITLE, container.getName() + ".json");
+                    if (activity != null) {
+                        activity.setCreateFileCallback((uri) -> {
+                            if (uri != null) {
+                                File cacheDir = getContext().getCacheDir();
+                                if (cacheDir != null) {
+                                    File tempFile = new File(cacheDir, "export.json");
+                                    manager.exportConfigAsync(container, tempFile, () -> {
+                                        try (ParcelFileDescriptor pfd = getContext().getContentResolver().openFileDescriptor(uri, "w");
+                                             FileOutputStream fos = new FileOutputStream(pfd.getFileDescriptor());
+                                             FileInputStream fis = new FileInputStream(tempFile)) {
+                                            byte[] buffer = new byte[4096];
+                                            int len;
+                                            while ((len = fis.read(buffer)) > 0) fos.write(buffer, 0, len);
+                                            AppUtils.showToast(getContext(), "Exported successfully");
+                                        }
+                                        catch (IOException e) {}
+                                    });
+                                }
+                            }
+                        });
+                        activity.startActivityForResult(intent, MainActivity.CREATE_FILE_REQUEST_CODE);
+                    }
+                } else if (itemId == R.id.menu_item_import) {
+                    Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                    intent.addCategory(Intent.CATEGORY_OPENABLE);
+                    intent.setType("application/json");
+                    if (activity != null) {
+                        activity.setOpenFileCallback((uri) -> {
+                            if (uri != null) {
+                                File cacheDir = getContext().getCacheDir();
+                                if (cacheDir != null) {
+                                    File tempFile = new File(cacheDir, "import.json");
+                                    try (ParcelFileDescriptor pfd = getContext().getContentResolver().openFileDescriptor(uri, "r");
+                                         FileInputStream fis = new FileInputStream(pfd.getFileDescriptor());
+                                         FileOutputStream fos = new FileOutputStream(tempFile)) {
+                                        byte[] buffer = new byte[4096];
+                                        int len;
+                                        while ((len = fis.read(buffer)) > 0) fos.write(buffer, 0, len);
+                                        fos.close();
+
+                                        preloaderDialog.show(R.string.updating_system_files);
+                                        manager.importConfigAsync(container, tempFile, () -> {
+                                            preloaderDialog.close();
+                                            loadContainersList();
+                                            AppUtils.showToast(getContext(), "Imported successfully");
+                                        });
+                                    }
+                                    catch (IOException e) {}
+                                }
+                            }
+                        });
+                        activity.startActivityForResult(intent, MainActivity.OPEN_FILE_REQUEST_CODE);
+                    }
                 } else if (itemId == R.id.menu_item_info) {
                     (new StorageInfoDialog(activity, container)).show();
                 }

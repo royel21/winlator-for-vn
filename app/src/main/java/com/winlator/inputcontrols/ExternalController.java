@@ -1,5 +1,6 @@
 package com.winlator.inputcontrols;
 
+import android.util.Log;
 import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -246,6 +247,11 @@ public class ExternalController implements GamepadSlot {
     public static boolean isGameController(InputDevice device) {
         if (device == null) return false;
         int sources = device.getSources();
+
+        if((sources & InputDevice.SOURCE_KEYBOARD) == InputDevice.SOURCE_KEYBOARD){
+            return false;
+        }
+
         return !device.isVirtual() && ((sources & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD ||
                (sources & InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK);
     }

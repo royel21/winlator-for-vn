@@ -2,8 +2,10 @@ package com.winlator;
 
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.ParcelFileDescriptor;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -28,6 +30,9 @@ import com.winlator.core.AppUtils;
 import com.winlator.core.ArrayUtils;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -106,6 +111,44 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
         }
         else if (itemId == R.id.menu_item_new_folder) {
             createFolder();
+            return true;
+        }
+        else if (itemId == R.id.menu_item_import) {
+            final Shortcut selectedFolder = !folderStack.isEmpty() ? folderStack.peek() : null;
+            if (selectedFolder == null) {
+                AppUtils.showToast(getContext(), "Please enter a container folder to import shortcuts");
+                return true;
+            }
+
+            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            intent.setType("application/json");
+            MainActivity activity = (MainActivity)getActivity();
+            if (activity != null) {
+                activity.setOpenFileCallback((uri) -> {
+                    if (uri != null) {
+                        File cacheDir = getContext().getCacheDir();
+                        if (cacheDir != null) {
+                            File tempFile = new File(cacheDir, "import_shortcut.json");
+                            try (ParcelFileDescriptor pfd = getContext().getContentResolver().openFileDescriptor(uri, "r");
+                                 FileInputStream fis = new FileInputStream(pfd.getFileDescriptor());
+                                 FileOutputStream fos = new FileOutputStream(tempFile)) {
+                                byte[] buffer = new byte[4096];
+                                int len;
+                                while ((len = fis.read(buffer)) > 0) fos.write(buffer, 0, len);
+                                fos.close();
+
+                                manager.importShortcutConfigAsync(selectedFolder, tempFile, () -> {
+                                    refreshContent();
+                                    AppUtils.showToast(getContext(), "Imported successfully");
+                                });
+                            }
+                            catch (IOException e) {}
+                        }
+                    }
+                });
+                activity.startActivityForResult(intent, MainActivity.OPEN_FILE_REQUEST_CODE);
+            }
             return true;
         }
         else return super.onOptionsItemSelected(menuItem);

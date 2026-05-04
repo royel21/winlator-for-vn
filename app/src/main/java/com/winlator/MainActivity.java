@@ -43,11 +43,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public static final byte OPEN_FILE_REQUEST_CODE = 2;
     public static final byte EDIT_INPUT_CONTROLS_REQUEST_CODE = 3;
     public static final byte OPEN_DIRECTORY_REQUEST_CODE = 4;
+    public static final byte CREATE_FILE_REQUEST_CODE = 6;
     private DrawerLayout drawerLayout;
     public final PreloaderDialog preloaderDialog = new PreloaderDialog(this);
     private boolean editInputControls = false;
     private int selectedProfileId;
     private Callback<Uri> openFileCallback;
+    private Callback<Uri> createFileCallback;
     private SharedPreferences preferences;
     private Fragment currentFragment;
 
@@ -126,6 +128,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 openFileCallback = null;
             }
         }
+        else if (requestCode == MainActivity.CREATE_FILE_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+            if (createFileCallback != null) {
+                createFileCallback.call(data.getData());
+                createFileCallback = null;
+            }
+        }
     }
 
     @Override
@@ -156,6 +164,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         this.openFileCallback = openFileCallback;
     }
 
+    public void setCreateFileCallback(Callback<Uri> createFileCallback) {
+        this.createFileCallback = createFileCallback;
+    }
+
     private boolean requestAppPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             if (!Environment.isExternalStorageManager()) {
@@ -182,7 +194,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (itemId == R.id.menu_item_add ||
             itemId == R.id.menu_item_home ||
             itemId == R.id.menu_item_view_style ||
-            itemId == R.id.menu_item_new_folder) {
+            itemId == R.id.menu_item_new_folder ||
+            itemId == R.id.menu_item_export ||
+            itemId == R.id.menu_item_import ||
+            itemId == R.id.menu_item_import_all ||
+            itemId == R.id.menu_item_export_all ||
+            itemId == R.id.menu_item_copy ||
+            itemId == R.id.menu_item_cut ||
+            itemId == R.id.menu_item_settings) {
             return super.onOptionsItemSelected(menuItem);
         }
         else {
