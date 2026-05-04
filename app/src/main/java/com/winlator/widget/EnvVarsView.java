@@ -164,6 +164,7 @@ public class EnvVarsView extends FrameLayout {
             container.removeView(itemView);
             if (container.getChildCount() == 0) emptyTextView.setVisibility(View.VISIBLE);
         });
+
         container.addView(itemView);
         emptyTextView.setVisibility(View.GONE);
     }

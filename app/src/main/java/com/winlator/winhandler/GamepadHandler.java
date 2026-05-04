@@ -1,6 +1,7 @@
 package com.winlator.winhandler;
 
 import android.content.SharedPreferences;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 

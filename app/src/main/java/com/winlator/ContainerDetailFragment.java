@@ -110,6 +110,8 @@ public class ContainerDetailFragment extends Fragment {
     private CPUListView cpuListView;
     private CPUListView cpuListViewWoW64;
 
+    private SeekBar sbLogPixelsView;
+
     private Spinner sSystemFont;
 
     public ContainerDetailFragment() {
@@ -195,6 +197,7 @@ public class ContainerDetailFragment extends Fragment {
         cpuListViewWoW64 = view.findViewById(R.id.CPUListViewWoW64);
         envVarsView = view.findViewById(R.id.EnvVarsView);
         sSystemFont = view.findViewById(R.id.SSystemFont);
+        sbLogPixelsView = view.findViewById(R.id.SBLogPixels);
 
         loadUIFromContainer(container, view);
 
@@ -361,7 +364,7 @@ public class ContainerDetailFragment extends Fragment {
         else etName.setText(getString(R.string.container)+"-"+manager.getNextContainerId());
 
         final ArrayList<WineInfo> wineInfos = WineInstaller.getInstalledWineInfos(context);
-        loadWineVersionSpinner(view, sWineVersion, wineInfos);
+        loadWineVersionSpinner(view, sWineVersion, wineInfos, container);
 
         loadScreenSizeSpinner(view, container != null ? container.getScreenSize() : Container.DEFAULT_SCREEN_SIZE);
         loadScreenOrientationSpinner(view, container != null ? container.getScreenOrientation() : Container.DEFAULT_SCREEN_ORIENTATION);
@@ -431,6 +434,7 @@ public class ContainerDetailFragment extends Fragment {
         
         ((LinearLayout)view.findViewById(R.id.LLDrives)).removeAllViews();
         createDrivesTab(view);
+        
         WinVersions.loadSpinner(container, sWinVersion);
     }
 
@@ -460,6 +464,7 @@ public class ContainerDetailFragment extends Fragment {
         container.setAudioDriverConfig(vAudioDriverConfig.getTag().toString());
         container.setWinComponents(getWinComponents(view));
         container.setDrives(getDrives(view));
+        container.setWineVersion(sWineVersion.getSelectedItem().toString());
         container.setHUDMode((byte)sHUDMode.getSelectedItemPosition());
         container.setStartupSelection((byte)sStartupSelection.getSelectedItemPosition());
         container.setBox64Preset(Box64PresetManager.getSpinnerSelectedId(sBox64Preset));
@@ -470,10 +475,10 @@ public class ContainerDetailFragment extends Fragment {
         container.setDesktopTheme(getDesktopTheme(view));
 
         Object selectedWinVersion = sWinVersion.getSelectedItem();
-        String winVersion = selectedWinVersion instanceof WinVersions.WinVersion ? ((WinVersions.WinVersion)selectedWinVersion).version : (isEditMode() ? container.getWinVersion() : WinVersions.DEFAULT_VERSION);
+        String winVersion = selectedWinVersion instanceof WinVersions.WinVersion ? ((WinVersions.WinVersion)selectedWinVersion).version : (container != null ? container.getWinVersion() : WinVersions.DEFAULT_VERSION);
         container.setWinVersion(winVersion);
 
-        int logPixels = (int)((com.winlator.widget.SeekBar)view.findViewById(R.id.SBLogPixels)).getValue();
+        int logPixels = (int)sbLogPixelsView.getValue();
         container.setLogPixels(logPixels);
 
         final String[] mouseWarpOverrideValues = new String[]{"disable", "enable", "force"};
@@ -485,8 +490,7 @@ public class ContainerDetailFragment extends Fragment {
         try (WineRegistryEditor registryEditor = new WineRegistryEditor(userRegFile)) {
             WineUtils.setSystemFont(registryEditor, sSystemFont.getSelectedItem().toString());
 
-            SeekBar sbLogPixels = view.findViewById(R.id.SBLogPixels);
-            registryEditor.setDwordValue("Control Panel\\Desktop", "LogPixels", (int)sbLogPixels.getValue());
+            registryEditor.setDwordValue("Control Panel\\Desktop", "LogPixels", (int)sbLogPixelsView.getValue());
 
             Spinner sMouseWarpOverride = view.findViewById(R.id.SMouseWarpOverride);
 
@@ -543,9 +547,8 @@ public class ContainerDetailFragment extends Fragment {
             MSLogFont msLogFont = (new MSLogFont()).fromByteArray(registryEditor.getHexValues("Control Panel\\Desktop\\WindowMetrics", "CaptionFont"));
             AppUtils.setSpinnerSelectionFromValue(sSystemFont, msLogFont.getFaceName());
 
-            SeekBar sbLogPixels = view.findViewById(R.id.SBLogPixels);
             int logPixels = isEditMode() ? container.getLogPixels() : 96;
-            sbLogPixels.setValue(registryEditor.getDwordValue("Control Panel\\Desktop", "LogPixels", logPixels));
+            sbLogPixelsView.setValue(registryEditor.getDwordValue("Control Panel\\Desktop", "LogPixels", logPixels));
 
             List<String> mouseWarpOverrideList = Arrays.asList(context.getString(R.string.disable), context.getString(R.string.enable), context.getString(R.string.force));
             Spinner sMouseWarpOverride = view.findViewById(R.id.SMouseWarpOverride);
@@ -780,7 +783,7 @@ public class ContainerDetailFragment extends Fragment {
         popupMenu.show();
     }
 
-    private void loadWineVersionSpinner(final View view, Spinner sWineVersion, final ArrayList<WineInfo> wineInfos) {
+    private void loadWineVersionSpinner(final View view, Spinner sWineVersion, final ArrayList<WineInfo> wineInfos, Container container) {
         final Context context = getContext();
         
         if (isEditMode()) {
@@ -813,7 +816,7 @@ public class ContainerDetailFragment extends Fragment {
         
         sWineVersion.setAdapter(new ArrayAdapter<>(context, android.R.layout.simple_spinner_dropdown_item, wineVersions));
         
-        if (!isEditMode()) {
+        if (container == null) {
             AppUtils.setSpinnerSelectionFromValue(sWineVersion, WineInfo.WINE_X86_64.identifier());
         } else {
             AppUtils.setSpinnerSelectionFromValue(sWineVersion, container.getWineVersion());

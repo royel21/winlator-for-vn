@@ -217,14 +217,19 @@ public class ContainerManager {
             }
             else containerData = new JSONObject(jsonContent);
 
-            container.loadData(containerData);
-            container.putExtra("wineprefixNeedsUpdate", "t");
-            container.saveData();
+            if(containerData.has("wineVersion")){
+                String wineVersion = containerData.getString("wineVersion");
+                if (wineVersion.equals(container.getWineVersion())) {
+                    containerData.put("extraData", null);
+                    container.loadData(containerData);
+                    container.saveData();
 
-            JSONArray shortcutsArray = containerData.optJSONArray("shortcuts");
-            if (shortcutsArray != null) {
-                for (int i = 0; i < shortcutsArray.length(); i++) {
-                    createShortcut(container, shortcutsArray.getJSONObject(i));
+                    JSONArray shortcutsArray = containerData.optJSONArray("shortcuts");
+                    if (shortcutsArray != null) {
+                        for (int i = 0; i < shortcutsArray.length(); i++) {
+                            createShortcut(container, shortcutsArray.getJSONObject(i));
+                        }
+                    }
                 }
             }
         }
@@ -266,12 +271,7 @@ public class ContainerManager {
 
             for (int i = 0; i < containersArray.length(); i++) {
                 try {
-                    JSONObject containerData = containersArray.getJSONObject(i);
-                    Container container = createContainer(containerData);
-                    if (container != null) {
-                        container.putExtra("wineprefixNeedsUpdate", "t");
-                        container.saveData();
-                    }
+                    createContainer(containersArray.getJSONObject(i));
                 }
                 catch (JSONException e) {}
             }
