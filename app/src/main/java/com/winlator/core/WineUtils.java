@@ -319,8 +319,17 @@ public abstract class WineUtils {
         return unixPath;
     }
 
+public static void setWinVersion(Container container, String winVersionIdentifier) {
+        WinVersions.WinVersion winVersion = WinVersions.getWinVersionByIdentifier(winVersionIdentifier);
+        setWinVersion(container, winVersion);
+    }
+
     public static void setWinVersion(Container container, int winVersionIdx) {
         WinVersions.WinVersion winVersion = WinVersions.getWinVersions()[winVersionIdx];
+        setWinVersion(container, winVersion);
+    }
+
+    public static void setWinVersion(Container container, WinVersions.WinVersion winVersion) {
         String currentBuild = String.valueOf(winVersion.buildNumber);
         String currentVersion = winVersion.currentVersion != null ? winVersion.currentVersion : winVersion.majorVersion+"."+winVersion.minorVersion;
 

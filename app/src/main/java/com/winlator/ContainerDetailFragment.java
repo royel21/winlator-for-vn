@@ -306,40 +306,28 @@ public class ContainerDetailFragment extends Fragment {
                                 while ((len = fis.read(buffer)) > 0) fos.write(buffer, 0, len);
                                 fos.close();
 
-                                if (isEditMode()) {
-                                    manager.importConfigAsync(container, tempFile, () -> {
-                                        getActivity().runOnUiThread(() -> {
-                                            getParentFragmentManager().beginTransaction()
-                                                .replace(R.id.FLFragmentContainer, new ContainerDetailFragment(containerId))
-                                                .commit();
-                                            AppUtils.showToast(getContext(), "Imported successfully");
-                                        });
-                                    });
-                                }
-                                else {
-                                    final String json = FileUtils.readString(tempFile);
-                                    getActivity().runOnUiThread(() -> {
-                                        View fragmentView = getView();
-                                        if (fragmentView == null) return;
-                                        try {
-                                            JSONObject data;
-                                            if (json.trim().startsWith("[")) {
-                                                JSONArray array = new JSONArray(json);
-                                                if (array.length() > 0) data = array.getJSONObject(0);
-                                                else return;
-                                            }
-                                            else data = new JSONObject(json);
+                                final String json = FileUtils.readString(tempFile);
+                                getActivity().runOnUiThread(() -> {
+                                    View fragmentView = getView();
+                                    if (fragmentView == null) return;
+                                    try {
+                                        JSONObject data;
+                                        if (json.trim().startsWith("[")) {
+                                            JSONArray array = new JSONArray(json);
+                                            if (array.length() > 0) data = array.getJSONObject(0);
+                                            else return;
+                                        }
+                                        else data = new JSONObject(json);
 
-                                            Container dummyContainer = new Container(0);
-                                            dummyContainer.loadData(data);
-                                            loadUIFromContainer(dummyContainer, fragmentView);
-                                            AppUtils.showToast(getContext(), "Imported settings to UI. Press confirm to save.");
-                                        }
-                                        catch (JSONException e) {
-                                            e.printStackTrace();
-                                        }
-                                    });
-                                }
+                                        Container dummyContainer = new Container(0);
+                                        dummyContainer.loadData(data);
+                                        loadUIFromContainer(dummyContainer, fragmentView);
+                                        AppUtils.showToast(getContext(), "Imported settings to UI. Press confirm to save.");
+                                    }
+                                    catch (JSONException e) {
+                                        e.printStackTrace();
+                                    }
+                                });
                             }
                             catch (IOException e) {
                                 e.printStackTrace();
@@ -434,6 +422,8 @@ public class ContainerDetailFragment extends Fragment {
         
         ((LinearLayout)view.findViewById(R.id.LLDrives)).removeAllViews();
         createDrivesTab(view);
+
+        sbLogPixelsView.setValue(container != null ? container.getLogPixels() : 96);
         
         WinVersions.loadSpinner(container, sWinVersion);
     }

@@ -10,6 +10,9 @@ android {
         versionCode 27
         versionName "11.0"
     }
+    defaultConfig {
+        resConfigs "en", "pt", "ru", "zh"
+    }
 
     buildTypes {
         release {

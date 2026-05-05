@@ -107,4 +107,14 @@ public abstract class WinVersions {
             });
         }
     }
+
+    public static WinVersion getWinVersionByIdentifier(String identifier) {
+        WinVersion[] winVersions = getWinVersions();
+        for (WinVersion winVersion : winVersions) {
+            if (winVersion.version.equals(identifier)) {
+                return winVersion;
+            }
+        }
+        return winVersions[0];
+    }
 }

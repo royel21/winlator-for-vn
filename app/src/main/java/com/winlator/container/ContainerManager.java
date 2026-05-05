@@ -9,6 +9,7 @@ import com.winlator.core.FileUtils;
 import com.winlator.core.TarCompressorUtils;
 import com.winlator.core.WineInfo;
 import com.winlator.core.WineRegistryEditor;
+import com.winlator.core.WineUtils;
 import com.winlator.xenvironment.RootFS;
 
 import org.json.JSONArray;
@@ -222,6 +223,7 @@ public class ContainerManager {
                 if (wineVersion.equals(container.getWineVersion())) {
                     containerData.put("extraData", null);
                     container.loadData(containerData);
+                    WineUtils.setWinVersion(container, container.getWinVersion());
                     container.saveData();
 
                     JSONArray shortcutsArray = containerData.optJSONArray("shortcuts");
