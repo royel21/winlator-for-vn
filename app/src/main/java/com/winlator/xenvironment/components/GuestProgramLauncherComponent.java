@@ -298,11 +298,15 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
     public void onPause() {
         synchronized (lock) {
             if (pid != -1) {
-                List<ProcessHelper.PStat> processes = ProcessHelper.getChildProcesses();
-                for (int i = processes.size()-1; i >= 0; i--) {
-                    ProcessHelper.PStat process = processes.get(i);
-                    if (process.guestProcess && process.state != ProcessHelper.PState.STOPPED) {
-                        ProcessHelper.suspendProcess(process.pid);
+                Context context = environment.getContext();
+                SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+                if (preferences.getBoolean("pause_wine_in_background", true)) {
+                    List<ProcessHelper.PStat> processes = ProcessHelper.getChildProcesses();
+                    for (int i = processes.size() - 1; i >= 0; i--) {
+                        ProcessHelper.PStat process = processes.get(i);
+                        if (process.guestProcess && process.state != ProcessHelper.PState.STOPPED) {
+                            ProcessHelper.suspendProcess(process.pid);
+                        }
                     }
                 }
             }
