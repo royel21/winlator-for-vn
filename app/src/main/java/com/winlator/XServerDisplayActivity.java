@@ -157,19 +157,21 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         boolean useAndroidClipboardOnWine = preferences.getBoolean("use_android_clipboard_on_wine", false);
         clipboardManager = useAndroidClipboardOnWine ? (ClipboardManager)getSystemService(CLIPBOARD_SERVICE) : null;
 
-        drawerLayout = findViewById(R.id.DrawerLayout);
-        drawerLayout.setOnApplyWindowInsetsListener((view, windowInsets) -> windowInsets.replaceSystemWindowInsets(0, 0, 0, 0));
-        drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
 
-        NavigationView navigationView = findViewById(R.id.NavigationView);
         ProcessHelper.removeAllDebugCallbacks();
         boolean enableLogs = preferences.getBoolean("enable_wine_debug", false) || preferences.getInt("box64_logs", 0) >= 1;
         if (enableLogs) ProcessHelper.addDebugCallback(debugDialog = new DebugDialog(this));
+        
+        NavigationView navigationView = findViewById(R.id.NavigationView);
+        navigationView.setNavigationItemSelectedListener(this);
+        navigationView.setOnFocusChangeListener((v, hasFocus) -> navigationFocused  = hasFocus);
+
         Menu menu = navigationView.getMenu();
         menu.findItem(R.id.menu_item_logs).setVisible(enableLogs);
-        navigationView.setNavigationItemSelectedListener(this);
-
-        navigationView.setOnFocusChangeListener((v, hasFocus) -> navigationFocused  = hasFocus);
+        
+        drawerLayout = findViewById(R.id.DrawerLayout);
+        drawerLayout.setOnApplyWindowInsetsListener((view, windowInsets) -> windowInsets.replaceSystemWindowInsets(0, 0, 0, 0));
+        drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
         drawerLayout.addDrawerListener(new DrawerLayout.SimpleDrawerListener() {
             @Override
             public void onDrawerOpened(View drawerView) {
@@ -218,7 +220,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             wineInfo = WineInfo.fromIdentifier(this, wineVersion);
 
             // 始终设置 winePath，包括默认 Wine
-            if (wineInfo != null && wineInfo.path != null) {
+            if (wineInfo.path != null) {
                 rootFS.setWinePath(wineInfo.path);
             }
 
