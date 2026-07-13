@@ -33,4 +33,24 @@ public class ALSAServerComponent extends EnvironmentComponent {
             connector = null;
         }
     }
+
+    @Override
+    public void onPause() {
+        if (connector != null) {
+            for (com.winlator.xconnector.ConnectedClient client : connector.getClients()) {
+                ALSAClient alsaClient = (ALSAClient)client.getTag();
+                if (alsaClient != null) alsaClient.pause();
+            }
+        }
+    }
+
+    @Override
+    public void onResume() {
+        if (connector != null) {
+            for (com.winlator.xconnector.ConnectedClient client : connector.getClients()) {
+                ALSAClient alsaClient = (ALSAClient)client.getTag();
+                if (alsaClient != null) alsaClient.start();
+            }
+        }
+    }
 }

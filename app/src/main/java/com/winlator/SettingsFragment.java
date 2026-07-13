@@ -140,9 +140,6 @@ public class SettingsFragment extends Fragment {
         final CheckBox cbUseAndroidClipboardOnWine = view.findViewById(R.id.CBUseAndroidClipboardOnWine);
         cbUseAndroidClipboardOnWine.setChecked(preferences.getBoolean("use_android_clipboard_on_wine", false));
 
-        final CheckBox cbPauseWineInBackground = view.findViewById(R.id.CBPauseWineInBackground);
-        cbPauseWineInBackground.setChecked(preferences.getBoolean("pause_wine_in_background", true));
-
         final Spinner sClipboardCharset = view.findViewById(R.id.SClipboardCharset);
         String clipboardCharset = preferences.getString("clipboard_charset", "GBK");
         String[] charsetEntries = getResources().getStringArray(R.array.clipboard_charset_entries);
@@ -217,7 +214,6 @@ public class SettingsFragment extends Fragment {
             editor.putInt("preferred_input_api", sPreferredInputApi.getSelectedItemPosition());
             editor.putBoolean("open_android_browser_from_wine", cbOpenAndroidBrowserFromWine.isChecked());
             editor.putBoolean("use_android_clipboard_on_wine", cbUseAndroidClipboardOnWine.isChecked());
-            editor.putBoolean("pause_wine_in_background", cbPauseWineInBackground.isChecked());
             editor.putString("clipboard_charset", sClipboardCharset.getSelectedItem().toString());
             putGamepadPlayerConfigs(view, editor);
 

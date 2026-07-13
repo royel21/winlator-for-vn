@@ -369,7 +369,7 @@ public class ContainerDetailFragment extends Fragment {
         AppUtils.setSpinnerSelectionFromIdentifier(sAudioDriver, container != null ? container.getAudioDriver() : Container.DEFAULT_AUDIO_DRIVER);
         vAudioDriverConfig.setTag(container != null ? container.getAudioDriverConfig() : "");
 
-        sHUDMode.setSelection(container != null ? container.getHUDMode() : FrameRating.Mode.DISABLED.ordinal());
+        sHUDMode.setSelection(container != null ? container.getHUDMode() : FrameRating.Mode.SIMPLE.ordinal());
 
         byte oldStartupSelection = container != null ? container.getStartupSelection() : -1;
         sStartupSelection.setSelection(oldStartupSelection != -1 ? oldStartupSelection : Container.STARTUP_SELECTION_ESSENTIAL);

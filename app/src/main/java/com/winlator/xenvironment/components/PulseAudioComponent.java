@@ -90,4 +90,18 @@ public class PulseAudioComponent extends EnvironmentComponent {
 
         return ProcessHelper.exec(command, envVars, workingDir);
     }
+
+    @Override
+    public void onPause() {
+        synchronized (lock) {
+            if (pid != -1) ProcessHelper.suspendProcess(pid);
+        }
+    }
+
+    @Override
+    public void onResume() {
+        synchronized (lock) {
+            if (pid != -1) ProcessHelper.resumeProcess(pid);
+        }
+    }
 }
