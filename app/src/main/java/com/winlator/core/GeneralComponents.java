@@ -235,9 +235,9 @@ public abstract class GeneralComponents {
             File destination = type.getDestination(context);
             FileUtils.clear(destination);
 
-            String filename = identifier+".sf2";
+            String filename = identifier + ".sf2";
             destination = new File(destination, filename);
-            FileUtils.copy(context, type.assetFolder()+"/"+filename, destination);
+            FileUtils.copy(context, type.assetFolder() + "/" + filename, destination);
             return destination.getPath();
         }
         else if (type == Type.ADRENOTOOLS_DRIVER) {
