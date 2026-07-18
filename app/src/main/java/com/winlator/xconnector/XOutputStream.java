@@ -11,6 +11,7 @@ import dalvik.annotation.optimization.CriticalNative;
 public class XOutputStream {
     private final ReentrantLock lock = new ReentrantLock();
     private final long nativePtr;
+    private volatile boolean destroyed = false;
 
     static {
         System.loadLibrary("winlator");
@@ -21,23 +22,23 @@ public class XOutputStream {
     }
 
     public void setAncillaryFd(int ancillaryFd) {
-        setAncillaryFd(nativePtr, ancillaryFd);
+        if (!destroyed) setAncillaryFd(nativePtr, ancillaryFd);
     }
 
     public void writeByte(byte value) {
-        writeByte(nativePtr, value);
+        if (!destroyed) writeByte(nativePtr, value);
     }
 
     public void writeShort(short value) {
-        writeShort(nativePtr, value);
+        if (!destroyed) writeShort(nativePtr, value);
     }
 
     public void writeInt(int value) {
-        writeInt(nativePtr, value);
+        if (!destroyed) writeInt(nativePtr, value);
     }
 
     public void writeLong(long value) {
-        writeLong(nativePtr, value);
+        if (!destroyed) writeLong(nativePtr, value);
     }
 
     public void writeString8(String str) {
@@ -52,14 +53,16 @@ public class XOutputStream {
     }
 
     public void write(byte[] data, int offset, int length) {
+        if (destroyed) return;
         for (int i = offset; i < length; i++) writeByte(nativePtr, data[i]);
     }
 
     public void writeAt(int position, byte[] data) {
-        writeAt(nativePtr, position, data);
+        if (!destroyed) writeAt(nativePtr, position, data);
     }
 
     public void write(ByteBuffer data) {
+        if (destroyed) return;
         if (data.isDirect()) {
             writeByteBuffer(nativePtr, data, data.position(), data.remaining());
         }
@@ -71,7 +74,7 @@ public class XOutputStream {
     }
 
     public void writePad(int length) {
-        writePad(nativePtr, length);
+        if (!destroyed) writePad(nativePtr, length);
     }
 
     public XStreamLock lock() {
@@ -79,7 +82,16 @@ public class XOutputStream {
     }
 
     public void destroy() {
-        destroy(nativePtr);
+        lock.lock();
+        try {
+            if (!destroyed) {
+                destroy(nativePtr);
+                destroyed = true;
+            }
+        }
+        finally {
+            lock.unlock();
+        }
     }
 
     private class OutputStreamLock implements XStreamLock {
@@ -90,7 +102,7 @@ public class XOutputStream {
         @Override
         public void close() throws IOException {
             try {
-                if (!sendData(nativePtr)) throw new IOException("Failed to send data.");
+                if (!destroyed && !sendData(nativePtr)) throw new IOException("Failed to send data.");
             }
             finally {
                 lock.unlock();
@@ -99,7 +111,11 @@ public class XOutputStream {
     }
 
     public int length() {
-        return length(nativePtr);
+        return !destroyed ? length(nativePtr) : 0;
+    }
+
+    public boolean isDestroyed() {
+        return destroyed;
     }
 
     private native long nativeAllocate(int fd, int initialCapacity);
