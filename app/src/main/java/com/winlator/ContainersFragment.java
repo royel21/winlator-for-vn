@@ -298,7 +298,11 @@ public class ContainersFragment extends Fragment {
                         });
                         activity.startActivityForResult(intent, MainActivity.OPEN_FILE_REQUEST_CODE);
                     }
-                } else if (itemId == R.id.menu_item_info) {
+                } else if(itemId == R.id.menu_item_update_patch){
+                    container.putExtra("needPatchUpdate", "t");
+                    container.saveData();
+                }
+                else if (itemId == R.id.menu_item_info) {
                     (new StorageInfoDialog(activity, container)).show();
                 }
                 return true;

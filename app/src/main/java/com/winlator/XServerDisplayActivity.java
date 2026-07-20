@@ -214,6 +214,14 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
                 return;
             }
 
+            boolean needPatchUpdate = container.getExtra("needPatchUpdate").equals("t");
+            if(needPatchUpdate){
+                Log.d("rootfs_patch", "update patch");
+                TarCompressorUtils.extract(TarCompressorUtils.Type.ZSTD, this, "rootfs_patches.tzst", rootFS.getRootDir());
+                container.putExtra("needPatchUpdate", null);
+                container.saveData();
+            }
+
             win32AppWorkarounds = new Win32AppWorkarounds(this);
 
             String wineVersion = container.getWineVersion();

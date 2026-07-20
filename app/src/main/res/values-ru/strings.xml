@@ -289,4 +289,5 @@
     <string name="simple_fps">Простой (FPS)</string>
     <string name="full">Полный</string>
     <string name="renderer">Рендерер</string>
+    <string name="update_patch">Update Patch</string>
 </resources>

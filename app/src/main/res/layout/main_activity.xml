@@ -32,6 +32,7 @@
         android:layout_gravity="start"
         android:id="@+id/NavigationView"
         android:fitsSystemWindows="true"
+        android:paddingTop="30dp"
         app:headerLayout="@layout/main_menu_header"
         app:itemIconTint="?attr/colorAccent"
         app:itemTextColor="?attr/colorPrimaryText"

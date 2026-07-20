@@ -289,4 +289,5 @@
     <string name="simple_fps">Simples (FPS)</string>
     <string name="full">Completo</string>
     <string name="renderer">Renderizador</string>
+    <string name="update_patch">Update Patch</string>
 </resources>
