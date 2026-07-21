@@ -200,5 +200,9 @@ public abstract class BaseFileManagerFragment<T> extends Fragment {
         }
     }
 
+    public ContainerManager getManager() {
+        return manager;
+    }
+
     protected abstract String getHomeTitle();
 }

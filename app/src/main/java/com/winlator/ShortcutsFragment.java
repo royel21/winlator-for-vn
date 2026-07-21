@@ -6,6 +6,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -22,18 +23,24 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.winlator.container.ContainerManager;
 import com.winlator.container.Shortcut;
 import com.winlator.contentdialog.ContentDialog;
 import com.winlator.contentdialog.CreateFolderDialog;
 import com.winlator.contentdialog.ShortcutSettingsDialog;
 import com.winlator.core.AppUtils;
 import com.winlator.core.ArrayUtils;
+import com.winlator.core.FileUtils;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
@@ -58,6 +65,7 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
         menuInflater.inflate(R.menu.shortcuts_menu, menu);
         refreshViewStyleMenuItem(menu.findItem(R.id.menu_item_view_style));
     }
+
 
     private void createFolder() {
         clearClipboard();
@@ -218,7 +226,12 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
             return data.size();
         }
 
+        private void exportShortCutConfig(Shortcut shortcut){
+
+        }
+
         private void showListItemMenu(View anchorView, final Shortcut shortcut) {
+            MainActivity activity = (MainActivity)getActivity();
             final Context context = getContext();
             PopupMenu listItemMenu = new PopupMenu(context, anchorView);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) listItemMenu.setForceShowIcon(true);
@@ -243,6 +256,83 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
                         shortcut.remove();
                         refreshContent();
                     });
+                }else if(itemId == R.id.menu_item_export){
+                    Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                    intent.addCategory(Intent.CATEGORY_OPENABLE);
+                    intent.setType("application/json");
+                    intent.putExtra(Intent.EXTRA_TITLE, shortcut.name + ".json");
+                    if (activity != null) {
+                        activity.setCreateFileCallback((uri) -> {
+                            if (uri != null) {
+                                File cacheDir = getContext().getCacheDir();
+                                if (cacheDir != null) {
+                                    File tempFile = new File(cacheDir, "export.json");
+                                    manager.exportShortcutConfigAsync(shortcut, tempFile, () -> {
+                                        try (ParcelFileDescriptor pfd = getContext().getContentResolver().openFileDescriptor(uri, "w");
+                                             FileOutputStream fos = new FileOutputStream(pfd.getFileDescriptor());
+                                             FileInputStream fis = new FileInputStream(tempFile)) {
+                                            byte[] buffer = new byte[4096];
+                                            int len;
+                                            while ((len = fis.read(buffer)) > 0) fos.write(buffer, 0, len);
+                                            AppUtils.showToast(getContext(), "Exported successfully");
+                                        } catch (IOException e) {
+                                        }
+                                    });
+                                }
+                            }
+                        });
+                        activity.startActivityForResult(intent, MainActivity.CREATE_FILE_REQUEST_CODE);
+                    }
+                }else if(itemId == R.id.menu_item_import){
+                    Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                    intent.addCategory(Intent.CATEGORY_OPENABLE);
+                    intent.setType("application/json");
+                    intent.putExtra(Intent.EXTRA_TITLE, shortcut.name + ".json");
+                    if (activity != null) {
+                        activity.setOpenFileCallback((uri) -> {
+                            if (uri != null) {
+                                File cacheDir = getContext().getCacheDir();
+                                if (cacheDir != null) {
+                                    File tempFile = new File(cacheDir, "import.json");
+                                    try (ParcelFileDescriptor pfd = getContext().getContentResolver().openFileDescriptor(uri, "r");
+                                         FileInputStream fis = new FileInputStream(pfd.getFileDescriptor());
+                                         FileOutputStream fos = new FileOutputStream(tempFile)) {
+                                        byte[] buffer = new byte[4096];
+                                        int len;
+                                        while ((len = fis.read(buffer)) > 0) fos.write(buffer, 0, len);
+                                        fos.close();
+
+                                        try {
+                                            JSONObject data = new JSONObject(FileUtils.readString(tempFile));
+
+                                            Iterator<String> keys = data.keys();
+                                            while (keys.hasNext()) {
+                                                String key = keys.next();
+                                                shortcut.putExtra(key, data.getString(key));
+                                            }
+
+                                            JSONObject extraData = data.optJSONObject("extraData");
+                                            if(extraData != null) {
+                                                keys = extraData.keys();
+                                                while (keys.hasNext()) {
+                                                    String key = keys.next();
+                                                    shortcut.putExtra(key, extraData.getString(key));
+                                                }
+                                                shortcut.saveData();
+                                                AppUtils.showToast(getContext(), "Imported successfully");
+                                            }
+                                        }
+                                        catch (JSONException e) {
+                                            AppUtils.showToast(getContext(), "Error Importing File Malformed");}
+                                    }
+                                    catch (IOException e) {
+                                        AppUtils.showToast(getContext(), "Error While Opening File");
+                                    }
+                                }
+                            }
+                        });
+                        activity.startActivityForResult(intent, MainActivity.OPEN_FILE_REQUEST_CODE);
+                    }
                 }
                 return true;
             });

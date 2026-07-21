@@ -197,8 +197,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             itemId == R.id.menu_item_new_folder ||
             itemId == R.id.menu_item_export ||
             itemId == R.id.menu_item_import ||
-            itemId == R.id.menu_item_import_all ||
-            itemId == R.id.menu_item_export_all ||
             itemId == R.id.menu_item_copy ||
             itemId == R.id.menu_item_cut ||
             itemId == R.id.menu_item_settings) {

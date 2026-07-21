@@ -2,6 +2,7 @@ package com.winlator.container;
 
 import android.content.Context;
 import android.os.Handler;
+import android.util.Log;
 
 import com.winlator.R;
 import com.winlator.core.Callback;
@@ -177,7 +178,7 @@ public class ContainerManager {
         Executors.newSingleThreadExecutor().execute(() -> {
             try {
                 JSONObject data = new JSONObject(FileUtils.readString(file));
-                createShortcut(shortcut.container, data);
+                createShortcut(shortcut.container, data, shortcut.file.isDirectory() ? shortcut.file : null);
             }
             catch (JSONException e) {}
             handler.post(callback);
@@ -229,7 +230,7 @@ public class ContainerManager {
                     JSONArray shortcutsArray = containerData.optJSONArray("shortcuts");
                     if (shortcutsArray != null) {
                         for (int i = 0; i < shortcutsArray.length(); i++) {
-                            createShortcut(container, shortcutsArray.getJSONObject(i));
+                            createShortcut(container, shortcutsArray.getJSONObject(i), null);
                         }
                     }
                 }
@@ -320,17 +321,19 @@ public class ContainerManager {
         return shortcuts;
     }
 
-    private void createShortcut(Container container, JSONObject data) {
+    private void createShortcut(Container container, JSONObject data, File destinationDir) {
         try {
             String name = data.getString("name");
             String path = data.getString("path");
             String wmClass = data.optString("wmClass", "");
             JSONObject extraData = data.optJSONObject("extraData");
+            Log.d("ishortcut", data.toString());
+            if (destinationDir == null) {
+                destinationDir = new File(container.getUserDir(), "Desktop");
+            }
+            if (!destinationDir.exists()) destinationDir.mkdirs();
 
-            File desktopDir = new File(container.getUserDir(), "Desktop");
-            if (!desktopDir.exists()) desktopDir.mkdirs();
-
-            File file = new File(desktopDir, name + ".desktop");
+            File file = new File(destinationDir, name + ".desktop");
             StringBuilder sb = new StringBuilder();
             sb.append("[Desktop Entry]\n")
               .append("Type=Application\n")

@@ -218,27 +218,27 @@
                 app:tabMode="auto">
 
                 <com.google.android.material.tabs.TabItem
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/wine_configuration" />
 
                 <com.google.android.material.tabs.TabItem
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/win_components" />
 
                 <com.google.android.material.tabs.TabItem
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/environment_variables" />
 
                 <com.google.android.material.tabs.TabItem
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/drives" />
 
                 <com.google.android.material.tabs.TabItem
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/advanced" />
             </com.google.android.material.tabs.TabLayout>

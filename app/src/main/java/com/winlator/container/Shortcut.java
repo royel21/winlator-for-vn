@@ -5,6 +5,7 @@ import android.graphics.BitmapFactory;
 
 import com.winlator.core.FileUtils;
 import com.winlator.core.StringUtils;
+import com.winlator.winhandler.GamepadHandler;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -126,6 +127,47 @@ public class Shortcut {
             data.put("name", name);
             data.put("path", path);
             data.put("wmClass", wmClass);
+            if(!extraData.has("screenSize")){
+                extraData.put("screenSize", getExtra("screenSize", container.getScreenSize()));
+            }
+            if(!extraData.has("screenOrientation")){
+                extraData.put("screenOrientation", getExtra("swapResolution", container.getScreenOrientation()));
+            }
+             if(!extraData.has("swapResolution")){
+                 extraData.put("swapResolution", getExtra("swapResolution", String.valueOf(container.isSwapResolution())));
+             }
+             if(!extraData.has("graphicsDriver")){
+                 extraData.put("graphicsDriver", getExtra("graphicsDriver", container.getGraphicsDriver()));
+             }
+             if(!extraData.has("dxwrapper")){
+                 extraData.put("dxwrapper", getExtra("dxwrapper", container.getDXWrapper()));
+             }
+             if(!extraData.has("dxwrapperConfig")){
+                 extraData.put("dxwrapperConfig", getExtra("dxwrapperConfig", container.getDXWrapperConfig()));
+             }
+             if(!extraData.has("graphicsDriverConfig")){
+                 extraData.put("graphicsDriverConfig", getExtra("graphicsDriverConfig", container.getGraphicsDriverConfig()));
+             }
+             if(!extraData.has("audioDriver")){
+                 extraData.put("audioDriver", getExtra("audioDriver", container.getAudioDriver()));
+             }
+             if(!extraData.has("audioDriverConfig")){
+                 extraData.put("audioDriverConfig", getExtra("audioDriverConfig", container.getAudioDriverConfig()));
+             }
+            if(!extraData.has("wincomponents")){
+                extraData.put("wincomponents", getExtra("wincomponents", container.getWinComponents()));
+            }
+            if(!extraData.has("envVars")){
+                extraData.put("envVars", container.getEnvVars());
+            }
+            if(!extraData.has("box64Preset")){
+                extraData.put("box64Preset", getExtra("box64Preset", container.getBox64Preset()));
+            }
+            data.put("forceFullscreen", getExtra("forceFullscreen", "0"));
+            data.put("controlsProfile", getExtra("controlsProfile", "0"));
+            data.put("dinputMapperType", getExtra("dinputMapperType", String.valueOf(GamepadHandler.DINPUT_MAPPER_TYPE_XINPUT)));
+            data.put("preferredInputApi", getExtra("preferredInputApi", "0"));
+            data.put("execArgs", getExtra("execArgs", ""));
             data.put("extraData", extraData);
             return data;
         }

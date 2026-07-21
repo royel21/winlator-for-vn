@@ -39,13 +39,13 @@ public class Keyboard {
 
     public void setKeysyms(byte keycode, int minKeysym, int majKeysym) {
         int index = keycode - MIN_KEYCODE;
-        keysyms[index*KEYSYMS_PER_KEYCODE+0] = minKeysym;
+        keysyms[index*KEYSYMS_PER_KEYCODE] = minKeysym;
         keysyms[index*KEYSYMS_PER_KEYCODE+1] = majKeysym;
     }
 
     public boolean hasKeysym(byte keycode, int keysym) {
         int index = keycode - MIN_KEYCODE;
-        return keysyms[index*KEYSYMS_PER_KEYCODE+0] == keysym || keysyms[index*KEYSYMS_PER_KEYCODE+1] == keysym;
+        return keysyms[index*KEYSYMS_PER_KEYCODE] == keysym || keysyms[index*KEYSYMS_PER_KEYCODE+1] == keysym;
     }
 
     public void setKeyPress(byte keycode, int keysym) {
@@ -119,7 +119,7 @@ public class Keyboard {
                     xKeycode == XKeycode.KEY_BKSP || xKeycode == XKeycode.KEY_DEL) unicodeChar = 0;
                 xServer.injectKeyPress(xKeycode, unicodeChar);
             }
-            else if (action == KeyEvent.ACTION_UP) {
+            else {
                 xServer.injectKeyRelease(xKeycode);
             }
         }
@@ -127,21 +127,6 @@ public class Keyboard {
             return E02_KeyInput.handleAndroidKeyEvent(this.xServer, event);
         }
         return true;
-    }
-
-    private XKeycode getCustomXKeycodeForKeysym(int keysym) {
-        XKeycode[] customKeys = XKeycode.getCustomKeys();
-        for (XKeycode xKeycode : customKeys) if (hasKeysym(xKeycode.id, keysym)) return xKeycode;
-        for (XKeycode xKeycode : customKeys) {
-            int index = xKeycode.id - MIN_KEYCODE;
-            if (keysyms[index*KEYSYMS_PER_KEYCODE+0] == 0) return xKeycode;
-        }
-        for (XKeycode xKeycode : customKeys) {
-            int index = xKeycode.id - MIN_KEYCODE;
-            keysyms[index*KEYSYMS_PER_KEYCODE+0] = 0;
-            keysyms[index*KEYSYMS_PER_KEYCODE+1] = 0;
-        }
-        return XKeycode.KEY_CUSTOM_1;
     }
 
     private static XKeycode[] createKeycodeMap() {
