@@ -19,6 +19,7 @@ public class Keyboard {
     private final Bitmask modifiersMask = new Bitmask();
     private final XKeycode[] keycodeMap = createKeycodeMap();
     private final ArraySet<Byte> pressedKeys = new ArraySet<>();
+    private final long[] lastKeyPressTime = new long[MAX_KEYCODE + 1];
     private final ArrayList<OnKeyboardListener> onKeyboardListeners = new ArrayList<>();
     private final XServer xServer;
 
@@ -64,6 +65,14 @@ public class Keyboard {
             pressedKeys.add(keycode);
             if (isModifier(keycode)) modifiersMask.set(getModifierFlag(keycode));
             triggerOnKeyPress(keycode, keysym);
+            lastKeyPressTime[keycode & 0xFF] = System.currentTimeMillis();
+        }
+        else if (!isModifier(keycode)) {
+            long currentTime = System.currentTimeMillis();
+            if (currentTime - lastKeyPressTime[keycode & 0xFF] >= 50) {
+                triggerOnKeyPress(keycode, keysym);
+                lastKeyPressTime[keycode & 0xFF] = currentTime;
+            }
         }
     }
 
@@ -105,7 +114,10 @@ public class Keyboard {
             if (xKeycode == null) return false;
 
             if (action == KeyEvent.ACTION_DOWN) {
-                xServer.injectKeyPress(xKeycode, xKeycode != XKeycode.KEY_ENTER ? event.getUnicodeChar() : 0);
+                int unicodeChar = event.getUnicodeChar();
+                if (xKeycode == XKeycode.KEY_ENTER || xKeycode == XKeycode.KEY_TAB || xKeycode == XKeycode.KEY_ESC ||
+                    xKeycode == XKeycode.KEY_BKSP || xKeycode == XKeycode.KEY_DEL) unicodeChar = 0;
+                xServer.injectKeyPress(xKeycode, unicodeChar);
             }
             else if (action == KeyEvent.ACTION_UP) {
                 xServer.injectKeyRelease(xKeycode);
