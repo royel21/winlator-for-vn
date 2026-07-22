@@ -226,10 +226,6 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
             return data.size();
         }
 
-        private void exportShortCutConfig(Shortcut shortcut){
-
-        }
-
         private void showListItemMenu(View anchorView, final Shortcut shortcut) {
             MainActivity activity = (MainActivity)getActivity();
             final Context context = getContext();
@@ -308,6 +304,7 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
                                             Iterator<String> keys = data.keys();
                                             while (keys.hasNext()) {
                                                 String key = keys.next();
+                                                if(key.equals("extraData")) continue;
                                                 shortcut.putExtra(key, data.getString(key));
                                             }
 

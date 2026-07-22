@@ -123,10 +123,6 @@ public class Shortcut {
 
     public JSONObject getData() {
         try {
-            JSONObject data = new JSONObject();
-            data.put("name", name);
-            data.put("path", path);
-            data.put("wmClass", wmClass);
             if(!extraData.has("screenSize")){
                 extraData.put("screenSize", getExtra("screenSize", container.getScreenSize()));
             }
@@ -163,12 +159,15 @@ public class Shortcut {
             if(!extraData.has("box64Preset")){
                 extraData.put("box64Preset", getExtra("box64Preset", container.getBox64Preset()));
             }
+            JSONObject data = new JSONObject();
             data.put("forceFullscreen", getExtra("forceFullscreen", "0"));
             data.put("controlsProfile", getExtra("controlsProfile", "0"));
             data.put("dinputMapperType", getExtra("dinputMapperType", String.valueOf(GamepadHandler.DINPUT_MAPPER_TYPE_XINPUT)));
             data.put("preferredInputApi", getExtra("preferredInputApi", "0"));
             data.put("execArgs", getExtra("execArgs", ""));
             data.put("extraData", extraData);
+            data.getJSONObject("extraData").put("wmClass", null);
+            data.getJSONObject("extraData").put("name", null);
             return data;
         }
         catch (JSONException e) {
