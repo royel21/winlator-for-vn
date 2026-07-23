@@ -12,6 +12,8 @@ public abstract class DefaultVersion {
     public static final String VIRGL = "23.1.9";
     public static final String GLADIO = "1.0";
     public static final String D8VK = "1.0";
+    public static final String D7VK = "1.11";
+
     public static final String VKD3D = "2.14.1";
     public static final String WINED3D = WineInfo.WINE_X86_64.version;
     public static final String CNC_DDRAW = "6.6";
@@ -41,6 +43,7 @@ public abstract class DefaultVersion {
             case "VKD3D": return VKD3D;
             case "WINED3D": return WINED3D;
             case "CNC_DDRAW": return CNC_DDRAW;
+            case "D7VK": return D7VK;
             case "SOUNDFONT": return SOUNDFONT;
             default: return "0.0";
         }

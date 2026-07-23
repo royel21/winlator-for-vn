@@ -170,7 +170,10 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
         if (!isArm64EC) {
             // x86_64: 原始逻辑
             ldLibraryPath = rootFS.getLibDir().getPath();
-            envVars.put("BOX64_LD_LIBRARY_PATH", rootDir+"/lib/x86_64-linux-gnu");
+            String wineLibDir = rootDir + "/" + winePath + "/lib";
+            String wineUnixLibDir = wineLibDir + "/wine/x86_64-unix";
+            envVars.put("BOX64_LD_LIBRARY_PATH", rootDir+"/lib/x86_64-linux-gnu:" + wineUnixLibDir + ":" + wineLibDir);
+            envVars.put("WINEDLLPATH", wineLibDir + "/wine");
         } else {
             // arm64ec: 参考 glibc 项目设置特殊的库路径
             String wp = winePath; // 已经处理过，确保不以 / 开头

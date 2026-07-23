@@ -6,6 +6,7 @@ public abstract class DXWrappers {
     public static final String WINED3D = "wined3d";
     public static final String DXVK = "dxvk";
     public static final String VKD3D = "vkd3d";
+    public static final String D7VK = "d7vk";
     public static final String CNC_DDRAW = "cnc-ddraw";
 
     public static String getName(String identifier) {
@@ -14,6 +15,7 @@ public abstract class DXWrappers {
             case DXVK: return "DXVK";
             case VKD3D: return "VKD3D";
             case CNC_DDRAW: return "CNC DDraw";
+            case D7VK: return "D7VK";
             default: return "None";
         }
     }

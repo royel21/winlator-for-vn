@@ -133,7 +133,7 @@ public class WineInfo implements Parcelable {
 
         Matcher matcher = pattern.matcher(identifier);
         if (matcher.find()) {
-            String path = RootFS.find(context).getRootDir().getPath() + "/opt/contents/wine/" + identifier;
+            String path = RootFS.find(context).getRootDir().getPath() + "/opt/contents/Wine/" + identifier;
             return new WineInfo(matcher.group(1), matcher.group(2), matcher.group(3).toLowerCase(), path);
         }
         else return MAIN_WINE_VERSION;

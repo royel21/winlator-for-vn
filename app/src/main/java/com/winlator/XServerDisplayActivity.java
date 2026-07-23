@@ -988,8 +988,16 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             FileUtils.delete(shadersDir);
             FileUtils.copy(this, assetDir+"/Shaders", shadersDir);
             TarCompressorUtils.extract(TarCompressorUtils.Type.ZSTD, this, assetDir+"/ddraw.tzst", windowsDir);
+            WineUtils.setDDrawLibOverride(container, true);
         }
-        else restoreBuiltinDllFiles("ddraw.dll");
+        else if (ddrawWrapper.equals(DXWrappers.D7VK)) {
+            TarCompressorUtils.extract(TarCompressorUtils.Type.ZSTD, this, "dxwrapper/d7vk-"+DefaultVersion.D7VK+".tzst", windowsDir);
+            WineUtils.setDDrawLibOverride(container, true);
+        }
+        else {
+            restoreBuiltinDllFiles("ddraw.dll");
+            WineUtils.setDDrawLibOverride(container, false);
+        }
         return true;
     }
 

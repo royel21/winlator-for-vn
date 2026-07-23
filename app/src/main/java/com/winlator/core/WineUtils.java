@@ -416,4 +416,13 @@ public static void setWinVersion(Container container, String winVersionIdentifie
             }
         }
     }
+
+    public static void setDDrawLibOverride(Container container, boolean useNative) {
+        final String dllOverridesKey = "Software\\Wine\\DllOverrides";
+        File userRegFile = new File(container.getRootDir(), ".wine/user.reg");
+        try (WineRegistryEditor registryEditor = new WineRegistryEditor(userRegFile)) {
+            if (useNative) registryEditor.setStringValue(dllOverridesKey, "ddraw", "native,builtin");
+            else registryEditor.setStringValue(dllOverridesKey, "ddraw", "builtin");
+        }
+    }
 }

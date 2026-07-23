@@ -64,7 +64,10 @@ public class RootFS {
     }
 
     public void setWinePath(String winePath) {
-        this.winePath = FileUtils.toRelativePath(rootDir.getPath(), winePath);
+        if (winePath.startsWith("/")) {
+            this.winePath = FileUtils.toRelativePath(rootDir.getPath(), winePath);
+        }
+        else this.winePath = winePath;
     }
 
     private File getImageInfoDir() {

@@ -21,7 +21,7 @@ import java.io.File;
 public abstract class WineThemeManager {
     public enum Theme {LIGHT, DARK}
     public enum BackgroundType {IMAGE, COLOR}
-    public static final String DEFAULT_DESKTOP_THEME = Theme.LIGHT+","+BackgroundType.IMAGE+",#0277bd";
+    public static final String DEFAULT_DESKTOP_THEME = "DARK,IMAGE,#0277bd";
     public static final String DEFAULT_WALLPAPER_ID = "wallpaper-1";
 
     public static class ThemeInfo {
@@ -56,12 +56,15 @@ public abstract class WineThemeManager {
         if (themeInfo.backgroundType == BackgroundType.IMAGE) createWallpaperBMPFile(context, themeInfo.wallpaperId, screenInfo);
 
         try (WineRegistryEditor registryEditor = new WineRegistryEditor(userRegFile)) {
+            registryEditor.setStringValue("Control Panel\\Desktop", "ThemeActive", "1");
             if (themeInfo.backgroundType == BackgroundType.IMAGE) {
                 registryEditor.setStringValue("Control Panel\\Desktop", "Wallpaper", RootFS.getDosUserCachePath()+"\\wallpaper.bmp");
             }
             else registryEditor.removeValue("Control Panel\\Desktop", "Wallpaper");
 
             if (themeInfo.theme == Theme.LIGHT) {
+                registryEditor.setDwordValue("Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", "AppsUseLightTheme", 1);
+                registryEditor.setDwordValue("Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", "SystemUsesLightTheme", 1);
                 registryEditor.setStringValue("Control Panel\\Colors", "ActiveBorder", "245 245 245");
                 registryEditor.setStringValue("Control Panel\\Colors", "ActiveTitle", "96 125 139");
                 registryEditor.setStringValue("Control Panel\\Colors", "Background", background);
@@ -94,6 +97,8 @@ public abstract class WineThemeManager {
                 registryEditor.setStringValue("Control Panel\\Colors", "WindowText", "0 0 0");
             }
             else if (themeInfo.theme == Theme.DARK) {
+                registryEditor.setDwordValue("Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", "AppsUseLightTheme", 0);
+                registryEditor.setDwordValue("Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", "SystemUsesLightTheme", 0);
                 registryEditor.setStringValue("Control Panel\\Colors", "ActiveBorder", "48 48 48");
                 registryEditor.setStringValue("Control Panel\\Colors", "ActiveTitle", "33 33 33");
                 registryEditor.setStringValue("Control Panel\\Colors", "Background", background);
