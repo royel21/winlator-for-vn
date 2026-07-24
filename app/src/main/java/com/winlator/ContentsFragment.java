@@ -179,7 +179,7 @@ public class ContentsFragment extends Fragment {
             String path = FileUtils.getFilePathFromUri(data.getData());
             if (path == null) path = data.getData().getPath();
             final File sourceFile = new File(path);
-            
+
             DownloadProgressDialog progressDialog = new DownloadProgressDialog(activity);
             progressDialog.show(R.string.installing_content);
             try {
@@ -213,9 +213,9 @@ public class ContentsFragment extends Fragment {
                                 break;
                         }
                         // 清理源文件
-                        if (sourceFile.exists()) {
-                            sourceFile.delete();
-                        }
+//                        if (sourceFile.exists()) {
+//                            sourceFile.delete();
+//                        }
                         safeRunOnUiThread(() -> ContentDialog.alert(getContext(), activity.getString(R.string.install_failed) + ": " + activity.getString(msgId), progressDialog::closeOnUiThread));
                     }
 
@@ -234,9 +234,9 @@ public class ContentsFragment extends Fragment {
                                         ContentUntrustedDialog untrustedDialog = new ContentUntrustedDialog(getContext(), untrustedFiles);
                                         untrustedDialog.setOnCancelCallback(() -> {
                                             // 取消时清理源文件
-                                            if (sourceFile.exists()) {
-                                                sourceFile.delete();
-                                            }
+//                                            if (sourceFile.exists()) {
+//                                                sourceFile.delete();
+//                                            }
                                             progressDialog.closeOnUiThread();
                                         });
                                         untrustedDialog.setOnConfirmCallback(() -> manager.finishInstallContent(profile, callback1));
@@ -245,9 +245,9 @@ public class ContentsFragment extends Fragment {
                                 });
                                 dialog.setOnCancelCallback(() -> {
                                     // 取消时清理源文件
-                                    if (sourceFile.exists()) {
-                                        sourceFile.delete();
-                                    }
+//                                    if (sourceFile.exists()) {
+//                                        sourceFile.delete();
+//                                    }
                                     progressDialog.closeOnUiThread();
                                 });
                                 dialog.show();
@@ -255,9 +255,9 @@ public class ContentsFragment extends Fragment {
 
                         } else {
                             // 安装成功后清理源文件
-                            if (sourceFile.exists()) {
-                                sourceFile.delete();
-                            }
+//                            if (sourceFile.exists()) {
+//                                sourceFile.delete();
+//                            }
                             progressDialog.closeOnUiThread();
                             safeRunOnUiThread(() -> {
                                 ContentDialog.alert(getContext(), R.string.content_installed_success, null);
@@ -273,9 +273,9 @@ public class ContentsFragment extends Fragment {
                 Executors.newSingleThreadExecutor().execute(() -> manager.extraContentFile(data.getData(), callback, progress -> safeRunOnUiThread(() -> progressDialog.setProgress(progress))));
             } catch (Exception e) {
                 // 异常时清理源文件
-                if (sourceFile.exists()) {
-                    sourceFile.delete();
-                }
+//                if (sourceFile.exists()) {
+//                    sourceFile.delete();
+//                }
                 progressDialog.closeOnUiThread();
                 AppUtils.showToast(getContext(), R.string.unable_to_import_profile);
             }
