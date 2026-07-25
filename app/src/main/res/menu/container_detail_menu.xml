@@ -4,7 +4,7 @@
     <item
         android:id="@+id/menu_item_export"
         android:icon="@drawable/icon_import_rotated"
-        android:title="@string/export"
+        android:title="@string/export_container"
         app:showAsAction="always" />
     <item
         android:id="@+id/menu_item_import"

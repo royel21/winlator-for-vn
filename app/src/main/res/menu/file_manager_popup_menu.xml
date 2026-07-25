@@ -4,8 +4,6 @@
     <item android:id="@+id/menu_item_copy" android:title="@string/copy" android:icon="@drawable/icon_popup_menu_copy" android:iconTint="?attr/colorAccent" />
     <item android:id="@+id/menu_item_cut" android:title="@string/cut" android:icon="@drawable/icon_popup_menu_cut" android:iconTint="?attr/colorAccent" />
     <item android:id="@+id/menu_item_remove" android:title="@string/remove" android:icon="@drawable/icon_popup_menu_remove" android:iconTint="?attr/colorAccent" />
-    <item android:id="@+id/menu_item_export" android:title="@string/export" android:icon="@drawable/icon_popup_menu_download" android:iconTint="?attr/colorAccent" />
-    <item android:id="@+id/menu_item_import" android:title="@string/import_config" android:icon="@drawable/icon_import_rotated" android:iconTint="?attr/colorAccent" />
     <item android:id="@+id/menu_item_rename" android:title="@string/rename" android:icon="@drawable/icon_popup_menu_edit" android:iconTint="?attr/colorAccent" />
     <item android:id="@+id/menu_item_add_favorite" android:title="@string/add_to_favorites" android:icon="@drawable/icon_popup_menu_add_favorite" android:iconTint="?attr/colorAccent" />
     <item android:id="@+id/menu_item_info" android:title="@string/information" android:icon="@drawable/icon_popup_menu_info" android:iconTint="?attr/colorAccent" />

@@ -174,6 +174,20 @@ public class Shortcut {
             return null;
         }
     }
+    public JSONObject getFullData() {
+        try {
+            JSONObject data = new JSONObject();
+            data.put("name", name);
+            data.put("path", path);
+            data.put("wmClass", wmClass);
+            data.put("extraData", extraData);
+            return data;
+        }
+        catch (JSONException e) {
+            return null;
+        }
+    }
+
 
     public void saveData() {
         String content = "[Desktop Entry]\n";

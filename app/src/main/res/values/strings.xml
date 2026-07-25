@@ -240,7 +240,7 @@
     <string name="logs">Logs</string>
     <string name="enable_wine_debug">Enable Wine debug</string>
     <string name="box64_logs">Box64 Logs</string>
-    <string name="export">Export Config</string>
+    <string name="export_container">Export</string>
     <string name="logs_exported_to">Logs exported to</string>
     <string name="general">General</string>
     <string name="startup_selection">Startup Selection</string>
@@ -406,8 +406,10 @@
     <string name="clear">Clear</string>
     <string name="export_all">Export All</string>
     <string name="import_all">Import All</string>
+    <string name="export_config">Export Config</string>
     <string name="import_config">Import Config</string>
     <string name="importing_container">Importing Container...</string>
     <string name="imported_successfully">Imported successfully</string>
     <string name="update_patch">Update Patch</string>
+    <string name="import_container">Import</string>
 </resources>

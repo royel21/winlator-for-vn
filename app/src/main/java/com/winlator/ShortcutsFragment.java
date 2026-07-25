@@ -232,12 +232,13 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
             PopupMenu listItemMenu = new PopupMenu(context, anchorView);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) listItemMenu.setForceShowIcon(true);
 
-            listItemMenu.inflate(R.menu.file_manager_popup_menu);
-
-            Menu menu = listItemMenu.getMenu();
-            menu.findItem(R.id.menu_item_rename).setVisible(false);
-            menu.findItem(R.id.menu_item_add_favorite).setVisible(false);
-            menu.findItem(R.id.menu_item_info).setVisible(false);
+            listItemMenu.inflate(R.menu.shortcut_popup_menu);
+            if(shortcut.file.isDirectory()) {
+                Menu menu = listItemMenu.getMenu();
+                menu.findItem(R.id.menu_item_settings).setVisible(false);
+                menu.findItem(R.id.menu_item_export).setVisible(false);
+                menu.findItem(R.id.menu_item_import).setVisible(false);
+            }
 
             listItemMenu.setOnMenuItemClickListener((menuItem) -> {
                 int itemId = menuItem.getItemId();
