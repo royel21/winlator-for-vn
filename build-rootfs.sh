@@ -60,6 +60,9 @@ cd "${BUILD_WORK_DIR}"
 # ==========================================
 # 3. Compile GStreamer (FFmpeg, H.264, x264, WMA)
 # ==========================================
+# ==========================================
+# 3. Compile GStreamer (FFmpeg, H.264, x264, WMA)
+# ==========================================
 echo "[+] Compiling GStreamer (${GST_VER}) with FFmpeg, H.264 & WMA..."
 git clone -b "${GST_VER}" --depth 1 https://github.com/GStreamer/gstreamer.git gst-src
 cd gst-src
@@ -69,6 +72,7 @@ meson setup builddir \
     --buildtype=release \
     --strip \
     --wrap-mode=nopromote \
+    -Dgpl=enabled \
     -Dgst-full-target-type=shared_library \
     -Dgst-full-libraries=app,video,player,audio,tag,pbutils \
     -Dbase=enabled \
