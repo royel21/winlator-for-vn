@@ -68,7 +68,7 @@ meson setup builddir \
     --prefix="${TARGET_DIR}/usr" \
     --buildtype=release \
     --strip \
-    --wrap-mode=fallback \
+    --wrap-mode=forcefallback \
     -Dgst-full-target-type=shared_library \
     -Dgst-full-libraries=app,video,player,audio,tag,pbutils,ffmpeg \
     -Dbase=enabled \
