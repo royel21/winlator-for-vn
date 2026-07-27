@@ -21,11 +21,12 @@ LD_FILE="${TARGET_DIR}/usr/lib/ld-linux-aarch64.so.1"
 # ==========================================
 # 0. Install Host Dependencies & Headers
 # ==========================================
-echo "[+] Installing build tools, po4a, and FFmpeg / x264 headers..."
-apt-get update && apt-get install -y \
+echo "[+] Installing build tools, doxygen, po4a, and FFmpeg / x264 headers..."
+apt-get update && apt-get install -y --no-install-recommends \
     debootstrap patchelf meson ninja-build wget git tar zstd build-essential file \
     libavcodec-dev libavformat-dev libavutil-dev libswscale-dev libavfilter-dev \
-    libx264-dev autoconf automake libtool po4a libudev-dev
+    libx264-dev autoconf automake libtool po4a libudev-dev ca-certificates \
+    doxygen graphviz
 
 # ==========================================
 # 1. Clean & Bootstrap Ubuntu 24.04 (Noble) Base
