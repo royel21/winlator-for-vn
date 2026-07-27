@@ -68,7 +68,7 @@ meson setup builddir \
     --prefix="${TARGET_DIR}/usr" \
     --buildtype=release \
     --strip \
-    --wrap-mode=forcefallback \
+    --wrap-mode=nopromote \
     -Dgst-full-target-type=shared_library \
     -Dgst-full-libraries=app,video,player,audio,tag,pbutils \
     -Dbase=enabled \
@@ -76,21 +76,20 @@ meson setup builddir \
     -Dbad=enabled \
     -Dugly=enabled \
     -Dlibav=enabled \
+    -Dgst-plugins-base:gl=disabled \
+    -Dgst-plugins-base:x11=disabled \
+    -Dgst-plugins-base:alsa=disabled \
+    -Dgst-plugins-good:cairo=disabled \
+    -Dgst-plugins-good:v4l2=disabled \
     -Dgst-libav:ffmpeg=enabled \
     -Dgst-plugins-ugly:x264=enabled \
-    -Dgst-plugins-good:v4l2=disabled \
     -Dintrospection=disabled \
     -Dtests=disabled \
     -Dexamples=disabled \
     -Ddoc=disabled \
     -Dges=disabled \
     -Dpython=disabled \
-    -Ddevtools=disabled \
-    -Dgstreamer:check=disabled \
-    -Dgstreamer:benchmarks=disabled \
-    -Dgstreamer:libunwind=disabled \
-    -Dgstreamer:libdw=disabled \
-    -Dgstreamer:bash-completion=disabled
+    -Ddevtools=disabled
 
 ninja -C builddir install
 cd "${BUILD_WORK_DIR}"
