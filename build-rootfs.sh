@@ -70,16 +70,15 @@ meson setup builddir \
     --strip \
     --wrap-mode=forcefallback \
     -Dgst-full-target-type=shared_library \
-    -Dgst-full-libraries=app,video,player,audio,tag,pbutils,ffmpeg \
+    -Dgst-full-libraries=app,video,player,audio,tag,pbutils \
     -Dbase=enabled \
     -Dgood=enabled \
     -Dbad=enabled \
     -Dugly=enabled \
     -Dlibav=enabled \
-    -Dx264=enabled \
-    -Dffmpeg=enabled \
-    -Duvch264=disabled \
-    -Dv4l2=disabled \
+    -Dgst-libav:ffmpeg=enabled \
+    -Dgst-plugins-ugly:x264=enabled \
+    -Dgst-plugins-good:v4l2=disabled \
     -Dintrospection=disabled \
     -Dtests=disabled \
     -Dexamples=disabled \
