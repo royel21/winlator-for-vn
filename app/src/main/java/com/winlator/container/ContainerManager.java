@@ -166,7 +166,7 @@ public class ContainerManager {
         final Handler handler = new Handler();
         Executors.newSingleThreadExecutor().execute(() -> {
             try {
-                FileUtils.writeString(file, shortcut.getFullData().toString(4));
+                FileUtils.writeString(file, shortcut.getData().toString(4));
             }
             catch (JSONException e) {}
             handler.post(callback);
@@ -190,7 +190,7 @@ public class ContainerManager {
             JSONObject containerData = container.getData();
             JSONArray shortcutsArray = new JSONArray();
             for (Shortcut shortcut : getShortcuts(container)) {
-                shortcutsArray.put(shortcut.getFullData());
+                shortcutsArray.put(shortcut.getData());
             }
             containerData.put("shortcuts", shortcutsArray);
             FileUtils.writeString(file, containerData.toString(4));
@@ -297,7 +297,7 @@ public class ContainerManager {
                 JSONObject containerData = container.getData();
                 JSONArray shortcutsArray = new JSONArray();
                 for (Shortcut shortcut : getShortcuts(container)) {
-                    shortcutsArray.put(shortcut.getFullData());
+                    shortcutsArray.put(shortcut.getData());
                 }
                 containerData.put("shortcuts", shortcutsArray);
                 containersArray.put(containerData);

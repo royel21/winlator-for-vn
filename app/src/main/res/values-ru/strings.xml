@@ -25,6 +25,7 @@
     <string name="scale">Масштаб</string>
     <string name="shape">Форма</string>
     <string name="type">Тип</string>
+    <string name="export_container">Экспорт</string>
     <string name="binding">Привязка</string>
     <string name="binding_up">Привязка Вверх</string>
     <string name="binding_right">Привязка Вправо</string>

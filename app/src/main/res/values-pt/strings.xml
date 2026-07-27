@@ -19,6 +19,7 @@
     <string name="starting_up">Iniciando...</string>
     <string name="unable_to_install_system_files">Não foi possível instalar arquivos do sistema</string>
     <string name="keyboard">Teclado</string>
+    <string name="export_container">Exportar</string>
     <string name="toggle_fullscreen">Alternar Tela-Cheia</string>
     <string name="exit">Sair</string>
     <string name="no_control_element_selected">Nenhum elemento de controle selecionado</string>

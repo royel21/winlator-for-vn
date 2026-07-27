@@ -239,7 +239,6 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
                 menu.findItem(R.id.menu_item_export).setVisible(false);
                 menu.findItem(R.id.menu_item_import).setVisible(false);
             }
-
             listItemMenu.setOnMenuItemClickListener((menuItem) -> {
                 int itemId = menuItem.getItemId();
                 if (itemId == R.id.menu_item_settings) {
