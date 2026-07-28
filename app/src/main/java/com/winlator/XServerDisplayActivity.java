@@ -980,23 +980,27 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
 
         GeneralComponents.extractFile(GeneralComponents.Type.VKD3D, this, dxwrapperConfig[1].get("version"), DefaultVersion.VKD3D);
 
-        if (ddrawWrapper.equals(DXWrappers.CNC_DDRAW)) {
-            final String assetDir = "dxwrapper/cnc-ddraw-"+DefaultVersion.CNC_DDRAW;
-            File configFile = new File(rootDir, RootFS.WINEPREFIX+"/drive_c/ProgramData/cnc-ddraw/ddraw.ini");
-            if (!configFile.isFile()) FileUtils.copy(this, assetDir+"/ddraw.ini", configFile);
-            File shadersDir = new File(rootDir, RootFS.WINEPREFIX+"/drive_c/ProgramData/cnc-ddraw/Shaders");
-            FileUtils.delete(shadersDir);
-            FileUtils.copy(this, assetDir+"/Shaders", shadersDir);
-            TarCompressorUtils.extract(TarCompressorUtils.Type.ZSTD, this, assetDir+"/ddraw.tzst", windowsDir);
-            WineUtils.setDDrawLibOverride(container, true);
-        }
-        else if (ddrawWrapper.equals(DXWrappers.D7VK)) {
-            TarCompressorUtils.extract(TarCompressorUtils.Type.ZSTD, this, "dxwrapper/d7vk-"+DefaultVersion.D7VK+".tzst", windowsDir);
-            WineUtils.setDDrawLibOverride(container, true);
-        }
-        else {
-            restoreBuiltinDllFiles("ddraw.dll");
-            WineUtils.setDDrawLibOverride(container, false);
+        File containerSysWoW64Dir = new File(rootDir, RootFS.WINEPREFIX+"/drive_c/windows/syswow64");
+        FileUtils.delete(new File(containerSysWoW64Dir, "ddraw_.dll"));
+
+        switch (ddrawWrapper) {
+            case DXWrappers.CNC_DDRAW:
+                final String assetDir = "dxwrapper/cnc-ddraw-"+DefaultVersion.CNC_DDRAW;
+                File configFile = new File(rootDir, RootFS.WINEPREFIX+"/drive_c/ProgramData/cnc-ddraw/ddraw.ini");
+                if (!configFile.isFile()) FileUtils.copy(this, assetDir+"/ddraw.ini", configFile);
+                File shadersDir = new File(rootDir, RootFS.WINEPREFIX+"/drive_c/ProgramData/cnc-ddraw/Shaders");
+                FileUtils.delete(shadersDir);
+                FileUtils.copy(this, assetDir+"/Shaders", shadersDir);
+                TarCompressorUtils.extract(TarCompressorUtils.Type.ZSTD, this, assetDir+"/ddraw.tzst", windowsDir);
+                break;
+            case DXWrappers.D7VK:
+                restoreBuiltinDllFiles("ddraw.dll");
+                (new File(containerSysWoW64Dir, "ddraw.dll")).renameTo(new File(containerSysWoW64Dir, "ddraw_.dll"));
+                TarCompressorUtils.extract(TarCompressorUtils.Type.ZSTD, this, "dxwrapper/d7vk-"+DefaultVersion.D7VK+".tzst", windowsDir);
+                break;
+            default:
+                restoreBuiltinDllFiles("ddraw.dll");
+                break;
         }
         return true;
     }

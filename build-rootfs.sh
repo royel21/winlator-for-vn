@@ -23,10 +23,10 @@ LD_FILE="${TARGET_DIR}/usr/lib/ld-linux-aarch64.so.1"
 # ==========================================
 echo "[+] Installing build tools, doxygen, po4a, and FFmpeg / x264 headers..."
 apt-get update && apt-get install -y --no-install-recommends \
-    debootstrap patchelf meson ninja-build wget git tar zstd build-essential file \
+    patchelf meson ninja-build wget git tar zstd build-essential file \
     libavcodec-dev libavformat-dev libavutil-dev libswscale-dev libavfilter-dev \
     libx264-dev autoconf automake libtool po4a libudev-dev ca-certificates \
-    doxygen graphviz
+    doxygen graphviz tzdata
 
 # ==========================================
 # 1. Clean & Bootstrap Ubuntu 24.04 (Noble) Base
@@ -124,14 +124,24 @@ echo "[+] Applying patchelf safely to true ELF binaries..."
 
 patch_elf_safe() {
     local target="$1"
-    # Ensure it's a regular file (not a symlink or ld script like libc.so)
-    if [ -f "$target" ] && [ ! -L "$target" ]; then
-        if file -b "$target" | grep -q "^ELF"; then
-            patchelf --set-rpath "${LD_RPATH}" --set-interpreter "${LD_FILE}" "$target" 2>/dev/null || true
-        fi
+    
+    # 1. Skip symlinks or missing files
+    if [ ! -f "$target" ] || [ -L "$target" ]; then
+        return 0
+    fi
+
+    # 2. Skip ASCII text files (GNU ld scripts like libc.so, libpthread.so)
+    local file_type
+    file_type=$(file -b "$target" 2>/dev/null || true)
+    if echo "$file_type" | grep -q "text"; then
+        return 0
+    fi
+
+    # 3. Patch valid 64-bit ELF binaries only
+    if echo "$file_type" | grep -qE "ELF 64-bit.*(shared object|executable)"; then
+        patchelf --set-rpath "${LD_RPATH}" --set-interpreter "${LD_FILE}" "$target" 2>/dev/null || true
     fi
 }
-
 # Patch GStreamer plugins
 if [ -d "${TARGET_DIR}/usr/lib/gstreamer-1.0" ]; then
     find "${TARGET_DIR}/usr/lib/gstreamer-1.0" -name "*.so" | while read -r plugin; do

@@ -95,10 +95,22 @@ echo "[+] Applying patchelf to built binaries..."
 
 patch_elf_safe() {
     local target="$1"
-    if [ -f "$target" ] && [ ! -L "$target" ]; then
-        if file -b "$target" | grep -q "^ELF"; then
-            patchelf --set-rpath "${LD_RPATH}" --set-interpreter "${LD_FILE}" "$target" 2>/dev/null || true
-        fi
+    
+    # 1. Skip symlinks or missing files
+    if [ ! -f "$target" ] || [ -L "$target" ]; then
+        return 0
+    fi
+
+    # 2. Skip ASCII text files (GNU ld scripts like libc.so, libpthread.so)
+    local file_type
+    file_type=$(file -b "$target" 2>/dev/null || true)
+    if echo "$file_type" | grep -q "text"; then
+        return 0
+    fi
+
+    # 3. Patch valid 64-bit ELF binaries only
+    if echo "$file_type" | grep -qE "ELF 64-bit.*(shared object|executable)"; then
+        patchelf --set-rpath "${LD_RPATH}" --set-interpreter "${LD_FILE}" "$target" 2>/dev/null || true
     fi
 }
 

@@ -414,6 +414,7 @@ public class ContainerDetailFragment extends Fragment {
         }
 
         envVarsView.setEnvVars(new EnvVars(container != null ? container.getEnvVars() : Container.DEFAULT_ENV_VARS));
+        view.findViewById(R.id.BTAddEnvVar).setOnClickListener((v) -> (new AddEnvVarDialog(context, envVarsView)).show());
         
         ViewGroup llTabWinComponents = view.findViewById(R.id.LLTabWinComponents);
         ((ViewGroup)llTabWinComponents.findViewById(R.id.LLWinComponentsDirectX)).removeAllViews();
@@ -659,14 +660,6 @@ public class ContainerDetailFragment extends Fragment {
             spinner.setTag(name);
             parent.addView(itemView);
         }
-    }
-
-    private EnvVarsView createEnvVarsTab(final View view) {
-        final Context context = view.getContext();
-        final EnvVarsView envVarsView = view.findViewById(R.id.EnvVarsView);
-        envVarsView.setEnvVars(new EnvVars(isEditMode() ? container.getEnvVars() : Container.DEFAULT_ENV_VARS));
-        view.findViewById(R.id.BTAddEnvVar).setOnClickListener((v) -> (new AddEnvVarDialog(context, envVarsView)).show());
-        return envVarsView;
     }
 
     private String getDrives(View view) {
