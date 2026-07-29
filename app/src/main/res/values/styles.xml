@@ -294,7 +294,19 @@
         <item name="android:layout_width">40dp</item>
         <item name="android:layout_height">36dp</item>
         <item name="tint">?attr/colorPrimaryVariant</item>
-        <item name="android:background">@drawable/right_side_button</item>
         <item name="android:padding">6dp</item>
+    </style>
+    <style name="MenuButton">
+        <item name="android:layout_width">40dp</item>
+        <item name="android:layout_height">36dp</item>
+        <item name="tint">?attr/colorPrimaryVariant</item>
+        <item name="android:background">@drawable/left_side_button</item>
+        <item name="android:padding">6dp</item>
+    </style>
+    <style name="RunButton">
+        <item name="android:layout_width">40dp</item>
+        <item name="android:layout_height">36dp</item>
+        <item name="android:padding">6dp</item>
+        <item name="tint">?attr/colorPrimaryVariant</item>
     </style>
 </resources>

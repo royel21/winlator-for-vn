@@ -357,6 +357,7 @@ public class ContainerDetailFragment extends Fragment {
         loadScreenSizeSpinner(view, container != null ? container.getScreenSize() : Container.DEFAULT_SCREEN_SIZE);
         loadScreenOrientationSpinner(view, container != null ? container.getScreenOrientation() : Container.DEFAULT_SCREEN_ORIENTATION);
         ((CheckBox)view.findViewById(R.id.CBSwapResolution)).setChecked(container != null ? container.isSwapResolution() : Container.DEFAULT_SWAP_RESOLUTION);
+        ((CheckBox)view.findViewById(R.id.CBStartAsFullscreen)).setChecked(container == null || container.isStartAsFullscreen());
 
         final String oldGraphicsDriverConfig = container != null ? container.getGraphicsDriverConfig() : "";
         String selectedGraphicsDriver = container != null ? container.getGraphicsDriver() : GraphicsDrivers.getDefaultDriver(context);
@@ -434,6 +435,7 @@ public class ContainerDetailFragment extends Fragment {
         container.setScreenSize(getScreenSize(view));
         container.setScreenOrientation(getScreenOrientation(view));
         container.setSwapResolution(isSwapResolution(view));
+        container.setStartAsFullscreen(((CheckBox)view.findViewById(R.id.CBStartAsFullscreen)).isChecked());
         
         String graphicsDriver = graphicsDriverPicker.getGraphicsDriver();
         container.setGraphicsDriver(graphicsDriver);

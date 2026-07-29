@@ -390,6 +390,11 @@ public class GLRenderer implements GLSurfaceView.Renderer, WindowManager.OnWindo
         this.forceWindowsFullscreen = forceWindowsFullscreen;
     }
 
+    public void setFullscreen(boolean fullscreen) {
+        this.fullscreen = fullscreen;
+        viewportNeedsUpdate = true;
+    }
+
     public boolean isFullscreen() {
         return fullscreen;
     }

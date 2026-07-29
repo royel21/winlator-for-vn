@@ -192,6 +192,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public boolean onOptionsItemSelected(MenuItem menuItem) {
         int itemId = menuItem.getItemId();
         if (itemId == R.id.menu_item_add ||
+            itemId == R.id.menu_item_create_shortcut ||
             itemId == R.id.menu_item_home ||
             itemId == R.id.menu_item_view_style ||
             itemId == R.id.menu_item_new_folder ||

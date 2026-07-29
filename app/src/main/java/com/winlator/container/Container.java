@@ -19,7 +19,7 @@ import java.io.File;
 import java.util.Iterator;
 
 public class Container {
-    public static final String DEFAULT_ENV_VARS = "LC_ALL=ja_JP.utf8 ZINK_DESCRIPTORS=lazy ZINK_DEBUG=compact MESA_SHADER_CACHE_MAX_SIZE=512MB TU_DEBUG=sysmem,noconform,nofsdt,gmem MESA_GL_VERSION_OVERRIDE=3.1 TZ=Asia/Tokyo MESA_VK_WSI_DEBUG=-sw MESA_EXTENSION_MAX_YEAR=2025 BOX64_DYNAREC_WEAKBARRIER=-1 mesa_glthread=true WINEESYNC=1 MESA_SHADER_CACHE_DISABLE=false DXVK_ASYNC=1 BOX64_MMAP32=1 LIBGL_ALWAYS_SOFTWARE=0 DRAW_USE_LLVM=0 GST_DEBUG=0 MANGOHUD=0 MANGOHUD_CONFIG=fps,frame_timing=0,ram,gpu_name,vulkan_driver,cpu_mhz,arch,exec_name,swap,font_size=24,engine_version,position=top-left,background_alpha=0.0,hud_no_margin";
+    public static final String DEFAULT_ENV_VARS = "LC_ALL=ja_JP.utf8 ZINK_DESCRIPTORS=lazy ZINK_DEBUG=compact MESA_SHADER_CACHE_MAX_SIZE=512MB TU_DEBUG=sysmem,noconform,nofsdt,gmem MESA_GL_VERSION_OVERRIDE=3.1 TZ=Asia/Tokyo MESA_VK_WSI_DEBUG=sw MESA_EXTENSION_MAX_YEAR=2025 BOX64_DYNAREC_WEAKBARRIER=-1 mesa_glthread=true WINEESYNC=1 MESA_SHADER_CACHE_DISABLE=false DXVK_ASYNC=1 BOX64_MMAP32=1 LIBGL_ALWAYS_SOFTWARE=0 DRAW_USE_LLVM=0 GST_DEBUG=0 MANGOHUD=0 MANGOHUD_CONFIG=fps,frame_timing=0,ram,gpu_name,vulkan_driver,cpu_mhz,arch,exec_name,swap,font_size=24,engine_version,position=top-left,background_alpha=0.0,hud_no_margin";
     public static final String DEFAULT_SCREEN_SIZE = "1280x720";
     public static final String DEFAULT_SCREEN_ORIENTATION = "landscape";
     public static final boolean DEFAULT_SWAP_RESOLUTION = false;
@@ -49,6 +49,7 @@ public class Container {
     private String wineVersion = WineInfo.MAIN_WINE_VERSION.identifier();
     private byte hudMode = (byte)FrameRating.Mode.SIMPLE.ordinal();
     private byte startupSelection = STARTUP_SELECTION_ESSENTIAL;
+    private boolean startAsFullscreen = true;
     private String cpuList;
     private String cpuListWoW64;
     private String desktopTheme = WineThemeManager.DEFAULT_DESKTOP_THEME;
@@ -191,6 +192,14 @@ public class Container {
 
     public void setStartupSelection(byte startupSelection) {
         this.startupSelection = startupSelection;
+    }
+
+    public boolean isStartAsFullscreen() {
+        return startAsFullscreen;
+    }
+
+    public void setStartAsFullscreen(boolean startAsFullscreen) {
+        this.startAsFullscreen = startAsFullscreen;
     }
 
     public String getCPUList() {
@@ -349,6 +358,33 @@ public class Container {
         this.mouseWarpOverride = mouseWarpOverride;
     }
 
+    public boolean hasDrive(String path) {
+        for (Drive drive : drivesIterator()) {
+            if (drive.path.equals(path)) return true;
+        }
+        return false;
+    }
+
+    public void addDrive(String path) {
+        if (hasDrive(path)) return;
+        char nextLetter = '\0';
+        for (int i = 0; i < MAX_DRIVE_LETTERS; i++) {
+            char letter = (char)('D' + i);
+            boolean used = false;
+            for (Drive drive : drivesIterator()) {
+                if (drive.letter.equalsIgnoreCase(String.valueOf(letter))) {
+                    used = true;
+                    break;
+                }
+            }
+            if (!used) {
+                nextLetter = letter;
+                break;
+            }
+        }
+        if (nextLetter != '\0') drives += nextLetter + ":" + path;
+    }
+
     public Iterable<Drive> drivesIterator() {
         return drivesIterator(drives);
     }
@@ -393,6 +429,7 @@ public class Container {
             data.put("drives", drives);
             data.put("hudMode", hudMode);
             data.put("startupSelection", startupSelection);
+            data.put("startAsFullscreen", startAsFullscreen);
             data.put("box64Preset", box64Preset);
             data.put("box64Version", box64Version);
             data.put("fexVersion", fexVersion);
@@ -478,6 +515,9 @@ public class Container {
                     break;
                 case "startupSelection" :
                     setStartupSelection((byte)data.optInt(key, getStartupSelection()));
+                    break;
+                case "startAsFullscreen" :
+                    setStartAsFullscreen(data.optBoolean(key, isStartAsFullscreen()));
                     break;
                 case "extraData" : {
                     JSONObject extraData = data.optJSONObject(key);

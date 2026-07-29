@@ -188,6 +188,7 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
         envVars.put("LD_LIBRARY_PATH", ldLibraryPath);
         envVars.put("ANDROID_SYSVSHM_SERVER", rootDir+UnixSocketConfig.SYSVSHM_SERVER_PATH);
         envVars.put("WINE_HOST_XDG_CURRENT_DESKTOP", "1");//新版wine桌面创建快捷方式需要这个
+        envVars.put("BOX64_ROOT", rootDir.getPath());
 
         if (this.envVars != null) envVars.putAll(this.envVars);
 

@@ -321,10 +321,11 @@ public class ContainerManager {
         return shortcuts;
     }
 
-    private void createShortcut(Container container, JSONObject data, File destinationDir) {
+    public void createShortcut(Container container, JSONObject data, File destinationDir) {
         try {
             String name = data.getString("name");
             String path = data.getString("path");
+            String icon = data.optString("icon", "");
             String wmClass = data.optString("wmClass", "");
             JSONObject extraData = data.optJSONObject("extraData");
             Log.d("ishortcut", data.toString());
@@ -338,8 +339,11 @@ public class ContainerManager {
             sb.append("[Desktop Entry]\n")
               .append("Type=Application\n")
               .append("Name=").append(name).append("\n")
-              .append("Exec=wine ").append(path).append("\n")
-              .append("StartupWMClass=").append(wmClass).append("\n");
+              .append("Exec=wine ").append(path).append("\n");
+            
+            if (!icon.isEmpty()) sb.append("Icon=").append(icon).append("\n");
+            
+            sb.append("StartupWMClass=").append(wmClass).append("\n");
 
             if (extraData != null && extraData.length() > 0) {
                 sb.append("\n[Extra Data]\n");

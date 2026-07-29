@@ -196,7 +196,13 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
 
         if (!isGenerateWineprefix()) {
             ContainerManager containerManager = new ContainerManager(this);
-            container = containerManager.getContainerById(getIntent().getIntExtra("container_id", 0));
+            int containerId = getIntent().getIntExtra("container_id", 0);
+            container = containerManager.getContainerById(containerId);
+            if (container == null) {
+                Log.e("XServerDisplayActivity", "Container not found for id: " + containerId);
+                finish();
+                return;
+            }
             containerManager.activateContainer(container);
 
             boolean wineprefixNeedsUpdate = container.getExtra("wineprefixNeedsUpdate").equals("t");
@@ -233,7 +239,14 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             }
 
             String shortcutPath = getIntent().getStringExtra("shortcut_path");
-            if (shortcutPath != null && !shortcutPath.isEmpty()) shortcut = new Shortcut(container, new File(shortcutPath));
+            if (shortcutPath != null && !shortcutPath.isEmpty()) {
+                File shortcutFile = new File(shortcutPath);
+                if (shortcutFile.exists()) {
+                    shortcut = new Shortcut(container, shortcutFile);
+                } else {
+                    Log.e("XServerDisplayActivity", "Shortcut file not found: " + shortcutPath);
+                }
+            }
 
             String graphicsDriver = container.getGraphicsDriver();
             audioDriver = container.getAudioDriver();
@@ -676,6 +689,17 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         renderer.setCursorVisible(false);
         renderer.setCursorColor(preferences.getInt("cursor_color", 0xffffff));
         renderer.setCursorScale(preferences.getFloat("cursor_scale", 1.0f));
+        
+        boolean startAsFullscreen = false;
+        if (shortcut != null) {
+            String startAsFsExtra = shortcut.getExtra("startAsFullscreen");
+            startAsFullscreen = !startAsFsExtra.isEmpty() ? startAsFsExtra.equals("true") : (container != null && container.isStartAsFullscreen());
+        }
+        else if (container != null) {
+            startAsFullscreen = container.isStartAsFullscreen();
+        }
+        renderer.setFullscreen(startAsFullscreen);
+
         renderer.setForceWindowsFullscreen(shortcut != null && shortcut.getExtra("forceFullscreen", "0").equals("1"));
 
         xServer.setRenderer(renderer);
@@ -851,6 +875,9 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
 
         if (graphicsDriver[0].equals(GraphicsDrivers.TURNIP)) {
             envVars.put("MESA_VK_WSI_PRESENT_MODE", "mailbox");
+            envVars.put("VK_ICD_FILENAMES", rootDir.getPath() + "/usr/share/vulkan/icd.d/freedreno_icd.aarch64.json");
+            envVars.put("MESA_VK_WSI_DEBUG", "sw");
+            if (!envVars.has("TU_DEBUG")) envVars.put("TU_DEBUG", "sysmem");
             TurnipConfigDialog.setEnvVars(this, graphicsDriverConfig[0], envVars);
 
             if (changed) {
@@ -1086,7 +1113,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             execArgs = shortcut.getExtra("execArgs");
             execArgs = !execArgs.isEmpty() ? " "+execArgs : "";
 
-            if (shortcut.path.endsWith(".lnk") || shortcut.path.contains("://")) {
+            if (shortcut.path != null && (shortcut.path.endsWith(".lnk") || shortcut.path.contains("://"))) {
                 cmdArgs = "\""+shortcut.path+"\""+execArgs;
             }
             else execPath = shortcut.path;
