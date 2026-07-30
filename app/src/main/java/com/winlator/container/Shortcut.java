@@ -2,6 +2,7 @@ package com.winlator.container;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.util.Log;
 
 import com.winlator.core.FileUtils;
 import com.winlator.core.StringUtils;

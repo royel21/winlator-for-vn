@@ -1,6 +1,7 @@
 package com.winlator.core;
 
 import android.content.Context;
+import android.util.Log;
 
 import java.nio.charset.Charset;
 import java.util.Arrays;
@@ -34,6 +35,13 @@ public class StringUtils {
     }
 
     public static String unescapeDOSPath(String path) {
+        if(path.contains("\\\\\\\\"))
+        {
+            return path.replaceAll("\\\\([^\\\\]+)", "$1").replaceAll("\\\\([^\\\\]+)", "$1")
+                    .replaceAll("\\\\\\\\", "\\\\")
+                    .trim();
+        }
+
         return path.replace("\\\\", "\\").replace("\\ ", " ").trim();
     }
 

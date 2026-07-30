@@ -247,7 +247,6 @@ public class ContainerDetailFragment extends Fragment {
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater menuInflater) {
         menuInflater.inflate(R.menu.container_detail_menu, menu);
-        if (!isEditMode()) menu.findItem(R.id.menu_item_export).setVisible(false);
     }
 
     @Override

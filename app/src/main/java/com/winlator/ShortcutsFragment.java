@@ -19,6 +19,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -352,6 +353,7 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
             private final ImageView imageView;
             private final TextView title;
             private final TextView subtitle;
+            private final LinearLayout SelectItem;
 
             private ViewHolder(View view) {
                 super(view);
@@ -360,6 +362,7 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
                 this.subtitle = view.findViewById(R.id.TVSubtitle);
                 this.runButton = view.findViewById(R.id.BTRun);
                 this.menuButton = view.findViewById(R.id.BTMenu);
+                this.SelectItem = view.findViewById(R.id.item_select);
             }
         }
 
@@ -395,6 +398,7 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
             holder.imageView.setOnClickListener((v) -> runFromShortcut(item));
             holder.runButton.setOnClickListener((v) -> runFromShortcut(item));
             holder.menuButton.setOnClickListener((v) -> showListItemMenu(v, item));
+            holder.SelectItem.setOnClickListener((v) -> selectShortcut(item));
         }
 
         @Override
@@ -508,7 +512,9 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
             });
             listItemMenu.show();
         }
+        private void selectShortcut(final Shortcut shortcut){
 
+        }
         private void runFromShortcut(Shortcut shortcut) {
             AppCompatActivity activity = (AppCompatActivity)getActivity();
             if (activity == null) return;
