@@ -229,4 +229,17 @@ public class Shortcut {
             }
         }
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Shortcut) {
+            return ((Shortcut)obj).file.getAbsolutePath().equals(file.getAbsolutePath());
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return file.getAbsolutePath().hashCode();
+    }
 }

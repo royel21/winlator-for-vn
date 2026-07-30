@@ -33,5 +33,6 @@ This is a clone from https://github.com/moze30/winlator-zmod repository
 - DXVK ([github.com/doitsujin/dxvk](https://github.com/doitsujin/dxvk))
 - VKD3D ([gitlab.winehq.org/wine/vkd3d](https://gitlab.winehq.org/wine/vkd3d))
 - CNC DDraw ([github.com/FunkyFr3sh/cnc-ddraw](https://github.com/FunkyFr3sh/cnc-ddraw))
+- Icon Search ([Icon Search](https://www.flaticon.com/free-icons/search))
 
 Special thanks to all the developers involved in these projects.

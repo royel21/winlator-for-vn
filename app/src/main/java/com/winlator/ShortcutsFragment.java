@@ -31,10 +31,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.winlator.container.Container;
-import com.winlator.container.ContainerManager;
 import com.winlator.container.Shortcut;
 import com.winlator.contentdialog.ContentDialog;
-import com.winlator.contentdialog.CreateFolderDialog;
 import com.winlator.contentdialog.ShortcutSettingsDialog;
 import com.winlator.core.AppUtils;
 import com.winlator.core.ArrayUtils;
@@ -51,12 +49,15 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 
 public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
     private Container selectedContainerForShortcut;
+    private final HashSet<Shortcut> selectedShortcuts = new HashSet<>();
+    private View selectionOptionsContainer;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -65,8 +66,31 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
     }
 
     @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        selectionOptionsContainer = view.findViewById(R.id.LLSelectionOptions);
+        
+        view.findViewById(R.id.BTCancelSelection).setOnClickListener((v) -> {
+            selectedShortcuts.clear();
+            selectionOptionsContainer.setVisibility(View.GONE);
+            RecyclerView.Adapter<?> adapter = recyclerView.getAdapter();
+            if (adapter != null) adapter.notifyDataSetChanged();
+        });
+
+        view.findViewById(R.id.BTRemoveSelected).setOnClickListener((v) -> {
+            ContentDialog.confirm(getContext(), R.string.do_you_want_to_remove_this_file, () -> {
+                for (Shortcut shortcut : selectedShortcuts) shortcut.remove();
+                selectedShortcuts.clear();
+                selectionOptionsContainer.setVisibility(View.GONE);
+                refreshContent();
+            });
+        });
+    }
+
+    @Override
     public void refreshContent() {
         super.refreshContent();
+        if (selectionOptionsContainer != null) selectionOptionsContainer.setVisibility(selectedShortcuts.isEmpty() ? View.GONE : View.VISIBLE);
 
         Shortcut selectedFolder = !folderStack.isEmpty() ? folderStack.peek() : null;
         ArrayList<Shortcut> shortcuts = manager.loadShortcuts(selectedFolder);
@@ -75,29 +99,15 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
     }
 
     @Override
+    public boolean onOptionsMenuClicked() {
+        if (!folderStack.isEmpty()) selectedShortcuts.clear();
+        return super.onOptionsMenuClicked();
+    }
+
+    @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater menuInflater) {
         menuInflater.inflate(R.menu.shortcuts_menu, menu);
         refreshViewStyleMenuItem(menu.findItem(R.id.menu_item_view_style));
-    }
-
-
-    private void createFolder() {
-        clearClipboard();
-        if (manager.getContainers().isEmpty()) return;
-        CreateFolderDialog createFolderDialog = new CreateFolderDialog(manager);
-        createFolderDialog.setOnCreateFolderListener((container, name) -> {
-            File desktopDir = new File(container.getUserDir(), "Desktop");
-            File parent = !folderStack.isEmpty() ? folderStack.peek().file : desktopDir;
-            File file = new File(parent, name);
-            if (file.isDirectory()) {
-                AppUtils.showToast(getContext(), R.string.there_already_file_with_that_name);
-            }
-            else {
-                file.mkdir();
-                refreshContent();
-            }
-        });
-        createFolderDialog.show();
     }
 
     @Override
@@ -116,10 +126,10 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
         clearClipboard();
         File linkFile = shortcut.getLinkFile();
         File shortcutFile = new File(shortcut.file.getParentFile(), shortcut.file.getName());
-        File[] filesArr = {shortcutFile};
-        if (shortcut.file.isFile()) filesArr = ArrayUtils.concat(filesArr, new File[]{new File(linkFile.getParentFile(), linkFile.getName())});
+        File[] files = {shortcutFile};
+        if (shortcut.file.isFile()) files = ArrayUtils.concat(files, new File[]{new File(linkFile.getParentFile(), linkFile.getName())});
 
-        clipboard = new Clipboard(filesArr, cutMode);
+        clipboard = new Clipboard(files, cutMode);
         pasteButton.setVisibility(View.VISIBLE);
     }
 
@@ -136,8 +146,8 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
             createShortcutFromStorage();
             return true;
         }
-        else if (itemId == R.id.menu_item_new_folder) {
-            createFolder();
+        else if (itemId == R.id.menu_item_filter_shortcuts) {
+            showFilterShortcuts();
             return true;
         }
         else if (itemId == R.id.menu_item_import) {
@@ -189,22 +199,10 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
         }
         final Context context = getContext();
 
-        final ContentDialog dialog = new ContentDialog(context, R.layout.create_folder_dialog);
+        final ContentDialog dialog = new ContentDialog(context, R.layout.create_shortcut_dialog);
         dialog.setTitle(R.string.create_shortcut);
 
         final Spinner sContainer = dialog.findViewById(R.id.SContainer);
-        final EditText etName = dialog.findViewById(R.id.ETName);
-        etName.setVisibility(View.GONE);
-
-        // Hide the "Name" label
-        ViewGroup layout = (ViewGroup)etName.getParent();
-        for (int i = 0; i < layout.getChildCount(); i++) {
-            View child = layout.getChildAt(i);
-            if (child instanceof TextView && getString(R.string.name).equals(((TextView)child).getText().toString())) {
-                child.setVisibility(View.GONE);
-                break;
-            }
-        }
 
         ArrayList<String> items = new ArrayList<>();
         for (Container container : containers) items.add(container.getName());
@@ -229,6 +227,10 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
             }
         });
         dialog.show();
+    }
+
+    private void showFilterShortcuts(){
+
     }
 
     private void processSelectedExe(Container container, Uri uri) {
@@ -398,7 +400,11 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
             holder.imageView.setOnClickListener((v) -> runFromShortcut(item));
             holder.runButton.setOnClickListener((v) -> runFromShortcut(item));
             holder.menuButton.setOnClickListener((v) -> showListItemMenu(v, item));
-            holder.SelectItem.setOnClickListener((v) -> selectShortcut(item));
+
+            if (holder.SelectItem != null) {
+                holder.SelectItem.setSelected(selectedShortcuts.contains(item));
+                holder.SelectItem.setOnClickListener((v) -> selectShortcut(item));
+            }
         }
 
         @Override
@@ -513,13 +519,21 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
             listItemMenu.show();
         }
         private void selectShortcut(final Shortcut shortcut){
-
+            if (selectedShortcuts.contains(shortcut)) {
+                selectedShortcuts.remove(shortcut);
+            }
+            else {
+                selectedShortcuts.add(shortcut);
+            }
+            notifyDataSetChanged();
+            if (selectionOptionsContainer != null) selectionOptionsContainer.setVisibility(selectedShortcuts.isEmpty() ? View.GONE : View.VISIBLE);
         }
         private void runFromShortcut(Shortcut shortcut) {
             AppCompatActivity activity = (AppCompatActivity)getActivity();
             if (activity == null) return;
 
             if (shortcut.file.isDirectory()) {
+                selectedShortcuts.clear();
                 folderStack.push(shortcut);
                 refreshContent();
 

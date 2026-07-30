@@ -29,4 +29,32 @@
         android:src="@drawable/icon_paste"
         android:layout_margin="16dp"
         android:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/LLSelectionOptions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:visibility="gone">
+
+        <Button
+            android:id="@+id/BTCancelSelection"
+            style="@style/ButtonNeutral"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginRight="8dp"
+            android:text="@string/cancel" />
+
+        <Button
+            android:id="@+id/BTRemoveSelected"
+            style="@style/ButtonNeutral"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginLeft="8dp"
+            android:text="@string/remove" />
+    </LinearLayout>
 </FrameLayout>
