@@ -200,6 +200,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             itemId == R.id.menu_item_import ||
             itemId == R.id.menu_item_copy ||
             itemId == R.id.menu_item_cut ||
+            itemId == R.id.menu_item_filter_shortcuts ||
             itemId == R.id.menu_item_settings) {
             return super.onOptionsItemSelected(menuItem);
         }

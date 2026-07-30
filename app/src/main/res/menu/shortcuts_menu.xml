@@ -6,7 +6,7 @@
     <item
         android:icon="@drawable/icon_filter"
         android:id="@+id/menu_item_filter_shortcuts"
-        android:title="@string/new_folder"
+        android:title="@string/filter"
         app:showAsAction="ifRoom" />
 
     <item

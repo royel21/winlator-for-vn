@@ -874,10 +874,6 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         }
 
         if (graphicsDriver[0].equals(GraphicsDrivers.TURNIP)) {
-            // envVars.put("MESA_VK_WSI_PRESENT_MODE", "mailbox");
-            // envVars.put("VK_ICD_FILENAMES", rootDir.getPath() + "/usr/share/vulkan/icd.d/freedreno_icd.aarch64.json");
-            // envVars.put("MESA_VK_WSI_DEBUG", "sw");
-            // if (!envVars.has("TU_DEBUG")) envVars.put("TU_DEBUG", "sysmem");
             TurnipConfigDialog.setEnvVars(this, graphicsDriverConfig[0], envVars);
 
             if (changed) {

@@ -291,4 +291,5 @@
     <string name="full">Полный</string>
     <string name="renderer">Рендерер</string>
     <string name="update_patch">Update Patch</string>
+    <string name="clear_filter">Clear Filter</string>
 </resources>

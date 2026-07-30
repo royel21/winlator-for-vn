@@ -9,6 +9,8 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -58,18 +60,56 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
     private Container selectedContainerForShortcut;
     private final HashSet<Shortcut> selectedShortcuts = new HashSet<>();
     private View selectionOptionsContainer;
+    private EditText etFilter;
+    private View llFilter;
+    private String filterText = "";
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         viewStyle = ViewStyle.valueOf(preferences.getString("shortcuts_view_style", "GRID"));
+        filterText = preferences.getString("shortcuts_filter_text", "").toLowerCase(Locale.ENGLISH);
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         selectionOptionsContainer = view.findViewById(R.id.LLSelectionOptions);
+        llFilter = view.findViewById(R.id.LLFilter);
         
+        etFilter = view.findViewById(R.id.ETFilter);
+        final View btClearFilter = view.findViewById(R.id.remove_button);
+        if (etFilter != null) {
+            String savedFilterText = preferences.getString("shortcuts_filter_text", "");
+            etFilter.setText(savedFilterText);
+
+            if (btClearFilter != null) {
+                btClearFilter.setVisibility(!savedFilterText.isEmpty() ? View.VISIBLE : View.GONE);
+                btClearFilter.setOnClickListener((v) -> etFilter.setText(""));
+            }
+
+            etFilter.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    filterText = s.toString().toLowerCase(Locale.ENGLISH);
+                    if (btClearFilter != null) btClearFilter.setVisibility(s.length() > 0 ? View.VISIBLE : View.GONE);
+                    preferences.edit().putString("shortcuts_filter_text", s.toString()).apply();
+                    refreshContent();
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {}
+            });
+        }
+
+        if (llFilter != null) {
+            boolean filterVisible = preferences.getBoolean("shortcuts_filter_visible", false);
+            llFilter.setVisibility(filterVisible ? View.VISIBLE : View.GONE);
+        }
+
         view.findViewById(R.id.BTCancelSelection).setOnClickListener((v) -> {
             selectedShortcuts.clear();
             selectionOptionsContainer.setVisibility(View.GONE);
@@ -94,6 +134,17 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
 
         Shortcut selectedFolder = !folderStack.isEmpty() ? folderStack.peek() : null;
         ArrayList<Shortcut> shortcuts = manager.loadShortcuts(selectedFolder);
+
+        if (!filterText.isEmpty()) {
+            ArrayList<Shortcut> filteredShortcuts = new ArrayList<>();
+            for (Shortcut shortcut : shortcuts) {
+                if (shortcut.name.toLowerCase(Locale.ENGLISH).contains(filterText)) {
+                    filteredShortcuts.add(shortcut);
+                }
+            }
+            shortcuts = filteredShortcuts;
+        }
+
         recyclerView.setAdapter(new ShortcutsAdapter(shortcuts));
         emptyTextView.setVisibility(shortcuts.isEmpty() ? View.VISIBLE : View.GONE);
     }
@@ -230,7 +281,21 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
     }
 
     private void showFilterShortcuts(){
-
+        if (llFilter != null && etFilter != null) {
+            if (llFilter.getVisibility() == View.VISIBLE) {
+                llFilter.setVisibility(View.GONE);
+                etFilter.setText("");
+                filterText = "";
+                preferences.edit().putBoolean("shortcuts_filter_visible", false).apply();
+                refreshContent();
+            }
+            else {
+                llFilter.setVisibility(View.VISIBLE);
+                etFilter.requestFocus();
+                preferences.edit().putBoolean("shortcuts_filter_visible", true).apply();
+                AppUtils.showKeyboard((AppCompatActivity)getActivity());
+            }
+        }
     }
 
     private void processSelectedExe(Container container, Uri uri) {

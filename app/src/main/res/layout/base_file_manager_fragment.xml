@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
     <androidx.recyclerview.widget.RecyclerView
-        xmlns:app="http://schemas.android.com/apk/res-auto"
         android:id="@+id/RecyclerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scrollbars="vertical"
+        android:paddingBottom="100dp"
+        android:clipToPadding="false"
         app:layoutManager="LinearLayoutManager" />
 
     <TextView
@@ -28,33 +30,74 @@
         android:tint="#ffffff"
         android:src="@drawable/icon_paste"
         android:layout_margin="16dp"
+        android:layout_marginBottom="100dp"
         android:visibility="gone" />
 
     <LinearLayout
-        android:id="@+id/LLSelectionOptions"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:orientation="horizontal"
-        android:padding="16dp"
-        android:visibility="gone">
+        android:orientation="vertical">
 
-        <Button
-            android:id="@+id/BTCancelSelection"
-            style="@style/ButtonNeutral"
-            android:layout_width="0dp"
+        <LinearLayout
+            android:id="@+id/LLFilter"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginRight="8dp"
-            android:text="@string/cancel" />
+            android:layout_margin="16dp"
+            android:background="@drawable/floating_filter_background"
+            android:elevation="6dp"
+            android:padding="4dp"
+            android:gravity="center_vertical"
+            android:visibility="gone">
 
-        <Button
-            android:id="@+id/BTRemoveSelected"
-            style="@style/ButtonNeutral"
-            android:layout_width="0dp"
+            <EditText
+                android:id="@+id/ETFilter"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="@string/filter"
+                android:inputType="text"
+                android:background="@null"
+                android:paddingStart="12dp"
+                android:textColor="#FFFFFF"
+                android:importantForAutofill="no" />
+
+            <ImageView
+                android:id="@+id/remove_button"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:padding="4dp"
+                android:src="@drawable/remove_button"
+                android:background="?selectableItemBackgroundBorderless"
+                android:visibility="gone"
+                android:contentDescription="@string/clear_filter"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/LLSelectionOptions"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginLeft="8dp"
-            android:text="@string/remove" />
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:visibility="gone">
+
+            <Button
+                android:id="@+id/BTCancelSelection"
+                style="@style/ButtonNeutral"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginRight="8dp"
+                android:text="@string/cancel" />
+
+            <Button
+                android:id="@+id/BTRemoveSelected"
+                style="@style/ButtonNeutral"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginLeft="8dp"
+                android:text="@string/remove" />
+        </LinearLayout>
     </LinearLayout>
 </FrameLayout>

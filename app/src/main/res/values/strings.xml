@@ -421,4 +421,6 @@
     <string name="menu_button">Menu Button</string>
     <string name="run_button">Run Button</string>
     <string name="game_icon">Game Icon</string>
+    <string name="filter">Filter</string>
+    <string name="clear_filter">Clear Filter</string>
 </resources>
