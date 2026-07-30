@@ -125,6 +125,24 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
                 refreshContent();
             });
         });
+
+        view.findViewById(R.id.BTExportAll).setOnClickListener((View v)->{
+            if (selectedShortcuts.isEmpty()) return;
+            Context context = getContext();
+            File exportDir = new File(AppUtils.INTERNAL_STORAGE, "Winlator/Shortcuts");
+            if (!exportDir.exists()) exportDir.mkdirs();
+
+            for (Shortcut shortcut : new ArrayList<>(selectedShortcuts)) {
+                if (shortcut.file.isDirectory()) continue;
+                File outFile = new File(exportDir, shortcut.name + ".json");
+                manager.exportShortcutConfigAsync(shortcut, outFile, () -> {});
+            }
+
+            AppUtils.showToast(context, "Shortcuts exported to Winlator/Shortcuts");
+            selectedShortcuts.clear();
+            selectionOptionsContainer.setVisibility(View.GONE);
+            refreshContent();
+        });
     }
 
     @Override
