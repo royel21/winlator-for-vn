@@ -23,7 +23,7 @@ public class Container {
     public static final String DEFAULT_SCREEN_SIZE = "1280x720";
     public static final String DEFAULT_SCREEN_ORIENTATION = "landscape";
     public static final boolean DEFAULT_SWAP_RESOLUTION = false;
-    public static final String DEFAULT_AUDIO_DRIVER = AudioDrivers.PULSEAUDIO;
+    public static final String DEFAULT_AUDIO_DRIVER = AudioDrivers.ALSA;
     public static final String DEFAULT_DXWRAPPER = DXWrappers.DXVK;
     public static final String DEFAULT_WINCOMPONENTS = "direct3d=1,directsound=1,directmusic=1,directshow=1,directplay=0,xaudio=1,vcrun2005=0,vcrun2010=1,wmdecoder=1";
     public static final String FALLBACK_WINCOMPONENTS = "direct3d=0,directsound=0,directmusic=0,directshow=0,directplay=0,xaudio=0,vcrun2005=0,vcrun2010=0,wmdecoder=0";
