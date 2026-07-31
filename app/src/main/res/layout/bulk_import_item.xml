@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="8dp"
+    android:gravity="center_vertical">
+
+    <CheckBox
+        android:id="@+id/CheckBox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:layout_marginStart="8dp">
+
+        <TextView
+            android:id="@+id/TVName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textStyle="bold"
+            android:textColor="?attr/colorPrimaryVariant" />
+
+        <TextView
+            android:id="@+id/TVExe"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:textColor="?attr/colorSecondaryText" />
+    </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/BTChangeExe"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:src="@drawable/icon_edit"
+        android:background="?selectableItemBackgroundBorderless"
+        android:scaleType="centerInside"
+        android:padding="8dp"
+        app:tint="?attr/colorPrimaryVariant"
+        android:contentDescription="@string/edit" />
+
+</LinearLayout>

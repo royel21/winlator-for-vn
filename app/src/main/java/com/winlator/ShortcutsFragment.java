@@ -34,11 +34,13 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.winlator.container.Container;
 import com.winlator.container.Shortcut;
+import com.winlator.contentdialog.BulkImportDialog;
 import com.winlator.contentdialog.ContentDialog;
 import com.winlator.contentdialog.ShortcutSettingsDialog;
 import com.winlator.core.AppUtils;
 import com.winlator.core.ArrayUtils;
 import com.winlator.core.FileUtils;
+import com.winlator.core.GameFolderScanner;
 import com.winlator.core.StringUtils;
 import com.winlator.core.WineUtils;
 import com.winlator.win32.PEParser;
@@ -63,6 +65,7 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
     private EditText etFilter;
     private View llFilter;
     private String filterText = "";
+    private List<Shortcut> displayedShortcuts = new ArrayList<>();
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -109,6 +112,18 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
             boolean filterVisible = preferences.getBoolean("shortcuts_filter_visible", false);
             llFilter.setVisibility(filterVisible ? View.VISIBLE : View.GONE);
         }
+
+        view.findViewById(R.id.BTSelectAll).setOnClickListener((v) -> {
+            if (selectedShortcuts.containsAll(displayedShortcuts)) {
+                selectedShortcuts.removeAll(displayedShortcuts);
+            }
+            else {
+                selectedShortcuts.addAll(displayedShortcuts);
+            }
+            RecyclerView.Adapter<?> adapter = recyclerView.getAdapter();
+            if (adapter != null) adapter.notifyDataSetChanged();
+            if (selectionOptionsContainer != null) selectionOptionsContainer.setVisibility(selectedShortcuts.isEmpty() ? View.GONE : View.VISIBLE);
+        });
 
         view.findViewById(R.id.BTCancelSelection).setOnClickListener((v) -> {
             selectedShortcuts.clear();
@@ -163,6 +178,7 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
             shortcuts = filteredShortcuts;
         }
 
+        displayedShortcuts = shortcuts;
         recyclerView.setAdapter(new ShortcutsAdapter(shortcuts));
         emptyTextView.setVisibility(shortcuts.isEmpty() ? View.VISIBLE : View.GONE);
     }
@@ -272,30 +288,169 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
         dialog.setTitle(R.string.create_shortcut);
 
         final Spinner sContainer = dialog.findViewById(R.id.SContainer);
+        final Spinner sImportMethod = dialog.findViewById(R.id.SImportMethod);
 
-        ArrayList<String> items = new ArrayList<>();
-        for (Container container : containers) items.add(container.getName());
-        sContainer.setAdapter(new ArrayAdapter<>(context, android.R.layout.simple_spinner_dropdown_item, items));
+        ArrayList<String> containerNames = new ArrayList<>();
+        for (Container container : containers) containerNames.add(container.getName());
+        sContainer.setAdapter(new ArrayAdapter<>(context, android.R.layout.simple_spinner_dropdown_item, containerNames));
+
+        String[] importMethods = {"Single EXE", "Scan Folder for Games"};
+        sImportMethod.setAdapter(new ArrayAdapter<>(context, android.R.layout.simple_spinner_dropdown_item, importMethods));
 
         dialog.setOnConfirmCallback(() -> {
             int position = sContainer.getSelectedItemPosition();
             if (position >= 0) {
                 selectedContainerForShortcut = containers.get(position);
-                Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-                intent.addCategory(Intent.CATEGORY_OPENABLE);
-                intent.setType("*/*");
-                MainActivity activity = (MainActivity)getActivity();
-                if (activity != null) {
-                    activity.setOpenFileCallback((uri) -> {
-                        if (uri != null) {
-                            processSelectedExe(selectedContainerForShortcut, uri);
-                        }
-                    });
-                    activity.startActivityForResult(intent, MainActivity.OPEN_FILE_REQUEST_CODE);
+                int method = sImportMethod.getSelectedItemPosition();
+
+                if (method == 0) { // Single EXE
+                    Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                    intent.addCategory(Intent.CATEGORY_OPENABLE);
+                    intent.setType("*/*");
+                    MainActivity activity = (MainActivity)getActivity();
+                    if (activity != null) {
+                        activity.setOpenFileCallback((uri) -> {
+                            if (uri != null) processSelectedExe(selectedContainerForShortcut, uri);
+                        });
+                        activity.startActivityForResult(intent, MainActivity.OPEN_FILE_REQUEST_CODE);
+                    }
+                } else { // Scan Folder
+                    Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+                    MainActivity activity = (MainActivity)getActivity();
+                    if (activity != null) {
+                        activity.setOpenFileCallback((uri) -> {
+                            if (uri != null) scanFolderForGames(selectedContainerForShortcut, uri);
+                        });
+                        activity.startActivityForResult(intent, MainActivity.OPEN_FILE_REQUEST_CODE);
+                    }
                 }
             }
         });
         dialog.show();
+    }
+
+    private void scanFolderForGames(Container container, Uri uri) {
+        String path = FileUtils.getFilePathFromUri(uri);
+        if (path == null) path = uri.getPath();
+        if (path == null || path.isEmpty()) return;
+
+        File root = new File(path);
+        HashSet<String> existingExes = new HashSet<>();
+        ArrayList<Shortcut> existingShortcuts = manager.loadShortcuts(null);
+        for (Shortcut s : existingShortcuts) {
+            if (s.container.id == container.id) {
+                try {
+                    existingExes.add(s.file.getCanonicalPath());
+                } catch (IOException ignored) {}
+            }
+        }
+
+        List<GameFolderScanner.Candidate> candidates = GameFolderScanner.scan(root, existingExes);
+        if (candidates.isEmpty()) {
+            AppUtils.showToast(getContext(), "No games found in folder.");
+            return;
+        }
+
+        BulkImportDialog bulkDialog = new BulkImportDialog(getContext(), candidates);
+        bulkDialog.setOnConfirmBulkCallback(selectedCandidates -> {
+            for (GameFolderScanner.Candidate c : selectedCandidates) {
+                createShortcutForCandidate(container, c);
+            }
+            refreshContent();
+            AppUtils.showToast(getContext(), selectedCandidates.size() + " shortcuts created.");
+        });
+        bulkDialog.show();
+    }
+
+    private String saveShortcutIcon(Container container, File exeFile, String shortcutName) {
+        File gameFolder = exeFile.getParentFile();
+        if (gameFolder == null) return "";
+
+        Bitmap icon = null;
+        File[] icoFiles = gameFolder.listFiles((dir, fileName)-> {
+            String name = fileName.toLowerCase();
+            return name.endsWith(".ico") || name.endsWith(".png") ||  name.endsWith(".jpg") || name.endsWith(".bmp");
+        });
+
+        if(icoFiles != null){
+
+            for (File item : icoFiles) {
+                String name = item.getName();
+                if(name.toLowerCase().endsWith(".ico")){
+                    icon = com.winlator.win32.MSIcon.decodeFile(item);
+                    break;
+                }
+
+                if(name.toLowerCase().endsWith(".bmp")){
+                    icon = com.winlator.win32.MSBitmap.decodeFile(item);
+                    break;
+                }
+
+                if(name.toLowerCase().endsWith(".png") || name.toLowerCase().endsWith(".jpg")){
+                    icon = BitmapFactory.decodeFile(item.getPath());
+                    break;
+                }
+            }
+        }
+
+
+        if (icon == null) {
+            icon = PEParser.extractIcon(exeFile);
+        }
+
+        if (icon != null) {
+            String iconName = StringUtils.clearReservedChars(shortcutName).toLowerCase(Locale.ENGLISH);
+            File iconDir = container.getIconsDir(48);
+            if (!iconDir.exists()) iconDir.mkdirs();
+            File iconFile = new File(iconDir, iconName + ".png");
+            try (FileOutputStream out = new FileOutputStream(iconFile)) {
+                icon.compress(Bitmap.CompressFormat.PNG, 100, out);
+                return iconName;
+            } catch (IOException e) {
+                return "";
+            }
+        }
+        return "";
+    }
+
+    private void createShortcutForCandidate(Container container, GameFolderScanner.Candidate candidate) {
+        File gameFolder = candidate.exe.getParentFile();
+        if (gameFolder == null) return;
+
+        File libraryFolder = gameFolder.getParentFile();
+        File driveFolder = gameFolder;
+
+        if (libraryFolder != null && !libraryFolder.getAbsolutePath().equals(AppUtils.INTERNAL_STORAGE)) {
+            driveFolder = libraryFolder;
+        }
+
+        String driveFolderPath = StringUtils.removeEndSlash(driveFolder.getAbsolutePath());
+        if (!container.hasDrive(driveFolderPath)) {
+            container.addDrive(driveFolderPath);
+            container.saveData();
+        }
+
+        String dosPath = WineUtils.unixToDOSPath(candidate.exe.getAbsolutePath(), container);
+        if (!dosPath.contains(":")) return;
+
+        String iconName = saveShortcutIcon(container, candidate.exe, candidate.name);
+
+        JSONObject data = new JSONObject();
+        try {
+            data.put("name", candidate.name);
+            data.put("path", dosPath);
+            if (!iconName.isEmpty()) data.put("icon", iconName);
+
+            if (candidate.appId != null) {
+                JSONObject extraData = new JSONObject();
+                extraData.put("steamAppId", String.valueOf(candidate.appId));
+                data.put("extraData", extraData);
+            }
+
+            Shortcut selectedFolder = !folderStack.isEmpty() ? folderStack.peek() : null;
+            File destinationDir = selectedFolder != null ? selectedFolder.file : new File(container.getUserDir(), "Desktop");
+            manager.createShortcut(container, data, destinationDir);
+        } catch (JSONException ignored) {}
     }
 
     private void showFilterShortcuts(){
@@ -366,39 +521,7 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
              return;
         }
 
-        // Icon handling
-        Bitmap icon = null;
-        File[] icoFiles = gameFolder.listFiles((dir, filename) -> filename.toLowerCase().endsWith(".ico"));
-        if (icoFiles != null && icoFiles.length > 0) {
-            icon = com.winlator.win32.MSIcon.decodeFile(icoFiles[0]);
-        }
-
-        if (icon == null) {
-            File pngIcon = new File(gameFolder, "icon.png");
-            File jpgIcon = new File(gameFolder, "icon.jpg");
-            if (pngIcon.isFile()) {
-                icon = BitmapFactory.decodeFile(pngIcon.getPath());
-            } else if (jpgIcon.isFile()) {
-                icon = BitmapFactory.decodeFile(jpgIcon.getPath());
-            }
-        }
-
-        if (icon == null) {
-            icon = PEParser.extractIcon(exeFile);
-        }
-
-        String iconName = "";
-        if (icon != null) {
-            iconName = StringUtils.clearReservedChars(name).toLowerCase(Locale.ENGLISH);
-            File iconDir = container.getIconsDir(48);
-            if (!iconDir.exists()) iconDir.mkdirs();
-            File iconFile = new File(iconDir, iconName + ".png");
-            try (FileOutputStream out = new FileOutputStream(iconFile)) {
-                icon.compress(Bitmap.CompressFormat.PNG, 100, out);
-            } catch (IOException e) {
-                iconName = "";
-            }
-        }
+        String iconName = saveShortcutIcon(container, exeFile, name);
 
         JSONObject data = new JSONObject();
         try {

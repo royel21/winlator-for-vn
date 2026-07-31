@@ -80,34 +80,49 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:padding="16dp"
+            android:padding="4dp"
+            android:gravity="center_vertical"
             android:visibility="gone">
 
             <Button
                 android:id="@+id/BTCancelSelection"
                 style="@style/ButtonNeutral"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="40dp"
                 android:layout_weight="1"
-                android:layout_marginRight="8dp"
+                android:layout_marginEnd="4dp"
                 android:text="@string/cancel" />
 
             <Button
-                android:id="@+id/BTRemoveSelected"
+                android:id="@+id/BTSelectAll"
                 style="@style/ButtonNeutral"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_width="10dp"
+                android:layout_height="40dp"
                 android:layout_weight="1"
-                android:layout_marginLeft="8dp"
-                android:text="@string/remove" />
+                android:layout_marginEnd="4dp"
+                android:text="@string/select_all" />
+
             <Button
                 android:id="@+id/BTExportAll"
                 style="@style/ButtonNeutral"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_width="10dp"
+                android:layout_height="40dp"
                 android:layout_weight="1"
-                android:layout_marginLeft="8dp"
+                android:layout_marginEnd="4dp"
                 android:text="@string/export_all" />
+
+            <!-- Remove shown as icon, reduced height -->
+            <ImageView
+                android:id="@+id/BTRemoveSelected"
+                android:layout_width="0dp"
+                android:layout_height="30dp"
+                android:layout_weight="0.4"
+                android:src="@drawable/icon_remove"
+                app:tint="#FFFFFF"
+                android:scaleType="centerInside"
+                android:contentDescription="@string/remove" />
         </LinearLayout>
+
+
     </LinearLayout>
 </FrameLayout>

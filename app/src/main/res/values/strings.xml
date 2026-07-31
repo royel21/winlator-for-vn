@@ -423,4 +423,5 @@
     <string name="game_icon">Game Icon</string>
     <string name="filter">Filter</string>
     <string name="clear_filter">Clear Filter</string>
+    <string name="select_all">Select All</string>
 </resources>

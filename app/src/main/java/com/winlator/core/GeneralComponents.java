@@ -28,7 +28,7 @@ import java.util.Locale;
 
 public abstract class GeneralComponents {
     public enum InstallMode {DOWNLOAD, FILE, BOTH}
-    private static final String INSTALLABLE_COMPONENTS_URL = "http://cdn4.52emu.cn/wlt/v10/installable_components/%s";
+    private static final String INSTALLABLE_COMPONENTS_URL = "http://";
 
     public enum Type {
         BOX64, TURNIP, DXVK, VKD3D, WINED3D, SOUNDFONT, ADRENOTOOLS_DRIVER;
@@ -157,7 +157,7 @@ public abstract class GeneralComponents {
     }
 
     /**
-     * 从 WCP 系统获取已安装的组件版本列表
+     * Get the list of installed component versions from the WCP system
      */
     private static List<String> getWCPInstalledComponentNames(Type type, Context context) {
         List<String> result = new ArrayList<>();
@@ -170,7 +170,7 @@ public abstract class GeneralComponents {
                 List<ContentProfile> profiles = manager.getProfiles(wcpType);
                 if (profiles != null) {
                     for (ContentProfile profile : profiles) {
-                        // 只添加本地已安装的组件（remoteUrl 为 null）
+                        /// Only add locally installed components (remoteUrl is null)
                         if (profile.remoteUrl == null) {
                             result.add(profile.verName);
                         }
@@ -205,13 +205,13 @@ public abstract class GeneralComponents {
         File componentDir = getComponentDir(type, context);
         ArrayList<String> result = new ArrayList<>();
 
-        // 从传统路径读取已安装组件
+        // Read installed components from the default path
         String[] names;
         if (componentDir.isDirectory() && (names = componentDir.list()) != null) {
             for (String name : names) result.add(parseDisplayText(type, name));
         }
 
-        // 从 WCP 系统读取已安装组件
+        // Read installed components from the WCP system
         List<String> wcpNames = getWCPInstalledComponentNames(type, context);
         for (String name : wcpNames) {
             if (!result.contains(name)) {
@@ -267,12 +267,12 @@ public abstract class GeneralComponents {
     public static void extractFile(Type type, Context context, String identifier, String defaultVersion, TarCompressorUtils.OnExtractFileListener onExtractFileListener) {
         File destination = type.getDestination(context);
 
-        // 先尝试从 WCP 系统提取
+        // First, try to extract from the WCP system
         if (extractFromWCP(type, context, identifier, destination, onExtractFileListener)) {
             return;
         }
 
-        // 如果 WCP 中没有，则从传统路径提取
+        // If not in WCP, then extract from the default path
         if (isBuiltinComponent(type, identifier)) {
             String sourcePath = type.assetFolder()+"/"+type.lowerName()+"-"+identifier+".tzst";
             TarCompressorUtils.extract(TarCompressorUtils.Type.ZSTD, context, sourcePath, destination, onExtractFileListener);
@@ -289,7 +289,7 @@ public abstract class GeneralComponents {
     }
 
     /**
-     * 从 WCP 系统提取组件文件
+     * /Extract component files from the WCP system
      */
     private static boolean extractFromWCP(Type type, Context context, String identifier, File destination, TarCompressorUtils.OnExtractFileListener onExtractFileListener) {
         try {
@@ -302,7 +302,7 @@ public abstract class GeneralComponents {
             List<ContentProfile> profiles = manager.getProfiles(wcpType);
             if (profiles == null) return false;
             
-            // 查找匹配的组件
+            // Find matching components
             ContentProfile targetProfile = null;
             for (ContentProfile profile : profiles) {
                 if (profile.remoteUrl == null && profile.verName.equals(identifier)) {
@@ -313,8 +313,9 @@ public abstract class GeneralComponents {
             
             if (targetProfile == null) return false;
             
-            // 应用组件（复制文件到目标位置）
-            // 注意：applyContent 会将文件复制到 rootfs 中的正确位置，不需要指定 destination
+            // Application component (copy files to target location)
+            // Note: applyContent will copy the files to the correct location in the rootfs,
+            // no need to specify the destination
             manager.applyContent(targetProfile);
             return true;
         } catch (Exception e) {
@@ -328,8 +329,8 @@ public abstract class GeneralComponents {
     }
 
     public static void initViews(final Type type, View toolbox, final Spinner spinner, final String selectedItem, final String defaultItem) {
-        // WCP 系统统一管理组件，不再需要工具箱按钮
-        // 隐藏工具箱
+        // WCP system unified management component, toolbox button is no longer needed
+        // Hide toolbox
         if (toolbox != null) {
             toolbox.setVisibility(View.GONE);
         }
