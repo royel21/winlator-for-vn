@@ -75,6 +75,7 @@ public abstract class BaseFileManagerFragment<T> extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.base_file_manager_fragment, container, false);
         recyclerView = rootView.findViewById(R.id.RecyclerView);
+        recyclerView.setHasFixedSize(true);
         emptyTextView = rootView.findViewById(R.id.TVEmptyText);
 
         pasteButton = rootView.findViewById(R.id.BTPaste);

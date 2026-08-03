@@ -4,6 +4,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
 
+import android.util.LruCache;
+
 import com.winlator.core.FileUtils;
 import com.winlator.core.StringUtils;
 import com.winlator.winhandler.GamepadHandler;
@@ -18,11 +20,12 @@ public class Shortcut {
     public final Container container;
     public final String name;
     public final String path;
-    public final Bitmap icon;
+    private Bitmap icon;
     public final File file;
     public final File iconFile;
     public final String wmClass;
     private final JSONObject extraData = new JSONObject();
+    private static final LruCache<String, Bitmap> iconCache = new LruCache<>(64);
 
     public Shortcut(Container container, File file) {
         this.container = container;
@@ -60,10 +63,7 @@ public class Shortcut {
                         if (key.equals("Icon")) {
                             for (short iconSize : iconSizes) {
                                 iconFile = new File(container.getIconsDir(iconSize), value+".png");
-                                if (iconFile.isFile()){
-                                    icon = BitmapFactory.decodeFile(iconFile.getPath());
-                                    break;
-                                }
+                                if (iconFile.isFile()) break;
                             }
                         }
                         if (key.equals("StartupWMClass")) wmClass = value;
@@ -78,7 +78,6 @@ public class Shortcut {
             }
 
             this.name = FileUtils.getBasename(file.getPath());
-            this.icon = icon;
             this.iconFile = iconFile;
             this.wmClass = wmClass;
 
@@ -210,6 +209,18 @@ public class Shortcut {
         }
 
         FileUtils.writeString(file, content);
+    }
+
+    public Bitmap getIcon() {
+        if (icon == null && iconFile != null && iconFile.exists()) {
+            String cacheKey = iconFile.getAbsolutePath();
+            icon = iconCache.get(cacheKey);
+            if (icon == null) {
+                icon = BitmapFactory.decodeFile(cacheKey);
+                if (icon != null) iconCache.put(cacheKey, icon);
+            }
+        }
+        return icon;
     }
 
     public File getLinkFile() {

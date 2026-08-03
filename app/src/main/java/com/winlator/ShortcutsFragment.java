@@ -57,6 +57,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.Executors;
 
 public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
     private Container selectedContainerForShortcut;
@@ -66,6 +67,7 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
     private View llFilter;
     private String filterText = "";
     private List<Shortcut> displayedShortcuts = new ArrayList<>();
+    private ShortcutsAdapter adapter;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -165,22 +167,38 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
         super.refreshContent();
         if (selectionOptionsContainer != null) selectionOptionsContainer.setVisibility(selectedShortcuts.isEmpty() ? View.GONE : View.VISIBLE);
 
-        Shortcut selectedFolder = !folderStack.isEmpty() ? folderStack.peek() : null;
-        ArrayList<Shortcut> shortcuts = manager.loadShortcuts(selectedFolder);
+        final Shortcut selectedFolder = !folderStack.isEmpty() ? folderStack.peek() : null;
+        final Activity activity = getActivity();
+        if (activity == null) return;
 
-        if (!filterText.isEmpty()) {
-            ArrayList<Shortcut> filteredShortcuts = new ArrayList<>();
-            for (Shortcut shortcut : shortcuts) {
-                if (shortcut.name.toLowerCase(Locale.ENGLISH).contains(filterText)) {
-                    filteredShortcuts.add(shortcut);
+        if (displayedShortcuts.isEmpty()) preloaderDialog.show(R.string.loading);
+        Executors.newSingleThreadExecutor().execute(() -> {
+            final ArrayList<Shortcut> shortcuts = manager.loadShortcuts(selectedFolder);
+            if (!filterText.isEmpty()) {
+                ArrayList<Shortcut> filteredShortcuts = new ArrayList<>();
+                for (Shortcut shortcut : shortcuts) {
+                    if (shortcut.name.toLowerCase(Locale.ENGLISH).contains(filterText)) {
+                        filteredShortcuts.add(shortcut);
+                    }
                 }
+                shortcuts.clear();
+                shortcuts.addAll(filteredShortcuts);
             }
-            shortcuts = filteredShortcuts;
-        }
 
-        displayedShortcuts = shortcuts;
-        recyclerView.setAdapter(new ShortcutsAdapter(shortcuts));
-        emptyTextView.setVisibility(shortcuts.isEmpty() ? View.VISIBLE : View.GONE);
+            activity.runOnUiThread(() -> {
+                displayedShortcuts = shortcuts;
+                if (adapter == null) {
+                    adapter = new ShortcutsAdapter(shortcuts);
+                    recyclerView.setAdapter(adapter);
+                }
+                else {
+                    adapter.setData(shortcuts);
+                    adapter.notifyDataSetChanged();
+                }
+                emptyTextView.setVisibility(shortcuts.isEmpty() ? View.VISIBLE : View.GONE);
+                if (preloaderDialog.isShowing()) preloaderDialog.close();
+            });
+        });
     }
 
     @Override
@@ -505,8 +523,17 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
 
         String driveFolderPath = StringUtils.removeEndSlash(driveFolder.getAbsolutePath());
 
-        // Add drive folder as disk if not already present
-        if (!container.hasDrive(driveFolderPath)) {
+        // Check if an existing drive is an ancestor of the EXE file
+        boolean driveExists = false;
+        for (com.winlator.container.Drive drive : container.drivesIterator()) {
+            if (exeFile.getAbsolutePath().startsWith(drive.path)) {
+                driveExists = true;
+                break;
+            }
+        }
+
+        // Add drive folder as disk if no existing drive covers it
+        if (!driveExists) {
             container.addDrive(driveFolderPath);
             container.saveData();
             AppUtils.showToast(activity, activity.getString(R.string.game_folder_added_as_disk));
@@ -553,7 +580,11 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
     }
 
     private class ShortcutsAdapter extends RecyclerView.Adapter<ShortcutsAdapter.ViewHolder> {
-        private final List<Shortcut> data;
+        private List<Shortcut> data;
+
+        public void setData(List<Shortcut> data) {
+            this.data = data;
+        }
 
         private class ViewHolder extends RecyclerView.ViewHolder {
             private final ImageView runButton;
@@ -589,11 +620,12 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
             final Shortcut item = data.get(position);
 
-            if (item.icon == null) {
+            Bitmap icon = item.getIcon();
+            if (icon == null) {
                 int iconResId = item.file.isDirectory() ? R.drawable.container_folder : R.drawable.container_file_link;
                 holder.imageView.setImageResource(iconResId);
             }
-            else holder.imageView.setImageBitmap(item.icon);
+            else holder.imageView.setImageBitmap(icon);
 
             holder.title.setText(item.name);
             holder.subtitle.setText(item.container.getName());
@@ -603,13 +635,13 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
             }
             else holder.runButton.setImageResource(R.drawable.icon_run);
 
-            holder.imageView.setOnClickListener((v) -> runFromShortcut(item));
-            holder.runButton.setOnClickListener((v) -> runFromShortcut(item));
-            holder.menuButton.setOnClickListener((v) -> showListItemMenu(v, item));
+            holder.imageView.setOnClickListener((v) -> runFromShortcut(data.get(holder.getBindingAdapterPosition())));
+            holder.runButton.setOnClickListener((v) -> runFromShortcut(data.get(holder.getBindingAdapterPosition())));
+            holder.menuButton.setOnClickListener((v) -> showListItemMenu(v, data.get(holder.getBindingAdapterPosition())));
 
             if (holder.SelectItem != null) {
                 holder.SelectItem.setSelected(selectedShortcuts.contains(item));
-                holder.SelectItem.setOnClickListener((v) -> selectShortcut(item));
+                holder.SelectItem.setOnClickListener((v) -> selectShortcut(data.get(holder.getBindingAdapterPosition())));
             }
         }
 
