@@ -99,6 +99,7 @@ public abstract class BaseFileManagerFragment<T> extends Fragment {
     public void setViewStyle(ViewStyle viewStyle) {
         this.viewStyle = viewStyle;
         viewStyleNeedsUpdate = true;
+        if (recyclerView != null) recyclerView.getRecycledViewPool().clear();
         refreshContent();
     }
 

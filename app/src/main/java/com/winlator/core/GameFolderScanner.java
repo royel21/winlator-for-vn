@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 
 public class GameFolderScanner {
     private static final String TAG = "GameFolderScanner";
-    private static final int MAX_DEPTH = 2; // User requested max depth 2
+    private static final int MAX_DEPTH = 3; // User requested max depth 2
     private static final int CONFIDENT_SCORE = 60;
     private static final int AMBIGUOUS_MARGIN = 15;
     private static final int MAX_ALTERNATIVES = 20;
@@ -22,9 +22,10 @@ public class GameFolderScanner {
         "_commonredist", "commonredist", "redist", "redistributable", "redistributables",
         "directx", "dotnet", "dotnetfx", "vcredist", "vc_redist", "prerequisites", "prereq",
         "installer", "installers", "support", "extras", "docs", "documentation", "manual",
-        "soundtrack", "ost", "artbook", "bonus", "dlc", "mods", "saves", "savegames",
+        "soundtrack", "ost", "artbook", "bonus", "dlc", "mods", "saves", "savegames", "savedatas",
         "crashreportclient", "easyanticheat", "battleye", "punkbuster", "steamworks shared",
-        "Sound", "BGM"
+        "Sound", "bgm", "music", "voice", "voices", "video", "videos", "cutscenes", "cinematics",
+        "www", "locales", "swiftshader", "plugin", "movie", "koe", "mov", "wav", "wave"
     ));
 
     private static final Pattern JUNK_EXE_RE = Pattern.compile("(?i)^(unins\\w*|setup|install\\w*|vc_?redist.*|vcredist.*|dxsetup|dxwebsetup|directx.*|oalinst|openal.*|dotnetfx.*|ndp\\d.*|unitycrashhandler\\d*|crashreport\\w*|crashpad\\w*|crashsender\\w*|easyanticheat\\w*|eac\\w*|battleye\\w*|beservice\\w*|punkbuster\\w*|steamerrorreporter\\d*|gameoverlayui|touchup|cleanup|config|settings|benchmark|activation\\w*|register\\w*|readme|report\\w*|.*_debug|.*-debug)$");
@@ -120,8 +121,9 @@ public class GameFolderScanner {
         List<File> result = new ArrayList<>();
         for (File entry : entries) {
             String nameLower = entry.getName().toLowerCase();
-            if (entry.isFile() && entry.getName().toLowerCase().endsWith(".exe")) {
-                if (EXCLUDE_EXE.matcher(nameLower).find() || JUNK_EXE_RE.matcher(FileUtils.getBasename(entry.getName())).matches()) {
+            if (entry.isFile() && nameLower.endsWith(".exe")) {
+                if (EXCLUDE_EXE.matcher(nameLower).find() || JUNK_EXE_RE.matcher(FileUtils.getBasename(
+                        nameLower)).matches()) {
                     continue;
                 }
                 result.add(entry);

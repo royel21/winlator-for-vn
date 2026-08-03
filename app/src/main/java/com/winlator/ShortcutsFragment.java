@@ -609,10 +609,15 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
             this.data = data;
         }
 
+        @Override
+        public int getItemViewType(int position) {
+            return viewStyle.ordinal();
+        }
+
         @NonNull
         @Override
         public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            int resource = viewStyle == ViewStyle.LIST ? R.layout.file_list_item : R.layout.file_grid_item;
+            int resource = viewType == ViewStyle.LIST.ordinal() ? R.layout.file_list_item : R.layout.file_grid_item;
             return new ViewHolder(LayoutInflater.from(parent.getContext()).inflate(resource, parent, false));
         }
 
