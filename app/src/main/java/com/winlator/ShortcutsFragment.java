@@ -371,6 +371,22 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
 
         BulkImportDialog bulkDialog = new BulkImportDialog(getContext(), candidates);
         bulkDialog.setOnConfirmBulkCallback(selectedCandidates -> {
+            if (!selectedCandidates.isEmpty()) {
+                boolean driveExists = false;
+                String rootPath = StringUtils.removeEndSlash(root.getAbsolutePath());
+                for (com.winlator.container.Drive drive : container.drivesIterator()) {
+                    if (rootPath.startsWith(drive.path)) {
+                        driveExists = true;
+                        break;
+                    }
+                }
+
+                if (!driveExists && !rootPath.equals(AppUtils.INTERNAL_STORAGE)) {
+                    container.addDrive(rootPath);
+                    container.saveData();
+                }
+            }
+
             for (GameFolderScanner.Candidate c : selectedCandidates) {
                 createShortcutForCandidate(container, c);
             }
@@ -443,7 +459,18 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
         }
 
         String driveFolderPath = StringUtils.removeEndSlash(driveFolder.getAbsolutePath());
-        if (!container.hasDrive(driveFolderPath)) {
+
+        // Check if an existing drive is an ancestor of the EXE file
+        boolean driveExists = false;
+        for (com.winlator.container.Drive drive : container.drivesIterator()) {
+            if (candidate.exe.getAbsolutePath().startsWith(drive.path)) {
+                driveExists = true;
+                break;
+            }
+        }
+
+        // Add drive folder as disk if no existing drive covers it
+        if (!driveExists) {
             container.addDrive(driveFolderPath);
             container.saveData();
         }
