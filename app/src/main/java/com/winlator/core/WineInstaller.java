@@ -128,22 +128,18 @@ public abstract class WineInstaller {
         }
 
         File wineBin = new File(binDir, "wine");
-        File wineBin64 = new File(binDir, "wine64");
 
         if (!wineBin.isFile()) {
             callback.call(null);
             return;
         }
 
-        final boolean is64Bit = (wineBin64.isFile() && ElfHelper.is64Bit(wineBin64)) || ElfHelper.is64Bit(wineBin);
-        if (!is64Bit) {
-            callback.call(null);
-            return;
-        }
+        final String arch = ElfHelper.is64Bit(wineBin) ? "x86_64" : "x86";
 
         RootFS rootFS = RootFS.find(context);
         File rootDir = rootFS.getRootDir();
-        String wineBinPath = wineBin64.isFile() ? wineBin64.getPath() : wineBin.getPath();
+        String wineBinAbsPath = wineBin.getPath();
+        String wineBinRelPath = FileUtils.toRelativePath(rootDir.getPath(), wineBinAbsPath);
         final String winePath = wineDir.getPath();
 
         final AtomicReference<WineInfo> wineInfoRef = new AtomicReference<>();
@@ -153,8 +149,6 @@ public abstract class WineInstaller {
             if (matcher.find()) {
                 String version = matcher.group(1);
                 String subversion = matcher.groupCount() >= 2 ? matcher.group(2) : null;
-                // 从路径中判断架构
-                String arch = winePath.contains("arm64ec") ? "arm64ec" : "x86_64";
                 wineInfoRef.set(new WineInfo(version, subversion, arch, winePath));
             }
         };
@@ -167,7 +161,7 @@ public abstract class WineInstaller {
 
         XEnvironment environment = new XEnvironment(context, rootFS);
         GuestProgramLauncherComponent guestProgramLauncherComponent = new GuestProgramLauncherComponent();
-        guestProgramLauncherComponent.setGuestExecutable(wineBinPath+" --version");
+        guestProgramLauncherComponent.setGuestExecutable(wineBinAbsPath+" --version");
         guestProgramLauncherComponent.setTerminationCallback((status) -> {
             callback.call(wineInfoRef.get());
             ProcessHelper.removeDebugCallback(debugCallback);
