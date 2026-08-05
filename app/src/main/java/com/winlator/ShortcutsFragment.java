@@ -375,13 +375,13 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
                 boolean driveExists = false;
                 String rootPath = StringUtils.removeEndSlash(root.getAbsolutePath());
                 for (com.winlator.container.Drive drive : container.drivesIterator()) {
-                    if (rootPath.startsWith(drive.path)) {
+                    if (!isStorageRoot(drive.path) && rootPath.startsWith(drive.path)) {
                         driveExists = true;
                         break;
                     }
                 }
 
-                if (!driveExists && !rootPath.equals(AppUtils.INTERNAL_STORAGE)) {
+                if (!driveExists && !isStorageRoot(rootPath)) {
                     container.addDrive(rootPath);
                     container.saveData();
                 }
@@ -447,6 +447,15 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
         return "";
     }
 
+    private boolean isStorageRoot(String path) {
+        if (path.equals(AppUtils.INTERNAL_STORAGE)) return true;
+        ArrayList<String> externalPaths = FileUtils.getExternalStoragePaths(getContext());
+        for (String externalPath : externalPaths) {
+            if (path.equals(externalPath)) return true;
+        }
+        return false;
+    }
+
     private void createShortcutForCandidate(Container container, GameFolderScanner.Candidate candidate) {
         File gameFolder = candidate.exe.getParentFile();
         if (gameFolder == null) return;
@@ -454,7 +463,7 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
         File libraryFolder = gameFolder.getParentFile();
         File driveFolder = gameFolder;
 
-        if (libraryFolder != null && !libraryFolder.getAbsolutePath().equals(AppUtils.INTERNAL_STORAGE)) {
+        if (libraryFolder != null && !isStorageRoot(libraryFolder.getAbsolutePath())) {
             driveFolder = libraryFolder;
         }
 
@@ -463,7 +472,7 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
         // Check if an existing drive is an ancestor of the EXE file
         boolean driveExists = false;
         for (com.winlator.container.Drive drive : container.drivesIterator()) {
-            if (candidate.exe.getAbsolutePath().startsWith(drive.path)) {
+            if (!isStorageRoot(drive.path) && candidate.exe.getAbsolutePath().startsWith(drive.path)) {
                 driveExists = true;
                 break;
             }
@@ -544,7 +553,7 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
         File libraryFolder = gameFolder.getParentFile();
         File driveFolder = gameFolder;
 
-        if (libraryFolder != null && !libraryFolder.getAbsolutePath().equals(AppUtils.INTERNAL_STORAGE)) {
+        if (libraryFolder != null && !isStorageRoot(libraryFolder.getAbsolutePath())) {
             driveFolder = libraryFolder;
         }
 
@@ -553,7 +562,7 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
         // Check if an existing drive is an ancestor of the EXE file
         boolean driveExists = false;
         for (com.winlator.container.Drive drive : container.drivesIterator()) {
-            if (exeFile.getAbsolutePath().startsWith(drive.path)) {
+            if (!isStorageRoot(drive.path) && exeFile.getAbsolutePath().startsWith(drive.path)) {
                 driveExists = true;
                 break;
             }
