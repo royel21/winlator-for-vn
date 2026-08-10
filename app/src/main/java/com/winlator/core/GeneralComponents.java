@@ -338,7 +338,7 @@ public abstract class GeneralComponents {
         loadSpinner(type, spinner, selectedItem, defaultItem);
     }
 
-    private static void loadSpinner(Type type, Spinner spinner, String selectedItem, String defaultItem) {
+    public static void loadSpinner(Type type, Spinner spinner, String selectedItem, String defaultItem) {
         ArrayList<String> items = getBuiltinComponentNames(type);
         items.addAll(getInstalledComponentNames(type, spinner.getContext()));
 

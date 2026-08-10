@@ -17,8 +17,10 @@ import com.winlator.container.GraphicsDrivers;
 import com.winlator.container.Shortcut;
 import com.winlator.core.AppUtils;
 import com.winlator.container.DXWrapperPicker;
+import com.winlator.core.DefaultVersion;
 import com.winlator.core.EnvVars;
 import com.winlator.container.GraphicsDriverPicker;
+import com.winlator.core.GeneralComponents;
 import com.winlator.core.StringUtils;
 import com.winlator.inputcontrols.ControlsProfile;
 import com.winlator.inputcontrols.InputControlsManager;
@@ -88,6 +90,9 @@ public class ShortcutSettingsDialog extends ContentDialog {
         final Spinner sBox64Preset = findViewById(R.id.SBox64Preset);
         Box64PresetManager.loadSpinner(sBox64Preset, shortcut.getExtra("box64Preset", shortcut.container.getBox64Preset()));
 
+        final Spinner sBox64Version = findViewById(R.id.SBox64Version);
+        GeneralComponents.loadSpinner(GeneralComponents.Type.BOX64, sBox64Version, shortcut.getExtra("box64Version", shortcut.container.getBox64Version()), DefaultVersion.BOX64);
+
         final Spinner sControlsProfile = findViewById(R.id.SControlsProfile);
         loadControlsProfileSpinner(sControlsProfile, shortcut.getExtra("controlsProfile", "0"));
 
@@ -151,6 +156,9 @@ public class ShortcutSettingsDialog extends ContentDialog {
 
                 String box64Preset = Box64PresetManager.getSpinnerSelectedId(sBox64Preset);
                 shortcut.putExtra("box64Preset", !box64Preset.equals(shortcut.container.getBox64Preset()) ? box64Preset : null);
+
+                String box64Version = StringUtils.parseIdentifier(sBox64Version.getSelectedItem());
+                shortcut.putExtra("box64Version", !box64Version.equals(shortcut.container.getBox64Version()) ? box64Version : null);
 
                 ArrayList<ControlsProfile> profiles = inputControlsManager.getProfiles(true);
                 int controlsProfile = sControlsProfile.getSelectedItemPosition() > 0 ? profiles.get(sControlsProfile.getSelectedItemPosition()-1).id : 0;

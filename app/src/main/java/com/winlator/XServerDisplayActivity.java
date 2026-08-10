@@ -620,7 +620,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             if (!envVars.has("WINEESYNC")) envVars.put("WINEESYNC", "1");
 
             guestProgramLauncherComponent.setBox64Preset(shortcut != null ? shortcut.getExtra("box64Preset", container.getBox64Preset()) : container.getBox64Preset());
-            guestProgramLauncherComponent.setBox64Version(container.getBox64Version());
+            guestProgramLauncherComponent.setBox64Version(shortcut != null ? shortcut.getExtra("box64Version", container.getBox64Version()) : container.getBox64Version());
             guestProgramLauncherComponent.setWineVersion(container.getWineVersion());
         }
 
