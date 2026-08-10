@@ -17,7 +17,6 @@ import java.util.Iterator;
 public abstract class Box64PresetManager {
     public static EnvVars getEnvVars(Context context, String id) {
         EnvVars envVars = new EnvVars();
-
         if (id.equals(Box64Preset.STABILITY)) {
             envVars.put("BOX64_DYNAREC_SAFEFLAGS", "2");
             envVars.put("BOX64_DYNAREC_FASTNAN", "0");
@@ -78,6 +77,7 @@ public abstract class Box64PresetManager {
                 }
             }
         }
+        envVars.put("BOX64_NOBANNER", "1");
 
         return envVars;
     }

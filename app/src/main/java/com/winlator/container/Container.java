@@ -19,7 +19,7 @@ import java.io.File;
 import java.util.Iterator;
 
 public class Container {
-    public static final String DEFAULT_ENV_VARS = "LC_ALL=ja_JP.utf8 ZINK_DESCRIPTORS=lazy ZINK_DEBUG=compact MESA_SHADER_CACHE_MAX_SIZE=512MB TU_DEBUG=sysmem,noconform,nofsdt,gmem MESA_GL_VERSION_OVERRIDE=3.1 TZ=Asia/Tokyo MESA_VK_WSI_DEBUG=sw MESA_EXTENSION_MAX_YEAR=2025 BOX64_DYNAREC_WEAKBARRIER=-1 mesa_glthread=true WINEESYNC=1 MESA_SHADER_CACHE_DISABLE=false DXVK_ASYNC=1 BOX64_MMAP32=1 LIBGL_ALWAYS_SOFTWARE=0 DRAW_USE_LLVM=0 GST_DEBUG=0 MANGOHUD=0 MANGOHUD_CONFIG=fps,frame_timing=0,ram,gpu_name,vulkan_driver,cpu_mhz,arch,exec_name,swap,font_size=24,engine_version,position=top-left,background_alpha=0.0,hud_no_margin BOX64_NOBANNER=1";
+    public static final String DEFAULT_ENV_VARS = "LC_ALL=ja_JP.utf8 ZINK_DESCRIPTORS=lazy ZINK_DEBUG=compact MESA_SHADER_CACHE_MAX_SIZE=512MB TU_DEBUG=sysmem,noconform,nofsdt,gmem MESA_GL_VERSION_OVERRIDE=3.1 TZ=Asia/Tokyo MESA_VK_WSI_DEBUG=sw MESA_EXTENSION_MAX_YEAR=2025 BOX64_DYNAREC_WEAKBARRIER=-1 mesa_glthread=true WINEESYNC=1 MESA_SHADER_CACHE_DISABLE=false DXVK_ASYNC=1 BOX64_MMAP32=1 LIBGL_ALWAYS_SOFTWARE=0 DRAW_USE_LLVM=0 GST_DEBUG=0 MANGOHUD=0 MANGOHUD_CONFIG=fps,frame_timing=0,ram,gpu_name,vulkan_driver,cpu_mhz,arch,exec_name,swap,font_size=24,engine_version,position=top-left,background_alpha=0.0,hud_no_margin";
     public static final String DEFAULT_SCREEN_SIZE = "1280x720";
     public static final String DEFAULT_SCREEN_ORIENTATION = "landscape";
     public static final boolean DEFAULT_SWAP_RESOLUTION = false;
