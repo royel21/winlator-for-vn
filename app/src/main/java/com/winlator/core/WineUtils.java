@@ -94,7 +94,7 @@ public abstract class WineUtils {
 
             File corefontsAddedFile = new File(userConfigDir, "corefonts.added");
             if (!corefontsAddedFile.isFile()) {
-                setupSystemFonts(registryEditor);
+                setupSystemFonts(registryEditor, wineInfo.path);
                 FileUtils.writeString(corefontsAddedFile, String.valueOf(System.currentTimeMillis()));
             }
         }
@@ -105,8 +105,22 @@ public abstract class WineUtils {
 
         boolean isMainWineVersion = WineInfo.isMainWineVersion(wineInfo.identifier());
 
-        File wineSystem32Dir = new File(rootDir, "/opt/wine/lib/wine/x86_64-windows");
-        File wineSysWoW64Dir = new File(rootDir, "/opt/wine/lib/wine/i386-windows");
+        File wineDir = new File(wineInfo.path);
+        if (!wineDir.exists()) {
+            if (wineInfo.path.startsWith("/")) {
+                wineDir = new File(rootDir, wineInfo.path.substring(1));
+            } else {
+                wineDir = new File(rootDir, wineInfo.path);
+            }
+        }
+
+        File wineSystem32Dir = new File(wineDir, "lib/wine/x86_64-windows");
+        File wineSysWoW64Dir = new File(wineDir, "lib/wine/i386-windows");
+
+        // Fallback for older wine versions
+        if (!wineSystem32Dir.exists()) wineSystem32Dir = new File(wineDir, "lib/wine");
+        if (!wineSysWoW64Dir.exists()) wineSysWoW64Dir = new File(wineDir, "lib/wine");
+
         File containerSystem32Dir = new File(rootDir, RootFS.WINEPREFIX+"/drive_c/windows/system32");
         File containerSysWoW64Dir = new File(rootDir, RootFS.WINEPREFIX+"/drive_c/windows/syswow64");
 
@@ -356,7 +370,7 @@ public static void setWinVersion(Container container, String winVersionIdentifie
         }
     }
 
-    private static void setupSystemFonts(WineRegistryEditor registryEditor) {
+    private static void setupSystemFonts(WineRegistryEditor registryEditor, String winePath) {
         final String[][] corefonts = {
             {"Andale Mono (TrueType)", "andalemo.ttf"},
             {"Arial (TrueType)", "arial.ttf"},
@@ -393,12 +407,23 @@ public static void setWinVersion(Container container, String winVersionIdentifie
         registryEditor.setStringValues("Software\\Microsoft\\Windows\\CurrentVersion\\Fonts", corefonts);
         registryEditor.setStringValues("Software\\Microsoft\\Windows NT\\CurrentVersion\\Fonts", corefonts);
 
+        String dosWinePath;
+        File wineDir = new File(winePath);
+        if (wineDir.exists() && wineDir.isAbsolute()) {
+            dosWinePath = "Z:" + winePath.replace("/", "\\");
+        } else {
+            String wp = winePath;
+            if (wp.startsWith("/")) wp = wp.substring(1);
+            dosWinePath = "Z:\\opt\\" + wp.replace("/", "\\");
+        }
+        if (!dosWinePath.endsWith("\\")) dosWinePath += "\\";
+
         final String[][] wineFonts = {
-            {"Marlett (TrueType)", "Z:\\opt\\wine\\share\\wine\\fonts\\marlett.ttf"},
-            {"Symbol (TrueType)", "Z:\\opt\\wine\\share\\wine\\fonts\\symbol.ttf"},
-            {"Tahoma (TrueType)", "Z:\\opt\\wine\\share\\wine\\fonts\\tahoma.ttf"},
-            {"Tahoma Bold (TrueType)", "Z:\\opt\\wine\\share\\wine\\fonts\\tahomabd.ttf"},
-            {"Wingdings (TrueType)", "Z:\\opt\\wine\\share\\wine\\fonts\\wingding.ttf"}
+            {"Marlett (TrueType)", dosWinePath + "share\\wine\\fonts\\marlett.ttf"},
+            {"Symbol (TrueType)", dosWinePath + "share\\wine\\fonts\\symbol.ttf"},
+            {"Tahoma (TrueType)", dosWinePath + "share\\wine\\fonts\\tahoma.ttf"},
+            {"Tahoma Bold (TrueType)", dosWinePath + "share\\wine\\fonts\\tahomabd.ttf"},
+            {"Wingdings (TrueType)", dosWinePath + "share\\wine\\fonts\\wingding.ttf"}
         };
 
         registryEditor.setStringValues("Software\\Microsoft\\Windows\\CurrentVersion\\Fonts", wineFonts);

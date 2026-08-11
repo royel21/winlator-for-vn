@@ -441,20 +441,27 @@ public class ContainerManager {
 
     private void copyCommonDlls(String winePath, String srcName, String dstName, JSONObject commonDlls, File containerDir) throws JSONException {
         File rootDir = RootFS.find(context).getRootDir();
-        // winePath 可能是绝对路径（如 /opt/x86_64-wine）或相对路径
-        File wineDir;
-        if (winePath.startsWith("/")) {
-            wineDir = new File(rootDir, winePath.substring(1));
-        } else {
-            wineDir = new File(rootDir, winePath);
+        File wineDir = new File(winePath);
+        if (!wineDir.exists()) {
+            if (winePath.startsWith("/")) {
+                wineDir = new File(rootDir, winePath.substring(1));
+            } else {
+                wineDir = new File(rootDir, winePath);
+            }
         }
+
         File srcDir = new File(wineDir, "lib/wine/" + srcName);
+        if (!srcDir.exists()) srcDir = new File(wineDir, "lib/wine");
+
         JSONArray dlnames = commonDlls.getJSONArray(dstName);
 
         for (int i = 0; i < dlnames.length(); i++) {
             String dlname = dlnames.getString(i);
-            File dstFile = new File(containerDir, ".wine/drive_c/windows/"+dstName+"/"+dlname);
-            FileUtils.copy(new File(srcDir, dlname), dstFile);
+            File srcFile = new File(srcDir, dlname);
+            if (srcFile.exists()) {
+                File dstFile = new File(containerDir, ".wine/drive_c/windows/" + dstName + "/" + dlname);
+                FileUtils.copy(srcFile, dstFile);
+            }
         }
     }
 
@@ -485,6 +492,7 @@ public class ContainerManager {
         }
         else {
             // 先尝试从 WCP 系统获取容器模板
+            boolean result = false;
             try {
                 com.winlator.contents.ContentsManager contentsManager = new com.winlator.contents.ContentsManager(context);
                 contentsManager.syncContents();
@@ -493,20 +501,39 @@ public class ContainerManager {
                     File file = com.winlator.contents.ContentsManager.getSourceFile(context, profile, profile.winePrefixPack);
                     String suffix = FileUtils.getExtension(file.getName());
                     if (suffix.equals("xz") || suffix.equals("txz")) {
-                        return TarCompressorUtils.extract(TarCompressorUtils.Type.XZ, file, containerDir);
+                        result = TarCompressorUtils.extract(TarCompressorUtils.Type.XZ, file, containerDir);
                     } else if (suffix.equals("zst") || suffix.equals("tzst")) {
-                        return TarCompressorUtils.extract(TarCompressorUtils.Type.ZSTD, file, containerDir);
+                        result = TarCompressorUtils.extract(TarCompressorUtils.Type.ZSTD, file, containerDir);
                     }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            
-            // 如果 WCP 中没有，则回退到本地安装的 Wine
-            File installedWineDir = RootFS.find(context).getInstalledWineDir();
-            WineInfo wineInfo = WineInfo.fromIdentifier(context, wineVersion);
-            File file = new File(installedWineDir, "container-pattern-"+wineInfo.fullVersion()+".tzst");
-            return TarCompressorUtils.extract(TarCompressorUtils.Type.ZSTD, file, containerDir);
+
+            if (!result) {
+                // 如果 WCP 中没有，则回退到本地安装的 Wine
+                File installedWineDir = RootFS.find(context).getInstalledWineDir();
+                WineInfo wineInfo = WineInfo.fromIdentifier(context, wineVersion);
+                File file = new File(installedWineDir, "container-pattern-" + wineInfo.fullVersion() + ".tzst");
+                result = TarCompressorUtils.extract(TarCompressorUtils.Type.ZSTD, file, containerDir);
+            }
+
+            if (result) {
+                try {
+                    WineInfo wineInfo = WineInfo.fromIdentifier(context, wineVersion);
+                    String arch = wineInfo.getArch();
+                    String commonDllsFile = arch.equals("arm64ec") ? "arm64ec-common_dlls.json" : "x86_64-common_dlls.json";
+                    JSONObject commonDlls = new JSONObject(FileUtils.readString(context, commonDllsFile));
+
+                    String nativeWindowsDir = arch.equals("arm64ec") ? "aarch64-windows" : "x86_64-windows";
+
+                    copyCommonDlls(wineInfo.path, nativeWindowsDir, "system32", commonDlls, containerDir);
+                    copyCommonDlls(wineInfo.path, "i386-windows", "syswow64", commonDlls, containerDir);
+                }
+                catch (JSONException e) {}
+            }
+
+            return result;
         }
     }
 }

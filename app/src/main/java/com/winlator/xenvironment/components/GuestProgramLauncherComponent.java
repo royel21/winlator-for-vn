@@ -3,6 +3,7 @@ package com.winlator.xenvironment.components;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Process;
+import android.util.Log;
 
 import androidx.preference.PreferenceManager;
 
@@ -52,9 +53,44 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
     @Override
     public void stop() {
         synchronized (lock) {
+            killWineServer();
             if (pid != -1) {
                 Process.killProcess(pid);
                 pid = -1;
+            }
+        }
+    }
+
+    private void killWineServer() {
+        if (environment == null || wineVersion.isEmpty() || envVars == null) return;
+        RootFS rootFS = environment.getRootFS();
+        File rootDir = rootFS.getRootDir();
+
+        String winePath = rootFS.getWinePath();
+        while (winePath.startsWith("/")) winePath = winePath.substring(1);
+        File wineDirAbs = new File(rootDir, winePath);
+
+        WineInfo wineInfo = WineInfo.fromIdentifier(environment.getContext(), wineVersion);
+        boolean isArm64EC = wineInfo != null && "arm64ec".equals(wineInfo.getArch());
+
+        String[] options = {"-k", "-w"};
+        for (String opt : options) {
+            String command;
+            if (!isArm64EC) {
+                command = rootDir.getPath() + "/usr/local/bin/box64 " + wineDirAbs.getPath() + "/bin/wineserver " + opt;
+            } else {
+                command = wineDirAbs.getPath() + "/bin/wineserver " + opt;
+            }
+
+            if (command.contains("rootfs/opt")) {
+                command = command.replace("rootfs/opt", "rootfs//opt");
+            }
+
+            try {
+                java.lang.Process process = Runtime.getRuntime().exec(ProcessHelper.splitCommand(command), envVars.toStringArray(), rootDir);
+                process.waitFor();
+            } catch (Exception e) {
+                Log.e("Winlator", "killWineServer failed for option " + opt, e);
             }
         }
     }
@@ -80,7 +116,8 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
     }
 
     public void setEnvVars(EnvVars envVars) {
-        this.envVars = envVars;
+        this.envVars = new EnvVars();
+        this.envVars.putAll(envVars);
     }
 
     public String getBox64Preset() {
@@ -216,8 +253,10 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
             command = rootDir + "/" + wp + "/bin/" + guestExecutable;
         }
 
-        android.util.Log.d("Winlator", "Wine architecture: " + (isArm64EC ? "arm64ec" : "x86_64"));
+                android.util.Log.d("Winlator", "Wine architecture: " + (isArm64EC ? "arm64ec" : "x86_64"));
         android.util.Log.d("Winlator", "Executing command: " + command);
+
+        this.envVars = envVars;
 
         return ProcessHelper.exec(command, envVars, rootDir, (status) -> {
             synchronized (lock) {
