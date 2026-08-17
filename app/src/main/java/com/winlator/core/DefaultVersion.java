@@ -12,7 +12,7 @@ public abstract class DefaultVersion {
     public static final String VIRGL = "23.1.9";
     public static final String GLADIO = "1.0";
     public static final String D8VK = "1.0";
-    public static final String D7VK = "1.11";
+    public static final String D7VK = "2.1";
 
     public static final String VKD3D = "2.14.1";
     public static final String WINED3D = WineInfo.WINE_X86_64.version;
