@@ -12,7 +12,7 @@ import java.util.ArrayList;
 
 public class Keyboard {
     public static final byte KEYSYMS_PER_KEYCODE = 2;
-    public static final short KEYS_COUNT = 248;
+    public static final short KEYS_COUNT = 512;
     public static final short MAX_KEYCODE = 255;
     public static final short MIN_KEYCODE = 8;
     public final int[] keysyms = new int[KEYS_COUNT];
@@ -38,13 +38,13 @@ public class Keyboard {
     }
 
     public void setKeysyms(byte keycode, int minKeysym, int majKeysym) {
-        int index = keycode - MIN_KEYCODE;
+        int index = (keycode & 0xFF) - MIN_KEYCODE;
         keysyms[index*KEYSYMS_PER_KEYCODE] = minKeysym;
         keysyms[index*KEYSYMS_PER_KEYCODE+1] = majKeysym;
     }
 
     public boolean hasKeysym(byte keycode, int keysym) {
-        int index = keycode - MIN_KEYCODE;
+        int index = (keycode & 0xFF) - MIN_KEYCODE;
         return keysyms[index*KEYSYMS_PER_KEYCODE] == keysym || keysyms[index*KEYSYMS_PER_KEYCODE+1] == keysym;
     }
 
@@ -130,7 +130,7 @@ public class Keyboard {
     }
 
     private static XKeycode[] createKeycodeMap() {
-        XKeycode[] keycodeMap = new XKeycode[159];
+        XKeycode[] keycodeMap = new XKeycode[256];
         keycodeMap[KeyEvent.KEYCODE_ENTER] = XKeycode.KEY_ENTER;
         keycodeMap[KeyEvent.KEYCODE_ESCAPE] = XKeycode.KEY_ESC;
         keycodeMap[KeyEvent.KEYCODE_DPAD_LEFT] = XKeycode.KEY_LEFT;
