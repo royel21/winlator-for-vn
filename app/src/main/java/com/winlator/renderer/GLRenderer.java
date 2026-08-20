@@ -50,7 +50,7 @@ public class GLRenderer implements GLSurfaceView.Renderer, WindowManager.OnWindo
     private final Drawable rootCursorDrawable;
     private final ArrayList<RenderableWindow> renderableWindows = new ArrayList<>();
     private boolean forceWindowsFullscreen;
-    private boolean fullscreen = true;
+    private boolean fullscreen = false;
     private boolean toggleFullscreen = false;
     protected boolean viewportNeedsUpdate = true;
     private boolean cursorVisible = true;
@@ -394,7 +394,7 @@ public class GLRenderer implements GLSurfaceView.Renderer, WindowManager.OnWindo
         this.fullscreen = fullscreen;
         viewportNeedsUpdate = true;
     }
-
+    
     public boolean isFullscreen() {
         return fullscreen;
     }
