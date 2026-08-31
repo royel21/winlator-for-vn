@@ -112,11 +112,13 @@ public class ContainersFragment extends Fragment {
             private final ImageView menuButton;
             private final ImageView imageView;
             private final TextView title;
+            private final TextView wineVersion;
 
             private ViewHolder(View view) {
                 super(view);
                 this.imageView = view.findViewById(R.id.ImageView);
                 this.title = view.findViewById(R.id.TVTitle);
+                this.wineVersion = view.findViewById(R.id.TVWineVersion);
                 this.runButton = view.findViewById(R.id.BTRun);
                 this.menuButton = view.findViewById(R.id.BTMenu);
             }
@@ -136,6 +138,7 @@ public class ContainersFragment extends Fragment {
             final Container item = data.get(position);
             holder.imageView.setImageResource(R.drawable.icon_container);
             holder.title.setText(item.getName());
+            holder.wineVersion.setText(item.getWineVersion());
             holder.runButton.setOnClickListener((view) -> runContainer(item));
             holder.menuButton.setOnClickListener((view) -> showListItemMenu(view, item));
         }

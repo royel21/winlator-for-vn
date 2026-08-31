@@ -9,14 +9,14 @@
         <LinearLayout
             android:id="@+id/item_select"
             android:layout_width="match_parent"
-            android:layout_height="152dp"
+            android:layout_height="172dp"
             android:layout_margin="2dp"
             android:background="@drawable/file_grid_item_background"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center_horizontal"
             android:orientation="vertical"
-            android:padding="6dp">
+            android:padding="8dp">
 
 
             <ImageView
@@ -43,6 +43,15 @@
                 android:ellipsize="end"
                 android:maxLines="1"
                 android:textColor="?attr/colorSecondaryText" />
+
+            <TextView
+                android:id="@+id/TVWineVersion"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="?attr/colorSecondaryText"
+                android:textSize="11sp"
+                android:ellipsize="end"
+                android:maxLines="1" />
         </LinearLayout>
 
         <ImageView

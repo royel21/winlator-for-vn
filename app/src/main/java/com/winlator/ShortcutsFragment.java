@@ -628,6 +628,7 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
             private final ImageView imageView;
             private final TextView title;
             private final TextView subtitle;
+            private final TextView wineVersion;
             private final LinearLayout SelectItem;
 
             private ViewHolder(View view) {
@@ -635,6 +636,7 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
                 this.imageView = view.findViewById(R.id.ImageView);
                 this.title = view.findViewById(R.id.TVTitle);
                 this.subtitle = view.findViewById(R.id.TVSubtitle);
+                this.wineVersion = view.findViewById(R.id.TVWineVersion);
                 this.runButton = view.findViewById(R.id.BTRun);
                 this.menuButton = view.findViewById(R.id.BTMenu);
                 this.SelectItem = view.findViewById(R.id.item_select);
@@ -670,6 +672,7 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
 
             holder.title.setText(item.name);
             holder.subtitle.setText(item.container.getName());
+            holder.wineVersion.setText(item.container.getWineVersion());
 
             if (item.file.isDirectory()) {
                 holder.runButton.setImageResource(R.drawable.icon_open);

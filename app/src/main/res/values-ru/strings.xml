@@ -50,6 +50,7 @@
     <string name="do_you_want_to_remove_this_file">Вы хотите удалить этот файл?</string>
     <string name="do_you_want_to_remove_this_controller">Вы хотите удалить контроллер?</string>
     <string name="do_you_want_to_remove_this_wine_version">Вы хотите удалить эту версию Wine?</string>
+    <string name="all_associated_containers_will_be_removed">Все связанные контейнеры будут удалены.</string>
     <string name="do_you_want_to_remove_this_preset">Вы хотите удалить предустановку?</string>
     <string name="do_you_want_to_remove_this_component_version">Вы хотите удалить эту версию компонента?</string>
     <string name="do_you_want_to_end_this_process">Вы хотите завершить процесс?</string>

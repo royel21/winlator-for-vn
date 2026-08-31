@@ -365,14 +365,22 @@ public class ContentsFragment extends Fragment {
                     if (itemId == R.id.content_info) {
                         new ContentInfoDialog(context, profile).show();
                     } else if (itemId == R.id.remove_content) {
-                        ContentDialog.confirm(context, R.string.do_you_want_to_remove_this_content, () -> {
+                        String message = getString(R.string.do_you_want_to_remove_this_content);
+                        if (profile.type == ContentProfile.ContentType.CONTENT_TYPE_WINE) {
+                            message += "\n\n" + getString(R.string.all_associated_containers_will_be_removed);
+                        }
+
+                        ContentDialog.confirm(context, message, () -> {
                             if (profile.type == ContentProfile.ContentType.CONTENT_TYPE_WINE) {
                                 ContainerManager containerManager = new ContainerManager(context);
+                                ArrayList<Container> toRemove = new ArrayList<>();
                                 for (Container container : containerManager.getContainers()) {
                                     if (container.getWineVersion().equals(ContentsManager.getEntryName(profile))) {
-                                        ContentDialog.alert(context, String.format(getString(R.string.unable_to_remove_content_since_container_using), container.getName()), null);
-                                        return;
+                                        toRemove.add(container);
                                     }
+                                }
+                                for (Container container : toRemove) {
+                                    containerManager.removeContainer(container);
                                 }
                             }
                             manager.removeContent(profile);
