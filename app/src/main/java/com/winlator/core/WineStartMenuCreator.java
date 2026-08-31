@@ -72,7 +72,7 @@ public abstract class WineStartMenuCreator {
         removeOldMenu(containerStartMenuFile, startMenuDir);
 
         try {
-            String startMenuFile = Locale.getDefault().getLanguage().equals("zh") ? "wine_startmenu_cn.json" : "wine_startmenu.json";
+            String startMenuFile = "wine_startmenu.json";
             JSONArray data = new JSONArray(FileUtils.readString(context, startMenuFile));
             FileUtils.writeString(containerStartMenuFile, data.toString());
             for (int i = 0; i < data.length(); i++) createMenuEntry(data.getJSONObject(i), startMenuDir);
