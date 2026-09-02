@@ -64,6 +64,8 @@ import com.winlator.core.WineThemeManager;
 import com.winlator.core.WineUtils;
 import com.winlator.fex.FEXPreset;
 import com.winlator.fex.FEXPresetManager;
+import com.winlator.inputcontrols.ControlsProfile;
+import com.winlator.inputcontrols.InputControlsManager;
 import com.winlator.widget.CPUListView;
 import com.winlator.widget.ColorPickerView;
 import com.winlator.widget.EnvVarsView;
@@ -103,6 +105,7 @@ public class ContainerDetailFragment extends Fragment {
     private Spinner sStartupSelection;
     private Spinner sBox64Version;
     private Spinner sBox64Preset;
+    private Spinner sControlsProfile;
     private Spinner sFEXVersion;
     private Spinner sFEXPreset;
     private Spinner sFEXPresetCustom;
@@ -190,6 +193,7 @@ public class ContainerDetailFragment extends Fragment {
         sWinVersion = view.findViewById(R.id.SWinVersion);
         sBox64Version = view.findViewById(R.id.SBox64Version);
         sBox64Preset = view.findViewById(R.id.SBox64Preset);
+        sControlsProfile = view.findViewById(R.id.SControlsProfile);
         sFEXVersion = view.findViewById(R.id.SFEXVersion);
         sFEXPreset = view.findViewById(R.id.SFEXPreset);
         sFEXPresetCustom = view.findViewById(R.id.SFEXPresetCustom);
@@ -381,6 +385,8 @@ public class ContainerDetailFragment extends Fragment {
 
         Box64PresetManager.loadSpinner(sBox64Preset, container != null ? container.getBox64Preset() : preferences.getString("box64_preset", Box64Preset.DEFAULT));
 
+        loadControlsProfileSpinner(sControlsProfile, container != null ? String.valueOf(container.getControlsProfile()) : "0");
+
         ContentsManager contentsManager = new ContentsManager(context);
         contentsManager.syncContents();
         updateFEXVersionSpinner(context, contentsManager, sFEXVersion);
@@ -461,6 +467,12 @@ public class ContainerDetailFragment extends Fragment {
         container.setStartupSelection((byte)sStartupSelection.getSelectedItemPosition());
         container.setBox64Preset(Box64PresetManager.getSpinnerSelectedId(sBox64Preset));
         container.setBox64Version(StringUtils.parseIdentifier(sBox64Version.getSelectedItem()));
+
+        InputControlsManager inputControlsManager = new InputControlsManager(getContext());
+        ArrayList<ControlsProfile> profiles = inputControlsManager.getProfiles(true);
+        int controlsProfile = sControlsProfile.getSelectedItemPosition() > 0 ? profiles.get(sControlsProfile.getSelectedItemPosition()-1).id : 0;
+        container.setControlsProfile(controlsProfile);
+
         container.setFexVersion(sFEXVersion.getSelectedItem().toString());
         container.setFexPreset(sFEXPreset.getSelectedItemPosition());
         container.setFexPresetCustom(FEXPresetManager.getSpinnerSelectedId(sFEXPresetCustom));
@@ -815,5 +827,24 @@ public class ContainerDetailFragment extends Fragment {
         for (ContentProfile profile : manager.getProfiles(ContentProfile.ContentType.CONTENT_TYPE_FEX))
             itemList.add(ContentsManager.getEntryName(profile));
         spinner.setAdapter(new ArrayAdapter<>(context, android.R.layout.simple_spinner_dropdown_item, itemList));
+    }
+
+    private void loadControlsProfileSpinner(Spinner spinner, String selectedValue) {
+        final Context context = getContext();
+        InputControlsManager inputControlsManager = new InputControlsManager(context);
+        final ArrayList<ControlsProfile> profiles = inputControlsManager.getProfiles(true);
+        ArrayList<String> values = new ArrayList<>();
+        values.add(context.getString(R.string.none));
+
+        int selectedPosition = 0;
+        int selectedId = Integer.parseInt(selectedValue);
+        for (int i = 0; i < profiles.size(); i++) {
+            ControlsProfile profile = profiles.get(i);
+            if (profile.id == selectedId) selectedPosition = i + 1;
+            values.add(profile.getName());
+        }
+
+        spinner.setAdapter(new ArrayAdapter<>(context, android.R.layout.simple_spinner_dropdown_item, values));
+        spinner.setSelection(selectedPosition, false);
     }
 }

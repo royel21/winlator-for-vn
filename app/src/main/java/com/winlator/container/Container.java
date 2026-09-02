@@ -58,6 +58,7 @@ public class Container {
     private String mouseWarpOverride = "disable";
     private String box64Preset = Box64Preset.DEFAULT;
     private String box64Version = DefaultVersion.BOX64;
+    private int controlsProfile = 0;
     private String fexVersion = "FEX-2603";
     private int fexPreset = 0;
     private String fexPresetCustom = com.winlator.fex.FEXPreset.COMPATIBILITY;
@@ -240,6 +241,14 @@ public class Container {
 
     public void setBox64Version(String box64Version) {
         this.box64Version = box64Version;
+    }
+
+    public int getControlsProfile() {
+        return controlsProfile;
+    }
+
+    public void setControlsProfile(int controlsProfile) {
+        this.controlsProfile = controlsProfile;
     }
 
     public String getFexVersion() {
@@ -432,6 +441,7 @@ public class Container {
             data.put("startAsFullscreen", startAsFullscreen);
             data.put("box64Preset", box64Preset);
             data.put("box64Version", box64Version);
+            data.put("controlsProfile", controlsProfile);
             data.put("fexVersion", fexVersion);
             data.put("fexPreset", fexPreset);
             data.put("fexPresetCustom", fexPresetCustom);
@@ -535,6 +545,9 @@ public class Container {
                     break;
                 case "box64Version" :
                     setBox64Version(data.optString(key, getBox64Version()));
+                    break;
+                case "controlsProfile" :
+                    setControlsProfile(data.optInt(key, getControlsProfile()));
                     break;
                 case "fexVersion" :
                     setFexVersion(data.optString(key, getFexVersion()));

@@ -177,10 +177,10 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
         // 检测 Wine 架构
         WineInfo wineInfo = WineInfo.fromIdentifier(environment.getContext(), wineVersion);
         boolean isArm64EC = wineInfo != null && "arm64ec".equals(wineInfo.getArch());
-        android.util.Log.d("Winlator", "Wine version: " + wineVersion);
-        android.util.Log.d("Winlator", "Wine info: " + (wineInfo != null ? wineInfo.identifier() : "null"));
-        android.util.Log.d("Winlator", "Wine arch: " + (wineInfo != null ? wineInfo.getArch() : "null"));
-        android.util.Log.d("Winlator", "Is arm64ec: " + isArm64EC);
+        android.util.Log.d("Winlator-log", "Wine version: " + wineVersion);
+        android.util.Log.d("Winlator-log", "Wine info: " + (wineInfo != null ? wineInfo.identifier() : "null"));
+        android.util.Log.d("Winlator-log", "Wine arch: " + (wineInfo != null ? wineInfo.getArch() : "null"));
+        android.util.Log.d("Winlator-log", "Is arm64ec: " + isArm64EC);
 
         if (!isArm64EC) {
             // x86_64: 使用 Box64（原始逻辑）
@@ -197,64 +197,82 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
         envVars.put("TMPDIR", rootDir+"/tmp");
         envVars.put("DISPLAY", ":0");
         
-        // 修复路径拼接（避免双斜杠）
+        // 修复路径拼接
         String winePath = rootFS.getWinePath();
-        if (winePath.startsWith("/")) winePath = winePath.substring(1);
-        envVars.put("PATH", rootDir+"/"+winePath+"/bin:"+rootDir+"/usr/local/bin:"+rootDir+"/usr/bin");
+        while (winePath.startsWith("/")) winePath = winePath.substring(1);
+        
+        File wineDirAbs = new File(rootDir, winePath);
+        File wineLibDir = new File(wineDirAbs, "lib");
+        File wineLibWineDir = new File(wineLibDir, "wine");
+        if (!wineLibWineDir.isDirectory()) wineLibWineDir.mkdirs();
+        
+        envVars.put("PATH", wineDirAbs.getPath() + "/bin:" + rootDir + "/usr/local/bin:" + rootDir + "/usr/bin");
         
         // 根据架构设置不同的库路径
         String ldLibraryPath;
+        File wineUnixLibDir;
         if (!isArm64EC) {
             // x86_64: 原始逻辑
             ldLibraryPath = rootFS.getLibDir().getPath();
-            String wineLibDir = rootDir + "/" + winePath + "/lib";
-            String wineUnixLibDir = wineLibDir + "/wine/x86_64-unix";
-            envVars.put("BOX64_LD_LIBRARY_PATH", rootDir+"/lib/x86_64-linux-gnu:" + wineUnixLibDir + ":" + wineLibDir);
-            envVars.put("WINEDLLPATH", wineLibDir + "/wine");
+            wineUnixLibDir = new File(wineLibWineDir, "x86_64-unix");
         } else {
             // arm64ec: 参考 glibc 项目设置特殊的库路径
-            String wp = winePath; // 已经处理过，确保不以 / 开头
-            File wineDirAbs = new File(rootDir, wp);
-            File wineLibDirAbs = new File(wineDirAbs, "lib");
-            File wineUnixLibDir = new File(wineLibDirAbs, "wine/aarch64-unix");
-            ldLibraryPath = wineUnixLibDir.getPath() + ":" + wineLibDirAbs.getPath() + ":" + rootFS.getLibDir().getPath();
-            envVars.put("WINEDLLPATH", wineLibDirAbs.getPath() + "/wine");
-            envVars.put("BOX64_LD_LIBRARY_PATH", rootDir+"/lib/x86_64-linux-gnu" + ":" + ldLibraryPath);
+            wineUnixLibDir = new File(wineLibWineDir, "aarch64-unix");
+            ldLibraryPath = wineUnixLibDir.getPath() + ":" + wineLibDir.getPath() + ":" + rootFS.getLibDir().getPath();
         }
+
+        // Fix: Wine 10.x+ layout compatibility - link all files from arch-specific unix dir to parent wine dir
+        if (wineUnixLibDir.exists()) {
+            File[] files = wineUnixLibDir.listFiles();
+            if (files != null) {
+                String relPrefix = wineUnixLibDir.getName() + "/";
+                for (File f : files) {
+                    if (f.isFile()) {
+                        FileUtils.symlink(relPrefix + f.getName(), new File(wineLibWineDir, f.getName()).getAbsolutePath());
+                    }
+                }
+            }
+        }
+
+        envVars.put("BOX64_LD_LIBRARY_PATH", rootDir + "/lib/x86_64-linux-gnu:" + wineUnixLibDir.getPath() + ":" + wineLibDir.getPath());
+        envVars.put("WINEDLLPATH", wineLibWineDir.getPath() + "/wine");
         
         envVars.put("LD_LIBRARY_PATH", ldLibraryPath);
-        envVars.put("ANDROID_SYSVSHM_SERVER", rootDir+UnixSocketConfig.SYSVSHM_SERVER_PATH);
+        envVars.put("ANDROID_SYSVSHM_SERVER", rootDir.getPath() + UnixSocketConfig.SYSVSHM_SERVER_PATH);
         envVars.put("WINE_HOST_XDG_CURRENT_DESKTOP", "1");//新版wine桌面创建快捷方式需要这个
         envVars.put("BOX64_ROOT", rootDir.getPath());
 
         if (this.envVars != null) envVars.putAll(this.envVars);
 
-        File shmDir = new File(rootDir, "/tmp/shm");
+        File shmDir = new File(rootDir, "tmp/shm");
         if (!shmDir.isDirectory()) shmDir.mkdirs();
 
         // 根据架构生成启动命令
-        String wp = rootFS.getWinePath();
-        android.util.Log.d("Winlator", "Original winePath from rootFS: '" + wp + "'");
-        
-        if (wp.startsWith("/")) {
-            android.util.Log.w("Winlator", "winePath starts with '/', removing it");
-            wp = wp.substring(1);
-        }
-        
-        android.util.Log.d("Winlator", "Processed winePath: '" + wp + "'");
-        android.util.Log.d("Winlator", "Root directory: '" + rootDir + "'");
+        android.util.Log.d("Winlator-log", "Wine path: '" + winePath + "'");
         
         String command;
         if (!isArm64EC) {
-            // x86_64: 使用 box64 转译（拼接完整路径）
-            command = rootDir+"/usr/local/bin/box64 "+rootDir+"/"+wp+"/bin/"+guestExecutable;
+            // x86_64: Use box64 to translate (with full path concatenation)
+            command = rootDir.getPath() + "/usr/local/bin/box64 " + wineDirAbs.getPath() + "/bin/" + guestExecutable;
         } else {
-            // arm64ec: 直接执行（拼接完整路径）
-            command = rootDir + "/" + wp + "/bin/" + guestExecutable;
+            // arm64ec: Execute directly (paste the full path)
+            command = wineDirAbs.getPath() + "/bin/" + guestExecutable;
+        }
+        
+        // 统一修复 //opt 问题
+        for (String key : new String[]{"PATH", "BOX64_LD_LIBRARY_PATH", "WINEDLLPATH", "LD_LIBRARY_PATH"}) {
+            String val = envVars.get(key);
+            if (val != null && val.contains("rootfs/opt")) {
+                envVars.put(key, val.replace("rootfs/opt", "rootfs//opt"));
+            }
+        }
+        
+        if (command.contains("rootfs/opt")) {
+            command = command.replace("rootfs/opt", "rootfs//opt");
         }
 
-                android.util.Log.d("Winlator", "Wine architecture: " + (isArm64EC ? "arm64ec" : "x86_64"));
-        android.util.Log.d("Winlator", "Executing command: " + command);
+        Log.d("Winlator-box", "BOX64_LD_LIBRARY_PATH set to: " + envVars.get("BOX64_LD_LIBRARY_PATH"));
+        Log.d("Winlator-box", "Executing command: "+ command);
 
         this.envVars = envVars;
 

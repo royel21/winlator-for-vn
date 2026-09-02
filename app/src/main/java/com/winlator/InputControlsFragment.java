@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
+import android.hardware.input.InputManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -47,7 +48,7 @@ import java.util.ArrayList;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class InputControlsFragment extends Fragment {
+public class InputControlsFragment extends Fragment implements InputManager.InputDeviceListener {
     private static final String INPUT_CONTROLS_URL = "http://cdn4.52emu.cn/wlt/v10/input_controls/%s";
     private InputControlsManager manager;
     private ControlsProfile currentProfile;
@@ -212,6 +213,16 @@ public class InputControlsFragment extends Fragment {
         return view;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        Context context = getContext();
+        if (context != null) {
+            InputManager inputManager = (InputManager) context.getSystemService(Context.INPUT_SERVICE);
+            inputManager.registerInputDeviceListener(this, null);
+        }
+    }
+
     private void openProfileFile(Spinner sProfile) {
         importProfileCallback = (importedProfile) -> {
             currentProfile = importedProfile;
@@ -270,6 +281,16 @@ public class InputControlsFragment extends Fragment {
         if (updateLayout != null) updateLayout.run();
     }
 
+    @Override
+    public void onPause() {
+        super.onPause();
+        Context context = getContext();
+        if (context != null) {
+            InputManager inputManager = (InputManager) context.getSystemService(Context.INPUT_SERVICE);
+            inputManager.unregisterInputDeviceListener(this);
+        }
+    }
+
     private void loadProfileSpinner(Spinner spinner) {
         final ArrayList<ControlsProfile> profiles = manager.getProfiles();
         ArrayList<String> values = new ArrayList<>();
@@ -297,6 +318,7 @@ public class InputControlsFragment extends Fragment {
     }
 
     private void loadExternalControllers(final View view) {
+        if (view == null) return;
         LinearLayout container = view.findViewById(R.id.LLExternalControllers);
         container.removeAllViews();
         Context context = getContext();
@@ -346,5 +368,20 @@ public class InputControlsFragment extends Fragment {
             }
         }
         else view.findViewById(R.id.TVEmptyText).setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public void onInputDeviceAdded(int deviceId) {
+        loadExternalControllers(getView());
+    }
+
+    @Override
+    public void onInputDeviceRemoved(int deviceId) {
+        loadExternalControllers(getView());
+    }
+
+    @Override
+    public void onInputDeviceChanged(int deviceId) {
+        loadExternalControllers(getView());
     }
 }

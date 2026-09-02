@@ -136,7 +136,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
     private boolean capturePointerOnExternalMouse = true;
     private MagnifierView magnifierView;
     private DebugDialog debugDialog;
-    private int frameRatingWindowId = -1;
+    public int frameRatingWindowId = -1;
     private Win32AppWorkarounds win32AppWorkarounds;
     private String screenEffectProfile;
 
@@ -736,12 +736,17 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             rootView.addView(frameRating);
         }
 
+        int controlsProfileId = 0;
         if (shortcut != null) {
-            String controlsProfile = shortcut.getExtra("controlsProfile");
-            if (!controlsProfile.isEmpty()) {
-                ControlsProfile profile = inputControlsManager.getProfile(Integer.parseInt(controlsProfile));
-                if (profile != null) showInputControls(profile);
-            }
+            String extra = shortcut.getExtra("controlsProfile");
+            if (!extra.isEmpty()) controlsProfileId = Integer.parseInt(extra);
+        }
+
+        if (controlsProfileId == 0 && container != null) controlsProfileId = container.getControlsProfile();
+
+        if (controlsProfileId > 0) {
+            ControlsProfile profile = inputControlsManager.getProfile(controlsProfileId);
+            if (profile != null) showInputControls(profile);
         }
 
         if (MainActivity.DEBUG_MODE) rootView.addView(AppUtils.createDebugMsgTextView(this));
@@ -1236,7 +1241,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         SettingsFragment.resetBox64Version(this);
     }
 
-    private void changeFrameRatingVisibility(Window window, boolean visible) {
+    public void changeFrameRatingVisibility(Window window, boolean visible) {
         if (frameRating == null) return;
         if (visible) {
             Window child = window.getChildCount() > 0 ? window.getChildren().get(0) : null;
