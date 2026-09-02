@@ -161,10 +161,8 @@ public class Shortcut {
             }
             JSONObject data = new JSONObject();
             data.put("forceFullscreen", getExtra("forceFullscreen", "0"));
-            data.put("controlsProfile", getExtra("controlsProfile", "0"));
-            data.put("dinputMapperType", getExtra("dinputMapperType", String.valueOf(GamepadHandler.DINPUT_MAPPER_TYPE_XINPUT)));
-            data.put("preferredInputApi", getExtra("preferredInputApi", "0"));
             data.put("execArgs", getExtra("execArgs", ""));
+            extraData.put("controlsProfile", getExtra("controlsProfile", ""+container.getControlsProfile()));
             data.put("extraData", extraData);
             data.getJSONObject("extraData").put("wmClass", null);
             data.getJSONObject("extraData").put("name", null);

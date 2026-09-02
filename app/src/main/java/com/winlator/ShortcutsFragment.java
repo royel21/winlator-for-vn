@@ -81,7 +81,7 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
         super.onViewCreated(view, savedInstanceState);
         selectionOptionsContainer = view.findViewById(R.id.LLSelectionOptions);
         llFilter = view.findViewById(R.id.LLFilter);
-        
+
         etFilter = view.findViewById(R.id.ETFilter);
         final View btClearFilter = view.findViewById(R.id.remove_button);
         if (etFilter != null) {
@@ -498,6 +498,7 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
             if (candidate.appId != null) {
                 JSONObject extraData = new JSONObject();
                 extraData.put("steamAppId", String.valueOf(candidate.appId));
+                extraData.put("controlsProfile", ""+container.getControlsProfile());
                 data.put("extraData", extraData);
             }
 
@@ -531,7 +532,7 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
 
         String path = FileUtils.getFilePathFromUri(uri);
         if (path == null) path = uri.getPath(); // Fallback to URI path
-        
+
         if (path == null || path.isEmpty()) {
             AppUtils.showToast(activity, "Unable to resolve file path.");
             return;
@@ -539,8 +540,8 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
 
         File exeFile = new File(path);
         Log.d("ShortcutsFragment", "Processing selected EXE: " + exeFile.getAbsolutePath());
-        if (!exeFile.getName().toLowerCase().endsWith(".exe")) {
-            AppUtils.showToast(activity, "Please select an executable file (.exe)");
+        if (!FileUtils.endsWith(exeFile, ".exe", ".bat")) {
+            AppUtils.showToast(activity, "Please select an executable file (.exe, .bat)");
             return;
         }
 
@@ -591,11 +592,11 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
             data.put("name", name);
             data.put("path", dosPath);
             if (!iconName.isEmpty()) data.put("icon", iconName);
-            
+
             Shortcut selectedFolder = !folderStack.isEmpty() ? folderStack.peek() : null;
             File destinationDir = selectedFolder != null ? selectedFolder.file : new File(container.getUserDir(), "Desktop");
             manager.createShortcut(container, data, destinationDir);
-            
+
             File shortcutFile = new File(destinationDir, name + ".desktop");
             if (shortcutFile.exists()) {
                 activity.runOnUiThread(() -> {

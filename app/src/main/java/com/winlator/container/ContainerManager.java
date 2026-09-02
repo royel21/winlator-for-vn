@@ -210,7 +210,7 @@ public class ContainerManager {
         try {
             String jsonContent = FileUtils.readString(file);
             if (jsonContent.isEmpty()) return;
-            
+
             JSONObject containerData;
             if (jsonContent.trim().startsWith("[")) {
                 JSONArray array = new JSONArray(jsonContent);
@@ -262,7 +262,7 @@ public class ContainerManager {
         try {
             String jsonContent = FileUtils.readString(file);
             if (jsonContent.isEmpty()) return;
-            
+
             JSONArray containersArray;
             if (jsonContent.trim().startsWith("{")) {
                 containersArray = new JSONArray();
@@ -340,9 +340,9 @@ public class ContainerManager {
               .append("Type=Application\n")
               .append("Name=").append(name).append("\n")
               .append("Exec=wine ").append(path).append("\n");
-            
+
             if (!icon.isEmpty()) sb.append("Icon=").append(icon).append("\n");
-            
+
             sb.append("StartupWMClass=").append(wmClass).append("\n");
 
             if (extraData != null && extraData.length() > 0) {
@@ -365,7 +365,7 @@ public class ContainerManager {
             handler.post(callback);
         });
     }
-    
+
     public void removeContainer(Container container) {
         if (FileUtils.delete(container.getRootDir())) containers.remove(container);
     }
@@ -470,16 +470,16 @@ public class ContainerManager {
             WineInfo wineInfo = WineInfo.fromIdentifier(context, wineVersion);
             String arch = wineInfo.getArch();
             String patternFile = arch.equals("arm64ec") ? "arm64ec-container_pattern.tzst" : "x86_64-container_pattern.tzst";
-            
+
             boolean result = TarCompressorUtils.extract(TarCompressorUtils.Type.ZSTD, context, patternFile, containerDir);
 
             if (result) {
                 try {
                     String commonDllsFile = arch.equals("arm64ec") ? "arm64ec-common_dlls.json" : "x86_64-common_dlls.json";
                     JSONObject commonDlls = new JSONObject(FileUtils.readString(context, commonDllsFile));
-                    
+
                     String nativeWindowsDir = arch.equals("arm64ec") ? "aarch64-windows" : "x86_64-windows";
-                    
+
                     copyCommonDlls(wineInfo.path, nativeWindowsDir, "system32", commonDlls, containerDir);
                     copyCommonDlls(wineInfo.path, "i386-windows", "syswow64", commonDlls, containerDir);
                 }

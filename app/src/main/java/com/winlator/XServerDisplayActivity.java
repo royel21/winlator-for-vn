@@ -161,14 +161,14 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         ProcessHelper.removeAllDebugCallbacks();
         boolean enableLogs = preferences.getBoolean("enable_wine_debug", false) || preferences.getInt("box64_logs", 0) >= 1;
         if (enableLogs) ProcessHelper.addDebugCallback(debugDialog = new DebugDialog(this));
-        
+
         NavigationView navigationView = findViewById(R.id.NavigationView);
         navigationView.setNavigationItemSelectedListener(this);
         navigationView.setOnFocusChangeListener((v, hasFocus) -> navigationFocused  = hasFocus);
 
         Menu menu = navigationView.getMenu();
         menu.findItem(R.id.menu_item_logs).setVisible(enableLogs);
-        
+
         drawerLayout = findViewById(R.id.DrawerLayout);
         drawerLayout.setOnApplyWindowInsetsListener((view, windowInsets) -> windowInsets.replaceSystemWindowInsets(0, 0, 0, 0));
         drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
@@ -689,7 +689,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         renderer.setCursorVisible(false);
         renderer.setCursorColor(preferences.getInt("cursor_color", 0xffffff));
         renderer.setCursorScale(preferences.getFloat("cursor_scale", 1.0f));
-        
+
         boolean startAsFullscreen = false;
         if (shortcut != null) {
             String startAsFsExtra = shortcut.getExtra("startAsFullscreen");
@@ -739,7 +739,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         int controlsProfileId = 0;
         if (shortcut != null) {
             String extra = shortcut.getExtra("controlsProfile");
-            if (!extra.isEmpty()) controlsProfileId = Integer.parseInt(extra);
+            if (!extra.isEmpty()){ controlsProfileId = Integer.parseInt(extra);}
         }
 
         if (controlsProfileId == 0 && container != null) controlsProfileId = container.getControlsProfile();
@@ -748,6 +748,8 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             ControlsProfile profile = inputControlsManager.getProfile(controlsProfileId);
             if (profile != null) showInputControls(profile);
         }
+
+        Log.d("XServerDisplayActivity", "setupUI: capturePointerOnExternalMouse = " + controlsProfileId);
 
         if (MainActivity.DEBUG_MODE) rootView.addView(AppUtils.createDebugMsgTextView(this));
         AppUtils.observeSoftKeyboardVisibility(drawerLayout, renderer::setScreenOffsetYRelativeToCursor);
@@ -969,16 +971,16 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             File wineSysWoW64Dir = new File(wineDir, "/lib/wine/i386-windows");
             File containerSystem32Dir = new File(rootDir, RootFS.WINEPREFIX+"/drive_c/windows/system32");
             File containerSysWoW64Dir = new File(rootDir, RootFS.WINEPREFIX+"/drive_c/windows/syswow64");
-            
+
             final String[] d3dDlls = {"d3d11.dll", "d3d10.dll", "d3d10_1.dll", "d3d10core.dll", "dxgi.dll", "d3d9.dll", "d3d8.dll", "ddraw.dll", "wined3d.dll"};
-            
+
             for (String dll : d3dDlls) {
                 // 覆盖 64位 (system32)
                 FileUtils.copy(new File(wineSystem32Dir, dll), new File(containerSystem32Dir, dll));
                 // 覆盖 32位 (syswow64)
                 FileUtils.copy(new File(wineSysWoW64Dir, dll), new File(containerSysWoW64Dir, dll));
             }
-            
+
             // 设置注册表，使用 builtin DLL
             WineUtils.setDirect3DLibOverrides(container, false);
         }
@@ -1001,7 +1003,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
                 TarCompressorUtils.extract(TarCompressorUtils.Type.ZSTD, this, "dxwrapper/d8vk-"+DefaultVersion.D8VK+".tzst", windowsDir);
             }
             if (!hasD3D10DllFile[0]) restoreBuiltinDllFiles("d3d10.dll", "d3d10_1.dll");
-            
+
             // 设置注册表，使用 native DLL
             WineUtils.setDirect3DLibOverrides(container, true);
         }
@@ -1081,7 +1083,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
     private void restoreBuiltinDllFiles(final String... dlls) {
         File rootDir = rootFS.getRootDir();
         File wineDir = new File(rootDir, rootFS.getWinePath());
-        
+
         // 根据 Wine 架构选择正确的目录
         String nativeWindowsDir;
         if (wineInfo != null && wineInfo.path != null && wineInfo.path.contains("arm64ec")) {
@@ -1089,7 +1091,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         } else {
             nativeWindowsDir = "x86_64-windows";
         }
-        
+
         File wineSystem32Dir = new File(wineDir, "/lib/wine/" + nativeWindowsDir);
         File wineSysWoW64Dir = new File(wineDir, "/lib/wine/i386-windows");
         File containerSystem32Dir = new File(rootDir, RootFS.WINEPREFIX+"/drive_c/windows/system32");

@@ -286,7 +286,7 @@ public abstract class FileUtils {
         if ("com.android.externalstorage.documents".equals(authority) ||
             "com.android.providers.downloads.documents".equals(authority) ||
             "com.android.providers.media.documents".equals(authority)) {
-            
+
             String docId = null;
             try {
                 docId = DocumentsContract.getTreeDocumentId(uri);
@@ -304,7 +304,7 @@ public abstract class FileUtils {
                 String[] parts = docId.split(":", -1);
                 String type = parts[0];
                 String relativePath = parts.length > 1 ? parts[1] : "";
-                
+
                 try {
                     relativePath = URLDecoder.decode(relativePath, "UTF-8");
                 } catch (Exception e) {}
@@ -474,5 +474,21 @@ public abstract class FileUtils {
         else intent = new Intent(Intent.ACTION_VIEW, Uri.parse(path));
         intent.addFlags(Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT | Intent.FLAG_ACTIVITY_NEW_TASK);
         activity.startActivity(intent);
+    }
+
+    public static boolean endsWith(File file, String... suffixes) {
+        if (file == null || suffixes == null || suffixes.length == 0) {
+            return false;
+        }
+
+        String fileName = file.getName().toLowerCase();
+
+        for (String suffix : suffixes) {
+            if (suffix != null && fileName.endsWith(suffix.toLowerCase())) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
