@@ -111,8 +111,13 @@ public class SettingsFragment extends Fragment {
 
         final Spinner sSoundFont = view.findViewById(R.id.SSoundFont);
         String soundfont = preferences.getString("soundfont", null);
-        GeneralComponents.initViews(GeneralComponents.Type.SOUNDFONT, view.findViewById(R.id.SoundFontToolbox), sSoundFont, soundfont, DefaultVersion.SOUNDFONT);
+        View soundFontToolbox = view.findViewById(R.id.SoundFontToolbox);
+        GeneralComponents.initViews(GeneralComponents.Type.SOUNDFONT, soundFontToolbox, sSoundFont, soundfont, DefaultVersion.SOUNDFONT);
+        soundFontToolbox.setVisibility(View.VISIBLE);
         view.findViewById(R.id.BTSoundFontTest).setOnClickListener((v) -> (new SoundFontTestDialog(context, sSoundFont.getSelectedItem().toString())).show());
+
+        soundFontToolbox.findViewWithTag("install").setOnClickListener((v) -> selectSoundFontFile(sSoundFont));
+        soundFontToolbox.findViewWithTag("remove").setOnClickListener((v) -> removeSoundFont(sSoundFont));
 
         final Spinner sMIDIInputDevice = view.findViewById(R.id.SMIDIInputDevice);
         String midiInputDevice = preferences.getString("midi_input_device", "auto");
@@ -565,5 +570,49 @@ public class SettingsFragment extends Fragment {
             }
             else editor.remove(key);
         }
+    }
+
+    private void selectSoundFontFile(Spinner sSoundFont) {
+        final Context context = getContext();
+        if (context == null) return;
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("*/*");
+        MainActivity activity = (MainActivity)getActivity();
+        if (activity != null) {
+            activity.setOpenFileCallback((uri) -> {
+                if (uri != null) {
+                    String filename = FileUtils.getName(context, uri);
+                    if (filename.toLowerCase().endsWith(".sf2")) {
+                        File destination = new File(GeneralComponents.getComponentDir(GeneralComponents.Type.SOUNDFONT, context), filename);
+                        if (FileUtils.copy(context, uri, destination)) {
+                            GeneralComponents.loadSpinner(GeneralComponents.Type.SOUNDFONT, sSoundFont, FileUtils.getBasename(filename), DefaultVersion.SOUNDFONT);
+                            AppUtils.showToast(context, R.string.soundfont_installed_successfully);
+                        }
+                        else AppUtils.showToast(context, R.string.unable_to_install_soundfont);
+                    }
+                    else AppUtils.showToast(context, R.string.invalid_file_format);
+                }
+            });
+            activity.startActivityForResult(intent, MainActivity.OPEN_FILE_REQUEST_CODE);
+        }
+    }
+
+    private void removeSoundFont(Spinner sSoundFont) {
+        final Context context = getContext();
+        if (context == null || sSoundFont.getSelectedItem() == null) return;
+        String identifier = sSoundFont.getSelectedItem().toString();
+        if (GeneralComponents.isBuiltinComponent(GeneralComponents.Type.SOUNDFONT, identifier)) {
+            AppUtils.showToast(context, R.string.cannot_remove_builtin_soundfont);
+            return;
+        }
+
+        ContentDialog.confirm(context, R.string.do_you_want_to_remove_this_soundfont, () -> {
+            File file = new File(GeneralComponents.getComponentDir(GeneralComponents.Type.SOUNDFONT, context), identifier + ".sf2");
+            if (file.delete()) {
+                GeneralComponents.loadSpinner(GeneralComponents.Type.SOUNDFONT, sSoundFont, null, DefaultVersion.SOUNDFONT);
+                AppUtils.showToast(context, R.string.soundfont_removed_successfully);
+            }
+        });
     }
 }

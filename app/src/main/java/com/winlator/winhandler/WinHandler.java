@@ -25,7 +25,7 @@ import java.util.concurrent.Executors;
 
 public class WinHandler {
     private static final short SERVER_PORT = 7947;
-    private static final short CLIENT_PORT = 7946;
+    private static final short CLIENT_PORT = 7949;
     private static final byte DEFAULT_PACKET_LENGTH = 64;
     private DatagramSocket socket;
     protected final ByteBuffer sendData = ByteBuffer.allocate(128).order(ByteOrder.LITTLE_ENDIAN);

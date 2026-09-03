@@ -7,6 +7,7 @@ import android.net.Uri;
 import android.os.Environment;
 import android.os.StatFs;
 import android.provider.DocumentsContract;
+import android.provider.OpenableColumns;
 import android.system.ErrnoException;
 import android.system.Os;
 
@@ -192,6 +193,20 @@ public abstract class FileUtils {
         return true;
     }
 
+    public static boolean copy(Context context, Uri srcUri, File dstFile) {
+        File parent = dstFile.getParentFile();
+        if (parent != null && !parent.exists() && !parent.mkdirs()) return false;
+
+        try (InputStream in = context.getContentResolver().openInputStream(srcUri);
+             OutputStream out = new FileOutputStream(dstFile)) {
+            StreamUtils.copy(in, out);
+            return dstFile.exists();
+        }
+        catch (IOException e) {
+            return false;
+        }
+    }
+
     public static void copy(Context context, String assetFile, File dstFile) {
         if (isDirectory(context, assetFile)) {
             if (!dstFile.isDirectory()) dstFile.mkdirs();
@@ -247,6 +262,24 @@ public abstract class FileUtils {
         path = StringUtils.removeEndSlash(path);
         int index = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'));
         return path.substring(index + 1);
+    }
+
+    public static String getName(Context context, Uri uri) {
+        String result = null;
+        if (uri.getScheme().equals("content")) {
+            try (android.database.Cursor cursor = context.getContentResolver().query(uri, null, null, null, null)) {
+                if (cursor != null && cursor.moveToFirst()) {
+                    int index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                    if (index != -1) result = cursor.getString(index);
+                }
+            }
+        }
+        if (result == null) {
+            result = uri.getPath();
+            int cut = result.lastIndexOf('/');
+            if (cut != -1) result = result.substring(cut + 1);
+        }
+        return result;
     }
 
     public static String getBasename(String path) {
