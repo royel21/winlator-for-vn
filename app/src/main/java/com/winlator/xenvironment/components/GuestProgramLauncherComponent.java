@@ -241,14 +241,14 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
         envVars.put("ANDROID_SYSVSHM_SERVER", rootDir.getPath() + UnixSocketConfig.SYSVSHM_SERVER_PATH);
         envVars.put("WINE_HOST_XDG_CURRENT_DESKTOP", "1");//新版wine桌面创建快捷方式需要这个
         envVars.put("BOX64_ROOT", rootDir.getPath());
-
+        envVars.put("LD_PRELOAD", rootDir.getPath()+"/usr/lib/fake_bind.so");
 
         if (this.envVars != null) envVars.putAll(this.envVars);
 
         File shmDir = new File(rootDir, "tmp/shm");
         if (!shmDir.isDirectory()) shmDir.mkdirs();
 
-        // 根据架构生成启动命令
+        // Generate startup command based on architecture
         android.util.Log.d("Winlator-log", "Wine path: '" + winePath + "'");
         
         String command;
@@ -274,13 +274,6 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
 
         Log.d("Winlator-box", "BOX64_LD_LIBRARY_PATH set to: " + envVars.get("BOX64_LD_LIBRARY_PATH"));
         Log.d("Winlator-box", "Executing command: "+ command);
-
-        String existingLdPreload = envVars.get("LD_PRELOAD");
-        if(existingLdPreload != null && !existingLdPreload.isEmpty()){
-            envVars.put("LD_PRELOAD", rootDir.getPath()+"/usr/lib/fake_bind.so" + ":"+existingLdPreload);
-        }else{
-            envVars.put("LD_PRELOAD", rootDir.getPath()+"/usr/lib/fake_bind.so");
-        }
 
         this.envVars = envVars;
 
