@@ -242,6 +242,7 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
         envVars.put("WINE_HOST_XDG_CURRENT_DESKTOP", "1");//新版wine桌面创建快捷方式需要这个
         envVars.put("BOX64_ROOT", rootDir.getPath());
 
+
         if (this.envVars != null) envVars.putAll(this.envVars);
 
         File shmDir = new File(rootDir, "tmp/shm");
@@ -273,6 +274,13 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
 
         Log.d("Winlator-box", "BOX64_LD_LIBRARY_PATH set to: " + envVars.get("BOX64_LD_LIBRARY_PATH"));
         Log.d("Winlator-box", "Executing command: "+ command);
+
+        String existingLdPreload = envVars.get("LD_PRELOAD");
+        if(existingLdPreload != null && !existingLdPreload.isEmpty()){
+            envVars.put("LD_PRELOAD", rootDir.getPath()+"/usr/lib/fake_bind.so" + ":"+existingLdPreload);
+        }else{
+            envVars.put("LD_PRELOAD", rootDir.getPath()+"/usr/lib/fake_bind.so");
+        }
 
         this.envVars = envVars;
 
