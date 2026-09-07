@@ -4,16 +4,23 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.View;
 import android.widget.TextView;
+import android.widget.ImageButton;
 
 import com.winlator.R;
 
 public class PreloaderDialog {
     private final Activity activity;
     private Dialog dialog;
+    private Runnable onCancelListener;
 
     public PreloaderDialog(Activity activity) {
         this.activity = activity;
+    }
+
+    public void setOnCancelListener(Runnable onCancelListener) {
+        this.onCancelListener = onCancelListener;
     }
 
     private void create() {
@@ -36,6 +43,18 @@ public class PreloaderDialog {
         close();
         if (dialog == null) create();
         ((TextView)dialog.findViewById(R.id.TextView)).setText(textResId);
+
+        ImageButton btCancel = dialog.findViewById(R.id.BTCancel);
+        if (onCancelListener != null) {
+            btCancel.setVisibility(View.VISIBLE);
+            btCancel.setOnClickListener(v -> {
+                close();
+                onCancelListener.run();
+            });
+        } else {
+            btCancel.setVisibility(View.GONE);
+        }
+
         dialog.show();
     }
 

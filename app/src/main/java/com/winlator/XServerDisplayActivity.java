@@ -153,6 +153,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         startService(new Intent(this, ForegroundService.class));
 
         final PreloaderDialog preloaderDialog = new PreloaderDialog(this);
+        preloaderDialog.setOnCancelListener(this::exit);
         preferences = PreferenceManager.getDefaultSharedPreferences(this);
         boolean useAndroidClipboardOnWine = preferences.getBoolean("use_android_clipboard_on_wine", false);
         clipboardManager = useAndroidClipboardOnWine ? (ClipboardManager)getSystemService(CLIPBOARD_SERVICE) : null;

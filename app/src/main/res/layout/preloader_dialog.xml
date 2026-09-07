@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center"
@@ -12,8 +13,8 @@
         android:orientation="horizontal"
         android:paddingTop="22dp"
         android:paddingBottom="22dp"
-        android:paddingLeft="32dp"
-        android:paddingRight="32dp"
+        android:paddingStart="32dp"
+        android:paddingEnd="24dp"
         android:gravity="center_vertical"
         android:layout_gravity="center"
         android:background="?attr/preloaderBackground">
@@ -22,7 +23,7 @@
             android:layout_width="64dp"
             android:layout_height="64dp"
             android:indeterminate="true"
-            android:layout_marginRight="16dp"
+            android:layout_marginEnd="16dp"
             android:indeterminateDrawable="?attr/progressBarIndeterminateImage" />
 
         <TextView
@@ -31,5 +32,18 @@
             android:layout_height="wrap_content"
             android:textSize="20dp"
             android:textColor="?attr/colorPrimaryText" />
+
+        <ImageButton
+            android:id="@+id/BTCancel"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginStart="16dp"
+            android:background="@drawable/square_button_background"
+            android:src="@drawable/icon_stop_square"
+            android:padding="2dp"
+            android:scaleType="centerInside"
+            android:visibility="gone"
+            android:contentDescription="@string/cancel"
+            app:tint="?attr/colorError" />
     </LinearLayout>
 </FrameLayout>
