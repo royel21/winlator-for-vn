@@ -190,7 +190,7 @@ public class TaskManagerDialog extends ContentDialog implements OnGetProcessInfo
         listItemMenu.setOnMenuItemClickListener((menuItem) -> {
             int itemId = menuItem.getItemId();
             final WinHandler winHandler = activity.getWinHandler();
-            if (itemId == R.id.menu_item_process_affinity) {
+             if (itemId == R.id.menu_item_process_affinity) {
                 showProcessorAffinityDialog(processInfo);
             } else if (itemId == R.id.menu_item_bring_to_front) {
                 winHandler.bringToFront(processInfo.name);

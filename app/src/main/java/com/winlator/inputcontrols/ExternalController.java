@@ -1,6 +1,5 @@
 package com.winlator.inputcontrols;
 
-import android.util.Log;
 import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -8,6 +7,7 @@ import android.view.MotionEvent;
 import androidx.annotation.Nullable;
 
 import com.winlator.core.ArrayUtils;
+import com.winlator.math.Mathf;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -29,6 +29,8 @@ public class ExternalController implements GamepadSlot {
     public static final byte IDX_BUTTON_L2 = 10;
     public static final byte IDX_BUTTON_R2 = 11;
     private String name;
+    private short vendorId;
+    private short productId;
     private String id;
     private int deviceId = -1;
     private final ArrayList<ExternalControllerBinding> controllerBindings = new ArrayList<>();
@@ -43,6 +45,24 @@ public class ExternalController implements GamepadSlot {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    @Override
+    public short getVendorId() {
+        return vendorId;
+    }
+
+    public void setVendorId(short vendorId) {
+        this.vendorId = vendorId;
+    }
+
+    @Override
+    public short getProductId() {
+        return productId;
+    }
+
+    public void setProductId(short productId) {
+        this.productId = productId;
     }
 
     public String getId() {
@@ -153,8 +173,8 @@ public class ExternalController implements GamepadSlot {
     }
 
     private void processTriggerButton(MotionEvent event) {
-        state.setPressed(IDX_BUTTON_L2, event.getAxisValue(MotionEvent.AXIS_LTRIGGER) == 1.0f || event.getAxisValue(MotionEvent.AXIS_BRAKE) == 1.0f);
-        state.setPressed(IDX_BUTTON_R2, event.getAxisValue(MotionEvent.AXIS_RTRIGGER) == 1.0f || event.getAxisValue(MotionEvent.AXIS_GAS) == 1.0f);
+        state.triggerL = Mathf.clamp(Math.max(event.getAxisValue(MotionEvent.AXIS_LTRIGGER), event.getAxisValue(MotionEvent.AXIS_BRAKE)) - Mathf.EPSILON, 0.0f, 1.0f);
+        state.triggerR = Mathf.clamp(Math.max(event.getAxisValue(MotionEvent.AXIS_RTRIGGER), event.getAxisValue(MotionEvent.AXIS_GAS)) - Mathf.EPSILON, 0.0f, 1.0f);
     }
 
     public boolean updateStateFromMotionEvent(MotionEvent event) {
@@ -204,6 +224,8 @@ public class ExternalController implements GamepadSlot {
                 ExternalController controller = new ExternalController();
                 controller.setId(device.getDescriptor());
                 controller.setName(device.getName());
+                controller.setVendorId((short)device.getVendorId());
+                controller.setProductId((short)device.getProductId());
                 controllers.add(controller);
             }
         }
@@ -239,6 +261,8 @@ public class ExternalController implements GamepadSlot {
                 controller.deviceId = deviceId;
                 controller.setId(device.getDescriptor());
                 controller.setName(device.getName());
+                controller.setVendorId((short)device.getVendorId());
+                controller.setProductId((short)device.getProductId());
                 connectedControllers.add(controller);
             }
         }
