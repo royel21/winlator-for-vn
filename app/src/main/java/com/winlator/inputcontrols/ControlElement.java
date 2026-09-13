@@ -27,10 +27,10 @@ import org.json.JSONObject;
 import java.util.Arrays;
 
 public class ControlElement {
-    public static final float STICK_DEAD_ZONE = 0.15f;
-    public static final float DPAD_DEAD_ZONE = 0.3f;
+    public static final float STICK_DEAD_ZONE = 0.05f;
+    public static final float DPAD_DEAD_ZONE = 0.1f;
     public static final float STICK_SENSITIVITY = 3.0f;
-    public static final float TRACKPAD_MIN_SPEED = 0.8f;
+    public static final float TRACKPAD_MIN_SPEED = 0.2f;
     public static final float TRACKPAD_MAX_SPEED = 20.0f;
     public static final byte TRACKPAD_ACCELERATION_THRESHOLD = 4;
     public static final short BUTTON_MIN_TIME_TO_KEEP_PRESSED = 300;
@@ -890,17 +890,21 @@ public class ControlElement {
                 if (currentPosition == null) currentPosition = new PointF();
                 currentPosition.x = boundingBox.left + deltaX * radius + radius;
                 currentPosition.y = boundingBox.top + deltaY * radius + radius;
-                final boolean[] states = {deltaY <= -STICK_DEAD_ZONE, deltaX >= STICK_DEAD_ZONE, deltaY >= STICK_DEAD_ZONE, deltaX <= -STICK_DEAD_ZONE};
 
                 for (byte i = 0; i < 4; i++) {
-                    float value = i == 1 || i == 3 ? deltaX : deltaY;
+                    float value = i == 1 || i == 3 ? deltaX : -deltaY;
                     Binding binding = getBindingAt(i);
                     if (binding.isGamepad()) {
-                        value = Mathf.clamp(Math.max(0, Math.abs(value) - 0.01f) * Mathf.sign(value) * STICK_SENSITIVITY, -1, 1);
+                        float magnitude = Math.abs(value);
+                        if (magnitude < STICK_DEAD_ZONE) value = 0;
+                        else {
+                            value = Mathf.clamp((magnitude - STICK_DEAD_ZONE) / (1.0f - STICK_DEAD_ZONE) * Mathf.sign(value), -1, 1);
+                        }
                         inputControlsView.handleInputEvent(binding, true, value);
                         this.states[i] = true;
                     }
                     else {
+                        final boolean[] states = {deltaY <= -STICK_DEAD_ZONE, deltaX >= STICK_DEAD_ZONE, deltaY >= STICK_DEAD_ZONE, deltaX <= -STICK_DEAD_ZONE};
                         boolean state = binding.isMouseMove() ? (states[i] || states[(i+2)%4]) : states[i];
                         inputControlsView.handleInputEvent(binding, state, value);
                         this.states[i] = state;
@@ -915,7 +919,7 @@ public class ControlElement {
                 int cursorDy = 0;
 
                 for (byte i = 0; i < 4; i++) {
-                    float value = (i == 1 || i == 3 ? deltaX : deltaY);
+                    float value = (i == 1 || i == 3 ? deltaX : -deltaY);
                     Binding binding = getBindingAt(i);
                     if (binding.isGamepad()) {
                         if (interpolator == null) interpolator = new CubicBezierInterpolator();
@@ -946,7 +950,7 @@ public class ControlElement {
                 final boolean[] states = {deltaY <= -DPAD_DEAD_ZONE, deltaX >= DPAD_DEAD_ZONE, deltaY >= DPAD_DEAD_ZONE, deltaX <= -DPAD_DEAD_ZONE};
 
                 for (byte i = 0; i < 4; i++) {
-                    float value = i == 1 || i == 3 ? deltaX : deltaY;
+                    float value = i == 1 || i == 3 ? deltaX : -deltaY;
                     Binding binding = getBindingAt(i);
                     boolean state = binding.isMouseMove() ? (states[i] || states[(i+2)%4]) : states[i];
                     inputControlsView.handleInputEvent(binding, state, value);

@@ -25,15 +25,20 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class WinHandler {
+    // Android listens on 7947. The old task/process bridge still uses 7946, while the native
+    // gamepad backend uses 7949. Keep the default route for task-manager/process traffic and only
+    // switch to the gamepad backend for the specific gamepad path.
     private static final short SERVER_PORT = 7947;
     private static final short CLIENT_PORT = 7946;
+    private static final short GAMEPAD_CLIENT_PORT = 7949;
     private DatagramSocket socket;
     protected final ByteBuffer sendData = ByteBuffer.allocate(256).order(ByteOrder.LITTLE_ENDIAN);
     protected final ByteBuffer receiveData = ByteBuffer.allocate(64).order(ByteOrder.LITTLE_ENDIAN);
     private final DatagramPacket sendPacket = new DatagramPacket(sendData.array(), sendData.capacity());
     private final DatagramPacket receivePacket = new DatagramPacket(receiveData.array(), receiveData.capacity());
     private final ArrayDeque<Runnable> actions = new ArrayDeque<>();
-    protected boolean initReceived = false;
+    protected boolean initReceived = true;
+    private int clientPort = CLIENT_PORT;
     private boolean running = false;
     private OnGetProcessInfoListener onGetProcessInfoListener;
     private OnPreExecListener onPreExecListener;
@@ -53,6 +58,7 @@ public class WinHandler {
             if (size == 0) return false;
             sendPacket.setAddress(localhost);
             sendPacket.setPort(port);
+            sendPacket.setLength(size);
             socket.send(sendPacket);
             return true;
         }
@@ -61,13 +67,17 @@ public class WinHandler {
         }
     }
 
+    protected boolean sendPacketToGamepad() {
+        return sendPacket(GAMEPAD_CLIENT_PORT);
+    }
+
     protected boolean sendPacket(int port, byte[] data) {
         try {
             sendPacket.setData(data);
             sendPacket.setAddress(localhost);
             sendPacket.setPort(port);
             socket.send(sendPacket);
-            sendPacket.setData(sendData.array());
+            sendPacket.setData(sendData.array(), 0, sendData.capacity());
             return true;
         }
         catch (IOException e) {
@@ -88,7 +98,7 @@ public class WinHandler {
                 sendData.put(parametersBytes);
             }
             else sendData.putInt(0);
-            sendPacket(CLIENT_PORT);
+            sendPacket(clientPort);
         });
     }
 
@@ -117,7 +127,7 @@ public class WinHandler {
             }
             else sendData.putInt(0);
             sendData.putInt(pid);
-            sendPacket(CLIENT_PORT);
+            sendPacket(clientPort);
         });
     }
 
@@ -127,7 +137,7 @@ public class WinHandler {
             sendData.put(RequestCodes.LIST_PROCESSES);
             sendData.putInt(0);
 
-            if (!sendPacket(CLIENT_PORT) && onGetProcessInfoListener != null) {
+            if (!sendPacket(clientPort) && onGetProcessInfoListener != null) {
                 onGetProcessInfoListener.onGetProcessInfo(0, 0, null);
             }
         });
@@ -143,7 +153,7 @@ public class WinHandler {
             sendData.putInt(affinityMask);
             sendData.put((byte)bytes.length);
             sendData.put(bytes);
-            sendPacket(CLIENT_PORT);
+            sendPacket(clientPort);
         });
     }
 
@@ -155,7 +165,7 @@ public class WinHandler {
             sendData.putInt(pid);
             sendData.putInt(affinityMask);
             sendData.put((byte)0);
-            sendPacket(CLIENT_PORT);
+            sendPacket(clientPort);
         });
     }
 
@@ -170,7 +180,7 @@ public class WinHandler {
             sendData.putShort((short)dy);
             sendData.putShort((short)wheelDelta);
             sendData.put((byte)((flags & MouseEventFlags.MOVE) != 0 ? 1 : 0)); // cursor pos feedback
-            sendPacket(CLIENT_PORT);
+            sendPacket(clientPort);
         });
     }
 
@@ -181,7 +191,7 @@ public class WinHandler {
             sendData.put(RequestCodes.KEYBOARD_EVENT);
             sendData.put(vkey);
             sendData.putInt(flags);
-            sendPacket(CLIENT_PORT);
+            sendPacket(clientPort);
         });
     }
 
@@ -198,7 +208,7 @@ public class WinHandler {
             sendData.putInt(minLength);
             sendData.put(bytes, 0, minLength);
             sendData.putLong(handle);
-            sendPacket(CLIENT_PORT);
+            sendPacket(clientPort);
         });
     }
 
@@ -207,7 +217,7 @@ public class WinHandler {
             sendData.rewind();
             sendData.put(RequestCodes.SHOW_DESKTOP);
             sendData.putInt(0);
-            sendPacket(CLIENT_PORT);
+            sendPacket(clientPort);
         });
     }
 
@@ -217,7 +227,7 @@ public class WinHandler {
             sendData.put(RequestCodes.SHOW_WINDOW);
             sendData.putLong(handle);
             sendData.putInt(nCmdShow);
-            sendPacket(CLIENT_PORT);
+            sendPacket(clientPort);
         });
     }
 
@@ -229,7 +239,7 @@ public class WinHandler {
             sendData.put(RequestCodes.SET_CLIPBOARD_DATA);
             sendData.putInt(minLength);
             sendData.put(bytes, 0, minLength);
-            sendPacket(CLIENT_PORT);
+            sendPacket(clientPort);
         });
     }
 
@@ -240,7 +250,7 @@ public class WinHandler {
             sendData.rewind();
             sendData.put(RequestCodes.GET_EXECUTABLE_PATH);
             sendData.putInt(processId);
-            if (!sendPacket(CLIENT_PORT)) {
+            if (!sendPacket(clientPort)) {
                 synchronized (requestCallback) {
                     requestCallback.notify();
                 }
@@ -314,6 +324,7 @@ public class WinHandler {
         switch (requestCode) {
             case RequestCodes.INIT: {
                 initReceived = true;
+                clientPort = port;
 
                 synchronized (actions) {
                     actions.notify();

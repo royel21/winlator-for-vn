@@ -84,8 +84,8 @@ public class GamepadHandler {
             String gamepadModel = preferences.getString("gamepad_model", null);
             if (gamepadModel != null) {
                 gamepadModelIds = new short[]{
-                    (short)Integer.parseInt(gamepadModel.substring(4, 8), 16),
-                    (short)Integer.parseInt(gamepadModel.substring(13, 17), 16),
+                        (short)Integer.parseInt(gamepadModel.substring(4, 8), 16),
+                        (short)Integer.parseInt(gamepadModel.substring(13, 17), 16),
                 };
             }
             else gamepadModelIds = new short[0];
@@ -318,7 +318,7 @@ public class GamepadHandler {
             for (int i = 0; i < jsonArray.length(); i++) {
                 JSONObject item = jsonArray.getJSONObject(i);
                 short vendorId = (
-short)Integer.parseInt(item.getString("vid"), 16);
+                        short)Integer.parseInt(item.getString("vid"), 16);
                 short productId = (short)Integer.parseInt(item.getString("pid"), 16);
                 result.add(new GamepadModel(item.getString("name"), vendorId, productId));
             }
