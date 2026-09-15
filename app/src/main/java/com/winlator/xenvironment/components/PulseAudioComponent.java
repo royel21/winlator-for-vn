@@ -12,6 +12,9 @@ import com.winlator.xenvironment.EnvironmentComponent;
 
 import java.io.File;
 
+import androidx.preference.PreferenceManager;
+import android.content.SharedPreferences;
+
 public class PulseAudioComponent extends EnvironmentComponent {
     private final UnixSocketConfig socketConfig;
     private static int pid = -1;
@@ -93,6 +96,10 @@ public class PulseAudioComponent extends EnvironmentComponent {
 
     @Override
     public void onPause() {
+        Context context = environment.getContext();
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+        if (preferences.getBoolean("enable_background_protection", false)) return;
+
         synchronized (lock) {
             if (pid != -1) ProcessHelper.suspendProcess(pid);
         }
@@ -100,8 +107,17 @@ public class PulseAudioComponent extends EnvironmentComponent {
 
     @Override
     public void onResume() {
+        Context context = environment.getContext();
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+        if (preferences.getBoolean("enable_background_protection", false)) return;
+
         synchronized (lock) {
             if (pid != -1) ProcessHelper.resumeProcess(pid);
         }
+    }
+
+    @Override
+    public void setMuted(boolean muted) {
+        // TODO: Implement muting for external PulseAudio process if possible
     }
 }

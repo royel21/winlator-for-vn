@@ -195,6 +195,7 @@ public class XServer {
         };
     }
 
+    @SuppressWarnings("unchecked")
     public <T extends Extension> T getExtension(byte opcode) {
         int index = Extension.START_MAJOR_OPCODE - opcode;
         return (T)extensions[index];

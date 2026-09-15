@@ -7,6 +7,10 @@ import com.winlator.xconnector.UnixSocketConfig;
 import com.winlator.xconnector.XConnectorEpoll;
 import com.winlator.xenvironment.EnvironmentComponent;
 
+import android.content.Context;
+import androidx.preference.PreferenceManager;
+import android.content.SharedPreferences;
+
 public class ALSAServerComponent extends EnvironmentComponent {
     private XConnectorEpoll connector;
     private final UnixSocketConfig socketConfig;
@@ -34,8 +38,24 @@ public class ALSAServerComponent extends EnvironmentComponent {
         }
     }
 
+    public void setMuted(boolean muted) {
+        if (connector != null) {
+            for (com.winlator.xconnector.ConnectedClient client : connector.getClients()) {
+                ALSAClient alsaClient = (ALSAClient)client.getTag();
+                if (alsaClient != null) alsaClient.setVolume(muted ? 0 : options.volume);
+            }
+        }
+    }
+
     @Override
     public void onPause() {
+        Context context = environment.getContext();
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+        if (preferences.getBoolean("enable_background_protection", false)) {
+            setMuted(true);
+            return;
+        }
+
         if (connector != null) {
             for (com.winlator.xconnector.ConnectedClient client : connector.getClients()) {
                 ALSAClient alsaClient = (ALSAClient)client.getTag();
@@ -46,6 +66,13 @@ public class ALSAServerComponent extends EnvironmentComponent {
 
     @Override
     public void onResume() {
+        Context context = environment.getContext();
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+        if (preferences.getBoolean("enable_background_protection", false)) {
+            setMuted(false);
+            return;
+        }
+
         if (connector != null) {
             for (com.winlator.xconnector.ConnectedClient client : connector.getClients()) {
                 ALSAClient alsaClient = (ALSAClient)client.getTag();

@@ -101,6 +101,10 @@ public class ALSAClient {
         return channels <= 1 ? AudioFormat.CHANNEL_OUT_MONO : AudioFormat.CHANNEL_OUT_STEREO;
     }
 
+    public void setVolume(float volume) {
+        if (audioTrack != null) audioTrack.setVolume(volume);
+    }
+
     public void prepare() {
         position = 0;
         previousUnderrunCount = 0;

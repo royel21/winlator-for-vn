@@ -68,4 +68,8 @@ public class XEnvironment implements Iterable<EnvironmentComponent> {
     public void onResume() {
         for (EnvironmentComponent environmentComponent : this) environmentComponent.onResume();
     }
+
+    public void setMuted(boolean muted) {
+        for (EnvironmentComponent environmentComponent : this) environmentComponent.setMuted(muted);
+    }
 }

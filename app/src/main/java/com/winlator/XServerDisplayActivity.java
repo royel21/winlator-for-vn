@@ -404,6 +404,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         if (environment != null) {
             xServerView.onResume();
             environment.onResume();
+            environment.setMuted(false);
         }
         ForegroundService.onResumeSession(this);
 
@@ -423,6 +424,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         if (environment != null && !isInPictureInPictureMode()) {
             environment.onPause();
             xServerView.onPause();
+            environment.setMuted(true);
         }
     }
 

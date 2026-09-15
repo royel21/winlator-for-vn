@@ -358,6 +358,10 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
 
     @Override
     public void onPause() {
+        Context context = environment.getContext();
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+        if (preferences.getBoolean("enable_background_protection", false)) return;
+
         synchronized (lock) {
             if (pid != -1) {
                 List<ProcessHelper.PStat> processes = ProcessHelper.getChildProcesses();
@@ -373,6 +377,10 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
 
     @Override
     public void onResume() {
+        Context context = environment.getContext();
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+        if (preferences.getBoolean("enable_background_protection", false)) return;
+
         synchronized (lock) {
             if (pid != -1) {
                 List<ProcessHelper.PStat> processes = ProcessHelper.getChildProcesses();

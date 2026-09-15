@@ -429,9 +429,12 @@ public class ForegroundService extends Service {
             return "Winlator is running in the background";
 
         if (sessionActive.get()) {
-            return isSessionInBackground && (isDeviceLocked() || !isInPictureInPictureMode())
-                    ? "Container session is paused"
-                    : "There is a container session running";
+            boolean bgProtection = prefs != null && prefs.getBoolean("enable_background_protection", false);
+            if (isSessionInBackground && (isDeviceLocked() || !isInPictureInPictureMode())) {
+                return bgProtection ? "Container session is running in background" : "Container session is paused";
+            } else {
+                return "There is a container session running";
+            }
         }
         return "Winlator is running in the background";
     }

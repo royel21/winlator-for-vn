@@ -10,4 +10,6 @@ public abstract class EnvironmentComponent {
     public void onPause() {}
 
     public void onResume() {}
+
+    public void setMuted(boolean muted) {}
 }
