@@ -21,6 +21,12 @@ import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.os.Build;
+import androidx.core.content.ContextCompat;
+import android.app.NotificationManager;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -51,6 +57,7 @@ import com.winlator.core.WineInstaller;
 import com.winlator.fex.FEXEditPresetDialog;
 import com.winlator.fex.FEXPreset;
 import com.winlator.fex.FEXPresetManager;
+import com.winlator.services.NotificationUtils;
 import com.winlator.widget.ColorPickerView;
 import com.winlator.widget.LogView;
 import com.winlator.widget.SeekBar;
@@ -71,6 +78,9 @@ public class SettingsFragment extends Fragment {
     public static final String DEFAULT_WINE_DEBUG_CHANNELS = "warn,err,fixme";
     public static final byte APP_THEME_LIGHT = 0;
     public static final byte APP_THEME_DARK = 1;
+
+    private static final String TAG = "SettingsFragment";
+
     private Callback<Uri> selectWineFileCallback;
     private PreloaderDialog preloaderDialog;
     private SharedPreferences preferences;
@@ -155,6 +165,32 @@ public class SettingsFragment extends Fragment {
             }
         }
 
+        final CheckBox cbEnableBackgroundWakelock = view.findViewById(R.id.CBEnableBackgroundWakelock);
+        cbEnableBackgroundWakelock.setChecked(preferences.getBoolean("enable_background_wakelock", false));
+
+        final CheckBox cbEnableBackgroundProtection = view.findViewById(R.id.CBEnableBackgroundProtection);
+        cbEnableBackgroundProtection.setChecked(preferences.getBoolean("enable_background_protection", false));
+        cbEnableBackgroundProtection.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            cbEnableBackgroundWakelock.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+            if (!isChecked) cbEnableBackgroundWakelock.setChecked(false);
+
+            if (isChecked && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                    // We force a temporary notification channel so that the notification permission request window appears on APIs 33+
+                    String tempId = "permission_trigger";
+                    NotificationUtils.getInstance(getContext().getApplicationContext()).createNotificationChannel(context, tempId, "Permission Trigger", NotificationManager.IMPORTANCE_LOW);
+//                    NotificationUtils.getInstance(getContext().getApplicationContext()).createNotificationChannel(); // Create the foreground notification channel.
+
+                    // And delete the channel after 1 second.
+                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                        NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+                        if (nm != null) nm.deleteNotificationChannel(tempId);
+                    }, 1000);
+                }
+            }
+        });
+        cbEnableBackgroundWakelock.setVisibility(cbEnableBackgroundProtection.isChecked() ? View.VISIBLE : View.GONE);
+
         final CheckBox cbEnableWineDebug = view.findViewById(R.id.CBEnableWineDebug);
         cbEnableWineDebug.setChecked(preferences.getBoolean("enable_wine_debug", false));
 
@@ -220,6 +256,8 @@ public class SettingsFragment extends Fragment {
             editor.putBoolean("open_android_browser_from_wine", cbOpenAndroidBrowserFromWine.isChecked());
             editor.putBoolean("use_android_clipboard_on_wine", cbUseAndroidClipboardOnWine.isChecked());
             editor.putString("clipboard_charset", sClipboardCharset.getSelectedItem().toString());
+            editor.putBoolean("enable_background_protection", cbEnableBackgroundProtection.isChecked());
+            editor.putBoolean("enable_background_wakelock", cbEnableBackgroundWakelock.isChecked());
             putGamepadPlayerConfigs(view, editor);
 
             int newAppThemeId = rgAppTheme.getCheckedRadioButtonId();

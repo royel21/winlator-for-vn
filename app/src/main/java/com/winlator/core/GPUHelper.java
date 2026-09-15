@@ -21,6 +21,13 @@ import javax.microedition.khronos.opengles.GL10;
 import dalvik.annotation.optimization.CriticalNative;
 
 public abstract class GPUHelper {
+    public enum VkPresentMode {
+        IMMEDIATE, MAILBOX, FIFO, FIFO_RELAXED;
+
+        public String value() {
+            return name().toLowerCase(Locale.ENGLISH);
+        }
+    }
     public static int VK_API_VERSION_1_3 = GPUHelper.vkMakeVersion(1, 3, 0);
 
     static {
@@ -116,12 +123,9 @@ public abstract class GPUHelper {
         return gpuInfo.get("version");
     }
 
-    public static boolean isAdreno6xx(Context context) {
-        return glGetRenderer(context).toLowerCase(Locale.ENGLISH).matches(".*adreno[^6]+6[0-9]{2}.*");
-    }
-
-    public static boolean isAdreno(Context context) {
-        return glGetRenderer(context).toLowerCase(Locale.ENGLISH).contains("adreno");
+    public static short getAdrenoModelId(Context context) {
+        Matcher matcher = Pattern.compile("adreno[^678]*([678][0-9]{2})", Pattern.CASE_INSENSITIVE).matcher(glGetRenderer(context));
+        return (short)(matcher.find() ? Integer.parseInt(matcher.group(1)) : 0);
     }
 
     public static int vkMakeVersion(String value) {
@@ -164,4 +168,8 @@ public abstract class GPUHelper {
     public static native int vkGetApiVersion();
 
     public static native void setGlobalEGLContext();
+
+    public static native long createOffscreenEGLContext(boolean sharedContext);
+
+    public static native void destroyOffscreenEGLContext(long contextPtr);
 }

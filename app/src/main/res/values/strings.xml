@@ -267,7 +267,6 @@
     <string name="removing_files">Removing Files...</string>
     <string name="disable_mouse_input">Disable Mouse Input</string>
     <string name="move_cursor_to_touchpoint">Move Cursor to Touchpoint</string>
-    <string name="sync_every_frame">Sync every frame</string>
     <string name="dpi_font_size">DPI (Font Size)</string>
     <string name="preferred_input_api">Preferred Input API</string>
     <string name="file_manager">File Manager</string>
@@ -371,6 +370,10 @@
     <string name="ddraw_wrapper" translatable="false">DDraw Wrapper</string>
     <string name="renderer">Renderer</string>
     <string name="clipboard_charset">Clipboard Charset</string>
+    <string name="enable_background_protection">Enable Background Protection</string>
+    <string name="enable_background_protection_tooltip">Keep container alive in background or when device locked, but processes\'re paused.</string>
+    <string name="enable_background_wakelock">Enable wakelock when the device is locked</string>
+    <string name="enable_background_wakelock_tooltip">Avoid issues when returning after unlocking the device.</string>
     <string name="running_notification_text">Running</string>
     <string name="fix_perms">Fix Permissions</string>
     <string name="fix_perms_done">Permissions fixed</string>
@@ -432,4 +435,9 @@
     <string name="clear_filter">Clear Filter</string>
     <string name="select_all">Select All</string>
     <string name="default_no_override">Default (No override)</string>
+    <string name="present_mode">Present Mode</string>
+    <string name="foreground_service_notification_channel_desc">Keeps Winlator running in the background so a paused wine session is not interrupted by Android\'s background process management.</string>
+    <string name="foreground_service_notification_content_container_p">Container session is paused in the background</string>
+    <string name="foreground_service_notification_content_container_r">There is a container session running in the background</string>
+    <string name="foreground_service_notification_content_else">Winlator is running in the background</string>
 </resources>

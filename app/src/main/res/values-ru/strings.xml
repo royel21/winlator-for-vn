@@ -190,7 +190,6 @@
     <string name="removing_files">Удаление файлов...</string>
     <string name="disable_mouse_input">Отключить ввод с помощью мыши</string>
     <string name="move_cursor_to_touchpoint">Переместите курсор в точку касания</string>
-    <string name="sync_every_frame">Синхронизируйте каждый кадр</string>
     <string name="dpi_font_size">DPI (Размер шрифта)</string>
     <string name="preferred_input_api">Предпочтительный API ввода</string>
     <string name="file_manager">Файловый менеджер</string>
@@ -238,6 +237,9 @@
     <string name="install_component">Установить компонент</string>
     <string name="open_android_browser_from_wine">Откройте браузер Android из Wine</string>
     <string name="use_android_clipboard_on_Wine">Использование буфера обмена Android в Wine</string>
+    <string name="enable_background_protection">Включить защиту в фоновом режиме</string>
+    <string name="enable_background_protection_tooltip">Держать контейнер активным в фоне или при блокировке, но процессы приостановлены.</string>
+    <string name="enable_background_wakelock_tooltip">Избежать проблем при возврате после разблокировки устройства.</string>
     <string name="capture_pointer_on_external_mouse">Захват указателя на внешней мыши</string>
     <string name="there_are_no_items_to_download">Нет элементов для загрузки.</string>
     <string name="enable_direct_rendering">Включить прямой рендеринг</string>
@@ -294,4 +296,10 @@
     <string name="update_patch">Update Patch</string>
     <string name="clear_filter">Clear Filter</string>
     <string name="default_no_override">Стандартный (без замены)</string>
+    <string name="present_mode">Режим презентации</string>
+    <string name="foreground_service_notification_channel_desc">Поддерживает работу Winlator в фоновом режиме, чтобы приостановленная сессия Wine не прерывалась управлением фоновыми процессами Android.</string>
+    <string name="foreground_service_notification_content_container_p">Сессия контейнера приостановлена в фоновом режиме</string>
+    <string name="foreground_service_notification_content_container_r">В фоновом режиме выполняется сессия контейнера</string>
+    <string name="foreground_service_notification_content_else">Winlator работает в фоновом режиме</string>
+    <string name="enable_background_wakelock">Включить wakelock, когда устройство заблокировано</string>
 </resources>

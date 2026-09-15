@@ -13,6 +13,7 @@ import com.winlator.xserver.errors.BadMatch;
 import com.winlator.xserver.errors.XRequestError;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 public class SyncExtension extends Extension {
     private final SparseBooleanArray fences = new SparseBooleanArray();
@@ -34,18 +35,37 @@ public class SyncExtension extends Extension {
         return "SYNC";
     }
 
+    public byte getErrorCount() {
+        return 1;
+    }
+
     public void setTriggered(int id) {
         synchronized (fences) {
-            if (fences.indexOfKey(id) >= 0) fences.put(id, true);
+            if (fences.indexOfKey(id) >= 0)
+                fences.put(id, true);
         }
     }
 
-    private void createFence(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
+    private boolean isAnyTriggered(int[] ids) throws XRequestError {
+        synchronized (fences) {
+            for (int id : ids) {
+                if (fences.indexOfKey(id) < 0)
+                    throw new BadFence(id);
+                if (fences.get(id))
+                    return true;
+            }
+            return false;
+        }
+    }
+
+    private void createFence(XClient client, XInputStream inputStream, XOutputStream outputStream)
+            throws IOException, XRequestError {
         synchronized (fences) {
             inputStream.skip(4);
             int id = inputStream.readInt();
 
-            if (fences.indexOfKey(id) >= 0) throw new BadIdChoice(id);
+            if (fences.indexOfKey(id) >= 0)
+                throw new BadIdChoice(id);
 
             boolean initiallyTriggered = inputStream.readByte() == 1;
             inputStream.skip(3);
@@ -54,64 +74,71 @@ public class SyncExtension extends Extension {
         }
     }
 
-    private void triggerFence(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
+    private void triggerFence(XClient client, XInputStream inputStream, XOutputStream outputStream)
+            throws IOException, XRequestError {
         synchronized (fences) {
             int id = inputStream.readInt();
-            if (fences.indexOfKey(id) < 0) throw new BadFence(id);
+            if (fences.indexOfKey(id) < 0)
+                throw new BadFence(id);
             fences.put(id, true);
         }
     }
 
-    private void resetFence(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
+    private void resetFence(XClient client, XInputStream inputStream, XOutputStream outputStream)
+            throws IOException, XRequestError {
         synchronized (fences) {
             int id = inputStream.readInt();
-            if (fences.indexOfKey(id) < 0) throw new BadFence(id);
+            if (fences.indexOfKey(id) < 0)
+                throw new BadFence(id);
 
             boolean triggered = fences.get(id);
-            if (!triggered) throw new BadMatch();
+            if (!triggered)
+                throw new BadMatch();
 
             fences.put(id, false);
         }
     }
 
-    private void destroyFence(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
+    private void destroyFence(XClient client, XInputStream inputStream, XOutputStream outputStream)
+            throws IOException, XRequestError {
         synchronized (fences) {
             int id = inputStream.readInt();
-            if (fences.indexOfKey(id) < 0) throw new BadFence(id);
+            if (fences.indexOfKey(id) < 0)
+                throw new BadFence(id);
             fences.delete(id);
         }
     }
 
-    private void awaitFence(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
-        synchronized (fences) {
-            int length = client.getRemainingRequestLength();
-            int[] ids = new int[length / 4];
-            int i = 0;
+    private void awaitFence(XClient client, XInputStream inputStream, XOutputStream outputStream)
+            throws IOException, XRequestError {
+        int length = client.getRemainingRequestLength();
+        int[] ids = new int[length / 4];
+        int i = 0;
 
-            while (length != 0) {
-                ids[i++] = inputStream.readInt();
-                length -= 4;
+        while (length != 0) {
+            ids[i++] = inputStream.readInt();
+            length -= 4;
+        }
+
+        int busyWaitIter = 0;
+        while (!isAnyTriggered(ids)) {
+            try {
+                if (busyWaitIter++ < 500) {
+                    Thread.yield();
+                } else
+                    TimeUnit.MICROSECONDS.sleep(100);
+            } catch (InterruptedException e) {
+                break;
             }
-
-            boolean anyTriggered = false;
-            do {
-                for (int id : ids) {
-                    if (fences.indexOfKey(id) < 0) throw new BadFence(id);
-                    anyTriggered = fences.get(id);
-                    if (anyTriggered) break;
-                }
-
-                Thread.yield();
-            }
-            while (!anyTriggered);
         }
     }
 
     @Override
-    public void handleRequest(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
+    public void handleRequest(XClient client, XInputStream inputStream, XOutputStream outputStream)
+            throws IOException, XRequestError {
         int opcode = client.getRequestData();
         switch (opcode) {
-            case ClientOpcodes.CREATE_FENCE :
+            case ClientOpcodes.CREATE_FENCE:
                 createFence(client, inputStream, outputStream);
                 break;
             case ClientOpcodes.TRIGGER_FENCE:
