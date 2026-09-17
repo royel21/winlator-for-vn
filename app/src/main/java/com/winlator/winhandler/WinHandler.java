@@ -324,7 +324,7 @@ public class WinHandler {
         switch (requestCode) {
             case RequestCodes.INIT: {
                 initReceived = true;
-                clientPort = port;
+                if (port != GAMEPAD_CLIENT_PORT) clientPort = port;
 
                 synchronized (actions) {
                     actions.notify();
