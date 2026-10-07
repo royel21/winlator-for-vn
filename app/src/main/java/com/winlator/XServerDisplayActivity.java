@@ -641,6 +641,8 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             guestProgramLauncherComponent.setWineVersion(container.getWineVersion());
         }
 
+        envVars.put("EGL_LOG_LEVEL", "fatal");
+
         environment = new XEnvironment(this, rootFS);
         environment.addComponent(new SysVSharedMemoryComponent(xServer, UnixSocketConfig.create(rootPath, UnixSocketConfig.SYSVSHM_SERVER_PATH)));
         environment.addComponent(new XServerComponent(xServer, UnixSocketConfig.create(rootPath, UnixSocketConfig.XSERVER_PATH)));
