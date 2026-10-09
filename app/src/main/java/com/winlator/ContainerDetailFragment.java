@@ -421,17 +421,17 @@ public class ContainerDetailFragment extends Fragment {
 
         envVarsView.setEnvVars(new EnvVars(container != null ? container.getEnvVars() : Container.DEFAULT_ENV_VARS));
         view.findViewById(R.id.BTAddEnvVar).setOnClickListener((v) -> (new AddEnvVarDialog(context, envVarsView)).show());
-        
+
         ViewGroup llTabWinComponents = view.findViewById(R.id.LLTabWinComponents);
         ((ViewGroup)llTabWinComponents.findViewById(R.id.LLWinComponentsDirectX)).removeAllViews();
         ((ViewGroup)llTabWinComponents.findViewById(R.id.LLWinComponentsGeneral)).removeAllViews();
         createWinComponentsTab(view, container != null ? container.getWinComponents() : Container.DEFAULT_WINCOMPONENTS);
-        
+
         ((LinearLayout)view.findViewById(R.id.LLDrives)).removeAllViews();
         createDrivesTab(view);
 
         sbLogPixelsView.setValue(container != null ? container.getLogPixels() : 96);
-        
+
         WinVersions.loadSpinner(container, sWinVersion);
     }
 
@@ -441,13 +441,13 @@ public class ContainerDetailFragment extends Fragment {
         container.setScreenOrientation(getScreenOrientation(view));
         container.setSwapResolution(isSwapResolution(view));
         container.setStartAsFullscreen(((CheckBox)view.findViewById(R.id.CBStartAsFullscreen)).isChecked());
-        
+
         String graphicsDriver = graphicsDriverPicker.getGraphicsDriver();
         container.setGraphicsDriver(graphicsDriver);
         container.setDXWrapper(dxwrapperPicker.getDXWrapper());
         container.setDXWrapperConfig(dxwrapperPicker.getDXWrapperConfig());
         container.setGraphicsDriverConfig(graphicsDriverPicker.getGraphicsDriverConfig());
-        
+
         String envVars = envVarsView.getEnvVars();
         if (graphicsDriver.startsWith(GraphicsDrivers.VORTEK)) {
             EnvVars env = new EnvVars(envVars);
@@ -455,7 +455,7 @@ public class ContainerDetailFragment extends Fragment {
             envVars = env.toString();
         }
         container.setEnvVars(envVars);
-        
+
         container.setCPUList(cpuListView.getCheckedCPUListAsString());
         container.setCPUListWoW64(cpuListViewWoW64.getCheckedCPUListAsString());
         container.setAudioDriver(StringUtils.parseIdentifier(sAudioDriver.getSelectedItem()));
@@ -557,7 +557,7 @@ public class ContainerDetailFragment extends Fragment {
             List<String> mouseWarpOverrideList = Arrays.asList(context.getString(R.string.disable), context.getString(R.string.enable), context.getString(R.string.force));
             Spinner sMouseWarpOverride = view.findViewById(R.id.SMouseWarpOverride);
             sMouseWarpOverride.setAdapter(new ArrayAdapter<>(context, android.R.layout.simple_spinner_dropdown_item, mouseWarpOverrideList));
-            
+
             String mouseWarpOverride = isEditMode() ? container.getMouseWarpOverride() : "disable";
             AppUtils.setSpinnerSelectionFromValue(sMouseWarpOverride, registryEditor.getStringValue("Software\\Wine\\DirectInput", "MouseWarpOverride", mouseWarpOverride));
         }
@@ -781,7 +781,7 @@ public class ContainerDetailFragment extends Fragment {
 
     private void loadWineVersionSpinner(final View view, Spinner sWineVersion, final ArrayList<WineInfo> wineInfos, Container container) {
         final Context context = getContext();
-        
+
         if (isEditMode()) {
             sWineVersion.setEnabled(false);
             sWineVersion.setAlpha(0.5f);
@@ -789,14 +789,14 @@ public class ContainerDetailFragment extends Fragment {
             sWineVersion.setEnabled(true);
             sWineVersion.setAlpha(1.0f);
         }
-        
+
         view.findViewById(R.id.LLWineVersion).setVisibility(View.VISIBLE);
-        
+
         ArrayList<String> wineVersions = new ArrayList<>();
         for (WineInfo wineInfo : wineInfos) {
             wineVersions.add(wineInfo.identifier());
         }
-        
+
         try {
             ContentsManager contentsManager = new ContentsManager(context);
             contentsManager.syncContents();
@@ -809,9 +809,9 @@ public class ContainerDetailFragment extends Fragment {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        
+
         sWineVersion.setAdapter(new ArrayAdapter<>(context, android.R.layout.simple_spinner_dropdown_item, wineVersions));
-        
+
         if (container == null) {
             AppUtils.setSpinnerSelectionFromValue(sWineVersion, WineInfo.WINE_X86_64.identifier());
         } else {
@@ -824,6 +824,7 @@ public class ContainerDetailFragment extends Fragment {
         itemList.add("FEX-2512");
         itemList.add("FEX-2601");
         itemList.add("FEX-2603");
+        itemList.add("FEX-2610");
         for (ContentProfile profile : manager.getProfiles(ContentProfile.ContentType.CONTENT_TYPE_FEX))
             itemList.add(ContentsManager.getEntryName(profile));
         spinner.setAdapter(new ArrayAdapter<>(context, android.R.layout.simple_spinner_dropdown_item, itemList));

@@ -131,7 +131,7 @@ public abstract class GeneralComponents {
                 items = new String[]{DefaultVersion.TURNIP, "25.3.0", "26.1.0", "26.1.15"};
                 break;
             case DXVK:
-                items = new String[]{DefaultVersion.MINOR_DXVK, DefaultVersion.MAJOR_DXVK, "2.7.1", "3.0.2" };
+                items = new String[]{DefaultVersion.MINOR_DXVK, DefaultVersion.MAJOR_DXVK, "2.7.1" };
                 break;
             case VKD3D:
                 items = new String[]{DefaultVersion.VKD3D, "3.0.1"};
@@ -164,7 +164,7 @@ public abstract class GeneralComponents {
         try {
             ContentsManager manager = new ContentsManager(context);
             manager.syncContents();
-            
+
             ContentProfile.ContentType wcpType = getWCPContentType(type);
             if (wcpType != null) {
                 List<ContentProfile> profiles = manager.getProfiles(wcpType);
@@ -295,13 +295,13 @@ public abstract class GeneralComponents {
         try {
             ContentsManager manager = new ContentsManager(context);
             manager.syncContents();
-            
+
             ContentProfile.ContentType wcpType = getWCPContentType(type);
             if (wcpType == null) return false;
-            
+
             List<ContentProfile> profiles = manager.getProfiles(wcpType);
             if (profiles == null) return false;
-            
+
             // Find matching components
             ContentProfile targetProfile = null;
             for (ContentProfile profile : profiles) {
@@ -310,9 +310,9 @@ public abstract class GeneralComponents {
                     break;
                 }
             }
-            
+
             if (targetProfile == null) return false;
-            
+
             // Application component (copy files to target location)
             // Note: applyContent will copy the files to the correct location in the rootfs,
             // no need to specify the destination
@@ -334,7 +334,7 @@ public abstract class GeneralComponents {
         if (toolbox != null) {
             toolbox.setVisibility(View.GONE);
         }
-        
+
         loadSpinner(type, spinner, selectedItem, defaultItem);
     }
 
