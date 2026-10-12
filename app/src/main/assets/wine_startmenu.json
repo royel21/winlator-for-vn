@@ -38,29 +38,8 @@
                 "path" : "Z:/opt/apps/GPUInfo.exe"
             },
             {
-                "name" : "D3D Cube",
-                "path" : "Z:/opt/apps/TestD3D.exe"
-            },
-            {
-                "name" : "OpenGL Test",
-                "path" : "Z:/opt/apps/wglgears.exe"
-            },
-            {
                 "name" : "D3D9 & D3D11 Test",
-                "children" : [
-                    {
-                        "name" : "D3D9_x32",
-                        "path" : "Z:/opt/apps/dx9_demo/D3D9_x32.exe"
-                    },
-                    {
-                        "name" : "D3D9_x64",
-                        "path" : "Z:/opt/apps/dx9_demo/D3D9_x64.exe"
-                    },
-                    {
-                        "name" : "D3D11_x64",
-                        "path" : "Z:/opt/apps/dx11_demo/D3D11_x64.exe"
-                    }
-                ]
+                "path": "Z:/opt/apps/dx11_demo/D3D11_x64.exe"
             },
             {
                 "name" : "My Computer",

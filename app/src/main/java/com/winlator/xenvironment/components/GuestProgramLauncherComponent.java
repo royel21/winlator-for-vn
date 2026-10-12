@@ -207,8 +207,7 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
         if (!wineLibWineDir.isDirectory()) wineLibWineDir.mkdirs();
         
         envVars.put("PATH", wineDirAbs.getPath() + "/bin:" + rootDir + "/usr/local/bin:" + rootDir + "/usr/bin");
-        
-        // 根据架构设置不同的库路径
+
         String ldLibraryPath;
         File wineUnixLibDir;
         if (!isArm64EC) {

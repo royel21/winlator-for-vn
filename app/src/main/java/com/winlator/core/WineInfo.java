@@ -121,7 +121,6 @@ public class WineInfo implements Parcelable {
             File installDir = ContentsManager.getInstallDir(context, profile);
             if (installDir.exists()) {
                 String arch = identifier.contains("arm64ec") ? "arm64ec" : "x86_64";
-                // 使用相对于 rootfs 的路径
                 String rootfsPath = RootFS.find(context).getRootDir().getPath();
                 String absPath = installDir.getAbsolutePath();
                 String relPath = absPath.startsWith(rootfsPath) ? absPath.substring(rootfsPath.length()) : absPath;
@@ -131,15 +130,60 @@ public class WineInfo implements Parcelable {
             }
         }
 
+        RootFS rootFS = RootFS.find(context);
+        File installedWineDir = rootFS.getInstalledWineDir();
+        File customWineDir = new File(installedWineDir, identifier);
+
+        if (!customWineDir.exists()) {
+            File contentsWineDir = new File(rootFS.getRootDir(), "opt/contents/Wine/" + identifier);
+            if (contentsWineDir.exists()) {
+                customWineDir = contentsWineDir;
+            } else if (installedWineDir.exists()) {
+                File[] files = installedWineDir.listFiles();
+                if (files != null) {
+                    for (File f : files) {
+                        if (f.getName().equalsIgnoreCase(identifier)) {
+                            customWineDir = f;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        String path = customWineDir.exists() ? customWineDir.getAbsolutePath() : rootFS.getRootDir().getPath() + "/opt/contents/Wine/" + identifier;
+
         Matcher matcher = pattern.matcher(identifier);
         if (matcher.find()) {
-            String path = RootFS.find(context).getRootDir().getPath() + "/opt/contents/Wine/" + identifier;
             return new WineInfo(matcher.group(1), matcher.group(2), matcher.group(3).toLowerCase(), path);
+        } else {
+            Matcher verMatcher = Pattern.compile("([0-9]+\\.[0-9]+)").matcher(identifier);
+            String ver = verMatcher.find() ? verMatcher.group(1) : "10.17";
+            String arch = identifier.toLowerCase().contains("arm64ec") ? "arm64ec" : "x86_64";
+            return new WineInfo(ver, null, arch, path);
         }
-        else return MAIN_WINE_VERSION;
     }
 
     public static boolean isMainWineVersion(String wineVersion) {
         return wineVersion == null || wineVersion.equalsIgnoreCase(WINE_X86_64.identifier()) || wineVersion.equalsIgnoreCase(WINE_ARM64EC.identifier());
+    }
+
+    public boolean isVersionAtLeast(int targetMajor, int targetMinor) {
+        if (version == null || version.isEmpty()) return false;
+        try {
+            String cleanVersion = version.replaceAll("[^0-9\\.]", "");
+            String[] parts = cleanVersion.split("\\.");
+            int major = parts.length > 0 && !parts[0].isEmpty() ? Integer.parseInt(parts[0]) : 0;
+            int minor = parts.length > 1 && !parts[1].isEmpty() ? Integer.parseInt(parts[1]) : 0;
+            if (major > targetMajor) return true;
+            if (major == targetMajor) return minor >= targetMinor;
+        } catch (Exception e) {
+            Log.e("WineInfo", "Failed to parse version: " + version, e);
+        }
+        return false;
+    }
+
+    public boolean isWine112OrNewer() {
+        return isVersionAtLeast(11, 2);
     }
 }

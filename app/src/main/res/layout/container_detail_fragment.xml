@@ -178,6 +178,26 @@
                 android:orientation="horizontal"
                 android:gravity="center_vertical" />
 
+            <LinearLayout
+                android:id="@+id/LLUseEGL"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="8dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Use EGL" />
+
+                <Spinner
+                    style="@style/ComboBox"
+                    android:layout_width="match_parent"
+                    android:id="@+id/SUseEGL"
+                    android:entries="@array/use_egl_entries" />
+            </LinearLayout>
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
