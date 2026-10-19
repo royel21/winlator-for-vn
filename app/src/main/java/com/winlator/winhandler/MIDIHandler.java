@@ -154,6 +154,7 @@ public class MIDIHandler {
 
         if (executorService != null) {
             try {
+                executorService.shutdown();
                 executorService.awaitTermination(2, TimeUnit.SECONDS);
             }
             catch (InterruptedException e) {}
