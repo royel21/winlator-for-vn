@@ -57,6 +57,43 @@ public class MIDIHandler {
         System.loadLibrary("midihandler");
     }
 
+    /**
+     * Equivalent to the Wine modReset function.
+     * Iterates through all 16 MIDI channels and sends All Notes Off (CC 123)
+     * and All Sound Off (CC 120) to the native synthesizer backend.
+     */
+    public void modReset() {
+        if (nativePtr == 0) return;
+
+        for (int ch = 0; ch < 16; ch++) {
+            // CC 123: All Notes Off
+            controlChange(nativePtr, ch, 123, 0);
+            // CC 120: All Sound Off
+            controlChange(nativePtr, ch, 120, 0);
+        }
+    }
+
+    /**
+     * Optional: If you also need to flush connected hardware/external output ports
+     * using Android's MIDI framework receiver.
+     */
+    public void resetOutputPort() {
+        synchronized (outputPortReceiver) {
+            if (outputPort != null) {
+                try {
+                    for (int ch = 0; ch < 16; ch++) {
+                        // Send bytes for CC 123 and CC 120 over Android MidiReceiver
+                        // Status byte: 0xB0 | channel, Control: 123/120, Value: 0
+                        byte status = (byte) (0xB0 | ch);
+                        outputPortReceiver.onSend(new byte[]{status, 123, 0, status, 120, 0}, 0, 6, 0);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
     public void outputPortConnect() {
         String selectedDevice = winHandler.activity.getPreferences().getString("midi_input_device", "auto");
         if (selectedDevice.equals("none")) return;
@@ -182,7 +219,12 @@ public class MIDIHandler {
                 keyPressure(nativePtr, channel, param1, param2);
                 break;
             case CMD_CONTROL_CHANGE:
-                controlChange(nativePtr, channel, param1, param2);
+                if (param1 == 120 || param1 == 123) {
+                    modReset(); // Resets all channels across the native backend
+                    resetOutputPort(); // Resets connected hardware ports if any
+                } else {
+                    controlChange(nativePtr, channel, param1, param2);
+                }
                 break;
             case CMD_PROGRAM_CHANGE:
                 programChange(nativePtr, channel, param1);
