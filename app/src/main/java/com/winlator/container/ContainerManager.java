@@ -105,6 +105,15 @@ public class ContainerManager {
                 registryEditor.setStringValue("Software\\Wine\\Direct3D", "UseGLSL", "enabled");
             }
 
+            File systemRegFile = new File(containerDir, ".wine/system.reg");
+            try (WineRegistryEditor registryEditor = new WineRegistryEditor(systemRegFile)) {
+                registryEditor.setStringValue("Software\\Classes\\.iso", null, "WineDiscImage");
+                registryEditor.setStringValue("Software\\Classes\\.cue", null, "WineDiscImage");
+                registryEditor.setStringValue("Software\\Classes\\.ccd", null, "WineDiscImage");
+                registryEditor.setStringValue("Software\\Classes\\WineDiscImage", null, "Disc Image");
+                registryEditor.setStringValue("Software\\Classes\\WineDiscImage\\DefaultIcon", null, "C:\\windows\\system32\\winecdrom.ico");
+            }
+
             com.winlator.win32.WinVersions.WinVersion[] winVersions = com.winlator.win32.WinVersions.getWinVersions();
             for (int i = 0; i < winVersions.length; i++) {
                 if (winVersions[i].version.equals(container.getWinVersion())) {

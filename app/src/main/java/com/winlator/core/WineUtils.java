@@ -92,6 +92,12 @@ public abstract class WineUtils {
             registryEditor.setStringValue("Software\\Classes\\lnkfile\\DefaultIcon", null, "shell32.dll,-30");
             registryEditor.setStringValue("Software\\Classes\\inifile\\DefaultIcon", null, "shell32.dll,-151");
 
+            registryEditor.setStringValue("Software\\Classes\\.iso", null, "WineDiscImage");
+            registryEditor.setStringValue("Software\\Classes\\.cue", null, "WineDiscImage");
+            registryEditor.setStringValue("Software\\Classes\\.ccd", null, "WineDiscImage");
+            registryEditor.setStringValue("Software\\Classes\\WineDiscImage", null, "Disc Image");
+            registryEditor.setStringValue("Software\\Classes\\WineDiscImage\\DefaultIcon", null, "C:\\windows\\system32\\winecdrom.ico");
+
             File corefontsAddedFile = new File(userConfigDir, "corefonts.added");
             if (!corefontsAddedFile.isFile()) {
                 setupSystemFonts(registryEditor, wineInfo.path);
