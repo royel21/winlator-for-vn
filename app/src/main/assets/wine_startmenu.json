@@ -83,7 +83,7 @@
         ]
     },
     {
-        "name": "D7/D8 to D3D9",
+        "name": "Change D3D7-8-9 Renderer",
         "children": [
             {
                 "name": "1. dxwrapper1.3.77",
@@ -108,7 +108,7 @@
         ]
     },
     {
-        "name": "Wine OpenGL Render",
+        "name": "Change OpenGL Render",
         "children": [
             {
                 "name": "EGL",
