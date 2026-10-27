@@ -604,6 +604,20 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             containerDataChanged = true;
         }
 
+        File userRegFile = new File(rootFS.getRootDir(), RootFS.WINEPREFIX + "/user.reg");
+        if (userRegFile.exists()) {
+            try (WineRegistryEditor registryEditor = new WineRegistryEditor(userRegFile)) {
+                registryEditor.setStringValue("Software\\Wine\\Drivers", "Graphics", "x11");
+                String useEGL = shortcut != null && !shortcut.getExtra("useEGL").isEmpty() ? shortcut.getExtra("useEGL") : (container != null ? container.getExtra("useEGL", "y") : "y");
+                boolean isEGL = (useEGL.equalsIgnoreCase("y") || useEGL.equalsIgnoreCase("t") || useEGL.equalsIgnoreCase("1"));
+                if (isEGL) {
+                    registryEditor.setStringValue("Software\\Wine\\X11 Driver", "UseEGL", "y");
+                } else {
+                    registryEditor.setStringValue("Software\\Wine\\X11 Driver", "UseEGL", "n");
+                }
+            }
+        }
+
         if (containerDataChanged) container.saveData();
     }
 
@@ -642,6 +656,15 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         }
 
         envVars.put("EGL_LOG_LEVEL", "fatal");
+
+        String useEGL = shortcut != null && !shortcut.getExtra("useEGL").isEmpty() ? shortcut.getExtra("useEGL") : (container != null ? container.getExtra("useEGL", "y") : "y");
+        boolean isEGL = (useEGL.equalsIgnoreCase("y") || useEGL.equalsIgnoreCase("t") || useEGL.equalsIgnoreCase("1"));
+        if (isEGL) {
+            envVars.put("EGL_PLATFORM", "x11");
+            if (!envVars.has("MESA_GL_VERSION_OVERRIDE")) {
+                envVars.put("MESA_GL_VERSION_OVERRIDE", "4.6COMPAT");
+            }
+        }
 
         environment = new XEnvironment(this, rootFS);
         environment.addComponent(new SysVSharedMemoryComponent(xServer, UnixSocketConfig.create(rootPath, UnixSocketConfig.SYSVSHM_SERVER_PATH)));

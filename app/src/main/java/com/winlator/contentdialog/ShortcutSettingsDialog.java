@@ -22,6 +22,7 @@ import com.winlator.core.EnvVars;
 import com.winlator.container.GraphicsDriverPicker;
 import com.winlator.core.GeneralComponents;
 import com.winlator.core.StringUtils;
+import com.winlator.core.WineInfo;
 import com.winlator.inputcontrols.ControlsProfile;
 import com.winlator.inputcontrols.InputControlsManager;
 import com.winlator.widget.EnvVarsView;
@@ -70,6 +71,14 @@ public class ShortcutSettingsDialog extends ContentDialog {
         String oldDXWrapperConfig = shortcut.getExtra("dxwrapperConfig", shortcut.container.getDXWrapperConfig());
         String selectedDXWrapper = shortcut.getExtra("dxwrapper", shortcut.container.getDXWrapper());
         DXWrapperPicker dxwrapperPicker = new DXWrapperPicker(findViewById(R.id.LLDXWrapper), graphicsDriverPicker, selectedDXWrapper, oldDXWrapperConfig);
+
+        final Spinner sOpenGLRender = findViewById(R.id.SOpenGLRender);
+        if (sOpenGLRender != null) {
+            String useEGLExtra = shortcut.getExtra("useEGL");
+            String defaultUseEGL = shortcut.container.getExtra("useEGL", "y");
+            String effectiveUseEGL = !useEGLExtra.isEmpty() ? useEGLExtra : defaultUseEGL;
+            sOpenGLRender.setSelection((effectiveUseEGL.equals("y") || effectiveUseEGL.equals("t") || effectiveUseEGL.equals("1")) ? 1 : 0);
+        }
 
         findViewById(R.id.BTHelpDXWrapper).setOnClickListener((v) -> AppUtils.showHelpBox(context, v, R.string.dxwrapper_help_content));
 
@@ -143,6 +152,12 @@ public class ShortcutSettingsDialog extends ContentDialog {
                 shortcut.putExtra("dxwrapper", !dxwrapper.equals(shortcut.container.getDXWrapper()) ? dxwrapper : null);
                 shortcut.putExtra("dxwrapperConfig", !dxwrapperConfig.equals(shortcut.container.getDXWrapperConfig()) ? dxwrapperConfig : null);
                 shortcut.putExtra("graphicsDriverConfig", !graphicsDriverConfig.equals(shortcut.container.getGraphicsDriverConfig()) ? graphicsDriverConfig : null);
+
+                if (sOpenGLRender != null) {
+                    String useEGL = sOpenGLRender.getSelectedItemPosition() == 1 ? "y" : "n";
+                    shortcut.putExtra("useEGL", !useEGL.equals(shortcut.container.getExtra("useEGL", "y")) ? useEGL : null);
+                }
+
                 shortcut.putExtra("audioDriver", !audioDriver.equals(shortcut.container.getAudioDriver())? audioDriver : null);
                 shortcut.putExtra("audioDriverConfig", !audioDriverConfig.equals(shortcut.container.getAudioDriverConfig()) ? audioDriverConfig : null);
                 shortcut.putExtra("forceFullscreen", cbForceFullscreen.isChecked() ? "1" : null);

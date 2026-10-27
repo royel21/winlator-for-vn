@@ -179,23 +179,22 @@
                 android:gravity="center_vertical" />
 
             <LinearLayout
-                android:id="@+id/LLUseEGL"
+                android:id="@+id/LLOpenGLRender"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:layout_marginTop="8dp"
-                android:visibility="gone">
+                android:layout_marginTop="8dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Use EGL" />
+                    android:text="Change OpenGL Render" />
 
                 <Spinner
                     style="@style/ComboBox"
                     android:layout_width="match_parent"
-                    android:id="@+id/SUseEGL"
-                    android:entries="@array/use_egl_entries" />
+                    android:id="@+id/SOpenGLRender"
+                    android:entries="@array/opengl_render_entries" />
             </LinearLayout>
 
             <TextView

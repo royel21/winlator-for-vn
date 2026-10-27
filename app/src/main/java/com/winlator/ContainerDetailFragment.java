@@ -370,6 +370,12 @@ public class ContainerDetailFragment extends Fragment {
         String selectedDXWrapper = container != null ? container.getDXWrapper() : Container.DEFAULT_DXWRAPPER;
         dxwrapperPicker = new DXWrapperPicker(view.findViewById(R.id.LLDXWrapper), graphicsDriverPicker, selectedDXWrapper, oldDXWrapperConfig);
 
+        Spinner sOpenGLRender = view.findViewById(R.id.SOpenGLRender);
+        if (sOpenGLRender != null) {
+            String useEGL = container != null ? container.getExtra("useEGL", "y") : "y";
+            sOpenGLRender.setSelection((useEGL.equals("y") || useEGL.equals("t") || useEGL.equals("1")) ? 1 : 0);
+        }
+
         AppUtils.setSpinnerSelectionFromIdentifier(sAudioDriver, container != null ? container.getAudioDriver() : Container.DEFAULT_AUDIO_DRIVER);
         vAudioDriverConfig.setTag(container != null ? container.getAudioDriverConfig() : "");
 
@@ -447,6 +453,12 @@ public class ContainerDetailFragment extends Fragment {
         container.setDXWrapper(dxwrapperPicker.getDXWrapper());
         container.setDXWrapperConfig(dxwrapperPicker.getDXWrapperConfig());
         container.setGraphicsDriverConfig(graphicsDriverPicker.getGraphicsDriverConfig());
+
+        Spinner sOpenGLRender = view.findViewById(R.id.SOpenGLRender);
+        if (sOpenGLRender != null) {
+            boolean useEGL = sOpenGLRender.getSelectedItemPosition() == 1;
+            container.putExtra("useEGL", useEGL ? "y" : "n");
+        }
 
         String envVars = envVarsView.getEnvVars();
         if (graphicsDriver.startsWith(GraphicsDrivers.VORTEK)) {

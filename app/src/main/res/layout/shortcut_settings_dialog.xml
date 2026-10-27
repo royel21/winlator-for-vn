@@ -169,6 +169,25 @@
             android:orientation="horizontal"
             android:gravity="center_vertical" />
 
+        <LinearLayout
+            android:id="@+id/LLOpenGLRender"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="8dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Change OpenGL Render" />
+
+            <Spinner
+                style="@style/ComboBox"
+                android:layout_width="match_parent"
+                android:id="@+id/SOpenGLRender"
+                android:entries="@array/opengl_render_entries" />
+        </LinearLayout>
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

@@ -181,8 +181,8 @@
         <item>mailbox</item>
         <item>fifo</item>
     </string-array>
-    <string-array name="use_egl_entries">
-        <item>@string/disable</item>
-        <item>@string/enable</item>
+    <string-array name="opengl_render_entries">
+        <item>WGL</item>
+        <item>EGL</item>
     </string-array>
 </resources>
