@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Winlator</string>
+    <string name="search">Pesquisar</string>
     <string name="run">Executar</string>
     <string name="edit">Editar</string>
     <string name="remove">Remover</string>

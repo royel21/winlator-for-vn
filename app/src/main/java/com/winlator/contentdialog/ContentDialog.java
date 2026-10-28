@@ -2,6 +2,8 @@ package com.winlator.contentdialog;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,6 +22,9 @@ import com.winlator.core.AppUtils;
 import com.winlator.core.Callback;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 public class ContentDialog extends Dialog {
     private Runnable onConfirmCallback;
@@ -194,19 +199,69 @@ public class ContentDialog extends Dialog {
     public static void showSelectionList(Context context, String title, final String[] items, boolean multiSelection, Callback<ArrayList<Integer>> callback) {
         ContentDialog dialog = new ContentDialog(context);
 
+        final EditText searchInput = dialog.findViewById(R.id.EditText);
+        searchInput.setHint(R.string.search);
+        searchInput.setText("");
+        searchInput.setVisibility(View.VISIBLE);
+
         final ListView listView = dialog.findViewById(R.id.ListView);
         listView.getLayoutParams().width = AppUtils.getPreferredDialogWidth(context);
         listView.setChoiceMode(multiSelection ? ListView.CHOICE_MODE_MULTIPLE : ListView.CHOICE_MODE_SINGLE);
         int layoutResId = multiSelection ? R.layout.simple_list_item_multiple_choice : R.layout.simple_list_item_single_choice;
-        listView.setAdapter(new ArrayAdapter<>(context, layoutResId, items));
+
+        final ArrayList<String> itemList = new ArrayList<>(Arrays.asList(items));
+        final ArrayList<String> filteredList = new ArrayList<>(itemList);
+        final ArrayAdapter<String> adapter = new ArrayAdapter<>(context, layoutResId, filteredList);
+        listView.setAdapter(adapter);
         listView.setVisibility(View.VISIBLE);
+
+        final Set<String> selectedItems = new HashSet<>();
+
+        listView.setOnItemClickListener((parent, view, position, id) -> {
+            String item = filteredList.get(position);
+            if (multiSelection) {
+                if (listView.isItemChecked(position)) {
+                    selectedItems.add(item);
+                } else {
+                    selectedItems.remove(item);
+                }
+            } else {
+                selectedItems.clear();
+                selectedItems.add(item);
+            }
+        });
+
+        searchInput.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String query = s.toString().trim().toLowerCase();
+                filteredList.clear();
+                for (String item : itemList) {
+                    if (query.isEmpty() || item.toLowerCase().contains(query)) {
+                        filteredList.add(item);
+                    }
+                }
+                adapter.notifyDataSetChanged();
+
+                for (int i = 0; i < filteredList.size(); i++) {
+                    listView.setItemChecked(i, selectedItems.contains(filteredList.get(i)));
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
 
         dialog.setTitle(title);
         dialog.setOnConfirmCallback(() -> {
             ArrayList<Integer> result = new ArrayList<>();
-            SparseBooleanArray checkedItemPositions = listView.getCheckedItemPositions();
-            for (int i = 0; i < checkedItemPositions.size(); i++) {
-                if (checkedItemPositions.valueAt(i)) result.add(checkedItemPositions.keyAt(i));
+            for (int i = 0; i < items.length; i++) {
+                if (selectedItems.contains(items[i])) {
+                    result.add(i);
+                }
             }
             callback.call(result);
         });
