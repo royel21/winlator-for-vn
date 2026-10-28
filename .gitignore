@@ -17,3 +17,5 @@ rootfs.tzst
 .modules.xml
 /app/debug/app-debug.apk
 /app/debug/output-metadata.json
+.idea/compiler.xml
+.idea/misc.xml
