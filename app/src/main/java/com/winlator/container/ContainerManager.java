@@ -332,12 +332,20 @@ public class ContainerManager {
 
     public void createShortcut(Container container, JSONObject data, File destinationDir) {
         try {
-            String name = data.getString("name");
-            String path = data.getString("path");
+            String name = data.optString("name", "");
+            String path = data.optString("path", "");
             String icon = data.optString("icon", "");
             String wmClass = data.optString("wmClass", "");
             JSONObject extraData = data.optJSONObject("extraData");
-            Log.d("ishortcut", data.toString());
+
+            if (extraData != null) {
+                if (name.isEmpty()) name = extraData.optString("name", "");
+                if (path.isEmpty()) path = extraData.optString("path", "");
+                if (wmClass.isEmpty()) wmClass = extraData.optString("wmClass", "");
+            }
+
+            if (name.isEmpty()) return;
+
             if (destinationDir == null) {
                 destinationDir = new File(container.getUserDir(), "Desktop");
             }
@@ -359,12 +367,17 @@ public class ContainerManager {
                 Iterator<String> keys = extraData.keys();
                 while (keys.hasNext()) {
                     String key = keys.next();
-                    sb.append(key).append("=").append(extraData.getString(key)).append("\n");
+                    String val = extraData.optString(key, "");
+                    if (!val.isEmpty() && !val.equals("null")) {
+                        sb.append(key).append("=").append(val).append("\n");
+                    }
                 }
             }
             FileUtils.writeString(file, sb.toString());
         }
-        catch (JSONException e) {}
+        catch (Exception e) {
+            Log.e("ContainerManager", "Failed to create/import shortcut", e);
+        }
     }
 
     public void removeContainerAsync(Container container, Runnable callback) {

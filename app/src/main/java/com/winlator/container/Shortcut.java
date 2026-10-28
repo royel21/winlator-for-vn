@@ -123,49 +123,45 @@ public class Shortcut {
 
     public JSONObject getData() {
         try {
-            if(!extraData.has("screenSize")){
-                extraData.put("screenSize", getExtra("screenSize", container.getScreenSize()));
-            }
-            if(!extraData.has("screenOrientation")){
-                extraData.put("screenOrientation", getExtra("swapResolution", container.getScreenOrientation()));
-            }
-             if(!extraData.has("swapResolution")){
-                 extraData.put("swapResolution", getExtra("swapResolution", String.valueOf(container.isSwapResolution())));
-             }
-             if(!extraData.has("graphicsDriver")){
-                 extraData.put("graphicsDriver", getExtra("graphicsDriver", container.getGraphicsDriver()));
-             }
-             if(!extraData.has("dxwrapper")){
-                 extraData.put("dxwrapper", getExtra("dxwrapper", container.getDXWrapper()));
-             }
-             if(!extraData.has("dxwrapperConfig")){
-                 extraData.put("dxwrapperConfig", getExtra("dxwrapperConfig", container.getDXWrapperConfig()));
-             }
-             if(!extraData.has("graphicsDriverConfig")){
-                 extraData.put("graphicsDriverConfig", getExtra("graphicsDriverConfig", container.getGraphicsDriverConfig()));
-             }
-             if(!extraData.has("audioDriver")){
-                 extraData.put("audioDriver", getExtra("audioDriver", container.getAudioDriver()));
-             }
-             if(!extraData.has("audioDriverConfig")){
-                 extraData.put("audioDriverConfig", getExtra("audioDriverConfig", container.getAudioDriverConfig()));
-             }
-            if(!extraData.has("wincomponents")){
-                extraData.put("wincomponents", getExtra("wincomponents", container.getWinComponents()));
-            }
-            if(!extraData.has("envVars")){
-                extraData.put("envVars", container.getEnvVars());
-            }
-            if(!extraData.has("box64Preset")){
-                extraData.put("box64Preset", getExtra("box64Preset", container.getBox64Preset()));
-            }
             JSONObject data = new JSONObject();
-            data.put("forceFullscreen", getExtra("forceFullscreen", "0"));
+            data.put("name", name);
+            data.put("path", path != null ? path : "");
+            data.put("wmClass", wmClass != null ? wmClass : "");
+            data.put("icon", iconFile != null ? iconFile.getName().replace(".png", "") : "");
             data.put("execArgs", getExtra("execArgs", ""));
-            extraData.put("controlsProfile", getExtra("controlsProfile", ""+container.getControlsProfile()));
-            data.put("extraData", extraData);
-            data.getJSONObject("extraData").put("wmClass", null);
-            data.getJSONObject("extraData").put("name", null);
+            data.put("forceFullscreen", getExtra("forceFullscreen", "0"));
+
+            JSONObject extra = new JSONObject(extraData.toString());
+
+            // Remove unique/local identifiers from extraData payload
+            extra.remove("id");
+            extra.remove("containerId");
+            extra.remove("name");
+            extra.remove("wmClass");
+            extra.remove("path");
+
+            if (!extra.has("screenSize")) extra.put("screenSize", getExtra("screenSize", container.getScreenSize()));
+            if (!extra.has("screenOrientation")) extra.put("screenOrientation", getExtra("screenOrientation", container.getScreenOrientation()));
+            if (!extra.has("swapResolution")) extra.put("swapResolution", getExtra("swapResolution", String.valueOf(container.isSwapResolution())));
+            if (!extra.has("graphicsDriver")) extra.put("graphicsDriver", getExtra("graphicsDriver", container.getGraphicsDriver()));
+            if (!extra.has("dxwrapper")) extra.put("dxwrapper", getExtra("dxwrapper", container.getDXWrapper()));
+            if (!extra.has("dxwrapperConfig")) extra.put("dxwrapperConfig", getExtra("dxwrapperConfig", container.getDXWrapperConfig()));
+            if (!extra.has("graphicsDriverConfig")) extra.put("graphicsDriverConfig", getExtra("graphicsDriverConfig", container.getGraphicsDriverConfig()));
+            if (!extra.has("audioDriver")) extra.put("audioDriver", getExtra("audioDriver", container.getAudioDriver()));
+            if (!extra.has("audioDriverConfig")) extra.put("audioDriverConfig", getExtra("audioDriverConfig", container.getAudioDriverConfig()));
+            if (!extra.has("wincomponents")) extra.put("wincomponents", getExtra("wincomponents", container.getWinComponents()));
+            if (!extra.has("envVars")) extra.put("envVars", getExtra("envVars", container.getEnvVars()));
+            if (!extra.has("box64Preset")) extra.put("box64Preset", getExtra("box64Preset", container.getBox64Preset()));
+            if (!extra.has("box64Version")) extra.put("box64Version", getExtra("box64Version", container.getBox64Version()));
+            if (!extra.has("controlsProfile")) extra.put("controlsProfile", getExtra("controlsProfile", String.valueOf(container.getControlsProfile())));
+            if (!extra.has("dinputMapperType")) extra.put("dinputMapperType", getExtra("dinputMapperType", String.valueOf(GamepadHandler.DINPUT_MAPPER_TYPE_XINPUT)));
+            if (!extra.has("preferredInputApi")) extra.put("preferredInputApi", getExtra("preferredInputApi", String.valueOf(GamepadHandler.PreferredInputApi.AUTO.ordinal())));
+            if (!extra.has("forceFullscreen")) extra.put("forceFullscreen", getExtra("forceFullscreen", "0"));
+            if (!extra.has("startAsFullscreen")) extra.put("startAsFullscreen", getExtra("startAsFullscreen", String.valueOf(container.isStartAsFullscreen())));
+            if (!extra.has("useEGL")) extra.put("useEGL", getExtra("useEGL", container.getExtra("useEGL", "y")));
+            if (!extra.has("mouseWarpOverride")) extra.put("mouseWarpOverride", getExtra("mouseWarpOverride", container.getMouseWarpOverride()));
+
+            data.put("extraData", extra);
             return data;
         }
         catch (JSONException e) {

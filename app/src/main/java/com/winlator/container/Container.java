@@ -25,7 +25,7 @@ public class Container {
     public static final boolean DEFAULT_SWAP_RESOLUTION = false;
     public static final String DEFAULT_AUDIO_DRIVER = AudioDrivers.ALSA;
     public static final String DEFAULT_DXWRAPPER = DXWrappers.DXVK;
-    public static final String DEFAULT_WINCOMPONENTS = "direct3d=1,directsound=0,directmusic=0,directshow=1,directplay=0,xaudio=1,vcrun2005=0,vcrun2010=1,wmdecoder=1";
+    public static final String DEFAULT_WINCOMPONENTS = "direct3d=1,directsound=0,directmusic=1,directshow=1,directplay=0,xaudio=1,vcrun2005=0,vcrun2010=1,wmdecoder=1";
     public static final String FALLBACK_WINCOMPONENTS = "direct3d=0,directsound=0,directmusic=0,directshow=0,directplay=0,xaudio=0,vcrun2005=0,vcrun2010=0,wmdecoder=0";
     public static final String DEFAULT_DRIVES = "E:"+AppUtils.DIRECTORY_DOWNLOADS +"D:"+AppUtils.INTERNAL_STORAGE;
     public static final byte STARTUP_SELECTION_NORMAL = 0;
@@ -449,7 +449,11 @@ public class Container {
             data.put("winVersion", winVersion);
             data.put("logPixels", logPixels);
             data.put("mouseWarpOverride", mouseWarpOverride);
-            data.put("extraData", extraData);
+
+            JSONObject extra = new JSONObject(extraData.toString());
+            extra.remove("id");
+            extra.remove("containerId");
+            data.put("extraData", extra);
 
             if (wineVersion != null && !wineVersion.isEmpty()) {
                 data.put("wineVersion", wineVersion);
