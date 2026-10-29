@@ -12,6 +12,15 @@ public class CursorManager extends XResourceManager {
         this.drawableManager = drawableManager;
     }
 
+    public void onContextLost() {
+        for (int i = 0; i < cursors.size(); i++) {
+            Cursor cursor = cursors.valueAt(i);
+            for (Drawable drawable : new Drawable[]{cursor.cursorImage, cursor.sourceImage, cursor.maskImage}) {
+                if (drawable != null && drawable.getTexture() != null) drawable.getTexture().onContextLost();
+            }
+        }
+    }
+
     public Cursor getCursor(int id) {
         return cursors.get(id);
     }

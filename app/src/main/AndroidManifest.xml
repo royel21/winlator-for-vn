@@ -42,7 +42,7 @@
             android:theme="@style/AppThemeFullscreenDark"
             android:supportsPictureInPicture="true"
             android:launchMode="singleTask"
-            android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|density|navigation"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|density|navigation|uiMode|fontScale|locale|layoutDirection|touchscreen|colorMode|mcc|mnc"
             android:screenOrientation="unspecified" />
 
         <activity android:name="com.winlator.ControlsEditorActivity"

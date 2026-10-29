@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
+import android.util.Log;
 
 import androidx.core.graphics.ColorUtils;
 
@@ -62,6 +63,7 @@ public class GLRenderer implements GLSurfaceView.Renderer, WindowManager.OnWindo
     protected short surfaceWidth;
     protected short surfaceHeight;
     public final EffectComposer effectComposer = new EffectComposer(this);
+    private boolean surfaceCreated = false;
 
     public GLRenderer(XServerView xServerView, XServer xServer) {
         this.xServerView = xServerView;
@@ -82,6 +84,23 @@ public class GLRenderer implements GLSurfaceView.Renderer, WindowManager.OnWindo
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         GPUHelper.setGlobalEGLContext();
+
+        /* Called again only when Android dropped the EGL context (setPreserveEGLContextOnPause is a hint):
+         * every cached GL object id is now invalid, so forget them and let them be recreated lazily */
+        if (surfaceCreated) {
+            Log.w("GLRenderer", "EGL context was recreated, restoring GL resources");
+            quadVertices.onContextLost();
+            cursorMaterial.onContextLost();
+            windowMaterial.onContextLost();
+            effectComposer.onContextLost();
+            if (rootCursorDrawable.getTexture() != null) rootCursorDrawable.getTexture().onContextLost();
+            try (XLock lock = xServer.lock(XServer.Lockable.DRAWABLE_MANAGER, XServer.Lockable.CURSOR_MANAGER)) {
+                xServer.drawableManager.onContextLost();
+                xServer.cursorManager.onContextLost();
+            }
+            viewportNeedsUpdate = true;
+        }
+        surfaceCreated = true;
 
         GLES20.glFrontFace(GLES20.GL_CCW);
         GLES20.glDisable(GLES20.GL_CULL_FACE);

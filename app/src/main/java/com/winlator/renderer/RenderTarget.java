@@ -34,4 +34,10 @@ public class RenderTarget extends Texture {
     public int getFramebuffer() {
         return framebuffer;
     }
+
+    @Override
+    public void onContextLost() {
+        framebuffer = 0;
+        super.onContextLost();
+    }
 }

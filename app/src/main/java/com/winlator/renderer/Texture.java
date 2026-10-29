@@ -134,6 +134,12 @@ public class Texture {
         return textureId > 0;
     }
 
+    /* the EGL context was recreated: the old id is invalid, reallocate (and re-upload) on next use */
+    public void onContextLost() {
+        textureId = 0;
+        needsUpdate = true;
+    }
+
     public int getTextureId() {
         return textureId;
     }

@@ -38,6 +38,12 @@ public class EffectComposer {
         return !effects.isEmpty();
     }
 
+    public synchronized void onContextLost() {
+        readBuffer = null;
+        writeBuffer = null;
+        for (Effect effect : effects) effect.getMaterial().onContextLost();
+    }
+
     private void swapBuffers() {
         RenderTarget tmp = writeBuffer;
         writeBuffer = readBuffer;

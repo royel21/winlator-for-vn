@@ -44,6 +44,13 @@ public class GPUImage extends Texture {
     }
 
     @Override
+    public void onContextLost() {
+        /* the hardware buffer (and its contents) survive, only the texture binding has to be redone */
+        imageKHRPtr = 0;
+        super.onContextLost();
+    }
+
+    @Override
     public void updateFromDrawable() {
         if (!isAllocated() && owner != null) allocateTexture(owner.width, owner.height, null);
         needsUpdate = false;

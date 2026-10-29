@@ -10,6 +10,7 @@ public abstract class ShaderMaterial {
     public static class Uniform {
         public final String name;
         public int location = -1;
+        private int program = 0;
 
         public Uniform(String name) {
             this.name = name;
@@ -70,10 +71,16 @@ public abstract class ShaderMaterial {
     }
 
     private int getUniformLocation(Uniform uniform) {
-        if (uniform.location != -1) return uniform.location;
+        if (uniform.location != -1 && uniform.program == programId) return uniform.location;
         int location = programId != 0 ? GLES20.glGetUniformLocation(programId, uniform.name) : -1;
         uniform.location = location;
+        uniform.program = programId;
         return location;
+    }
+
+    /* the EGL context was recreated: recompile on next use (uniform locations follow the new program) */
+    public void onContextLost() {
+        programId = 0;
     }
 
     public void destroy() {

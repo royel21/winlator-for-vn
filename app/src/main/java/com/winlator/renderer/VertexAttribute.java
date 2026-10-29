@@ -51,6 +51,12 @@ public class VertexAttribute {
         GLES20.glVertexAttribPointer(location, itemSize, GLES20.GL_FLOAT, false, 0, 0);
     }
 
+    public void onContextLost() {
+        bufferId = 0;
+        location = -1;
+        needsUpdate = true;
+    }
+
     public void disable() {
         if (location == -1) return;
         GLES20.glDisableVertexAttribArray(location);
