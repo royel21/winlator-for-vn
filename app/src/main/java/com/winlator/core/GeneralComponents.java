@@ -143,11 +143,25 @@ public abstract class GeneralComponents {
                 items = new String[]{DefaultVersion.SOUNDFONT};
                 break;
             case ADRENOTOOLS_DRIVER:
-                items = new String[]{"System"};
+                items = new String[]{"System", "Turnip-v26.3.0"};
                 break;
         }
 
         return new ArrayList<>(Arrays.asList(items));
+    }
+
+    /**
+     * Extract a builtin adrenotools driver (assets/adrenotools/<identifier>.tzst) on first use
+     */
+    private static File getBuiltinAdrenotoolsDriverDir(Context context, String identifier) {
+        File driverDir = new File(context.getFilesDir(), "builtin_adrenotools/"+identifier);
+        File[] manifestFiles = driverDir.listFiles((file, name) -> name.endsWith(".json"));
+        if (manifestFiles == null || manifestFiles.length == 0) {
+            FileUtils.delete(driverDir);
+            driverDir.mkdirs();
+            if (!TarCompressorUtils.extract(TarCompressorUtils.Type.ZSTD, context, "adrenotools/"+identifier+".tzst", driverDir)) return null;
+        }
+        return driverDir;
     }
 
     public static File getComponentDir(Type type, Context context) {
@@ -241,20 +255,22 @@ public abstract class GeneralComponents {
             return destination.getPath();
         }
         else if (type == Type.ADRENOTOOLS_DRIVER) {
-            if (isBuiltinComponent(type, identifier)) return null;
-            File source = type.getSource(context, identifier);
+            if (identifier.equalsIgnoreCase("System")) return null;
+            File source = isBuiltinComponent(type, identifier) ? getBuiltinAdrenotoolsDriverDir(context, identifier) : type.getSource(context, identifier);
+            if (source == null) return null;
             File[] manifestFiles = source.listFiles((file, name) -> name.endsWith(".json"));
-            if (manifestFiles != null) {
+            if (manifestFiles == null) return null;
+            for (File manifestFile : manifestFiles) {
                 try {
-                    JSONObject manifestJSONObject = new JSONObject(FileUtils.readString(manifestFiles[0]));
+                    JSONObject manifestJSONObject = new JSONObject(FileUtils.readString(manifestFile));
                     String libraryName = manifestJSONObject.optString("libraryName", "");
+                    if (libraryName.isEmpty()) continue; /* e.g. a Vulkan ICD json */
                     File libraryFile = new File(source, libraryName);
                     return libraryFile.isFile() ? libraryFile.getPath() : null;
                 }
-                catch (JSONException e) {
-                    return null;
-                }
+                catch (JSONException e) {}
             }
+            return null;
         }
 
         return type.getSource(context, identifier).getPath();
