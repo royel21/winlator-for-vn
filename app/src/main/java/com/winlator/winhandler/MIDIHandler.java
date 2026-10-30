@@ -41,6 +41,12 @@ public class MIDIHandler {
     private ExecutorService executorService;
     private final List<Integer> midiInClients = new CopyOnWriteArrayList<>();
     private final WinHandler winHandler;
+    private static final ExecutorService synthExecutor = Executors.newSingleThreadExecutor((runnable) -> {
+        Thread thread = new Thread(runnable, "MIDISynth");
+        thread.setDaemon(true);
+        return thread;
+    });
+    private String loadedSoundFontPath;
     private MidiOutputPort outputPort;
     private final MidiReceiver outputPortReceiver = new MidiReceiver() {
         @Override
@@ -198,6 +204,10 @@ public class MIDIHandler {
             executorService = null;
         }
 
+        // no more MIDI data will arrive, so stop whatever is still sounding
+        modReset();
+        resetOutputPort();
+
         if (socket != null) {
             socket.close();
             socket = null;
@@ -247,15 +257,38 @@ public class MIDIHandler {
         loadSoundFont(nativePtr, soundfontPath);
     }
 
+    /**
+     * Creates the synthesizer and loads the soundfont if it isn't loaded yet. This always runs on the
+     * same long-lived thread: FluidSynth loads samples with OpenMP, and its worker threads crash the
+     * app if the thread that started them exits (like the executor of a closed MIDI session).
+     */
+    public void prepareSynth(final String soundfontPath) {
+        try {
+            synthExecutor.submit(() -> {
+                if (init() && soundfontPath != null && !soundfontPath.equals(loadedSoundFontPath)) {
+                    loadSoundFont(soundfontPath);
+                    loadedSoundFontPath = soundfontPath;
+                }
+            }).get();
+        }
+        catch (Exception e) {}
+    }
+
     public void programChange(int channel, int program) {
         programChange(nativePtr, channel, program);
     }
 
     public void destroy() {
-        if (nativePtr != 0) {
-            destroy(nativePtr);
-            nativePtr = 0;
+        try {
+            synthExecutor.submit(() -> {
+                if (nativePtr != 0) {
+                    destroy(nativePtr);
+                    nativePtr = 0;
+                }
+                loadedSoundFontPath = null;
+            }).get();
         }
+        catch (Exception e) {}
     }
 
     private native long nativeAllocate();

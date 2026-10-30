@@ -380,11 +380,10 @@ public class WinHandler {
                 boolean isMidiOut = receiveData.get() == 1;
                 if (midiHandler == null) midiHandler = new MIDIHandler(this);
                 if (isMidiOut) {
-                    midiHandler.open(() -> {
-                        if (midiHandler.init()) {
-                            String soundfont = activity.getPreferences().getString("soundfont", DefaultVersion.SOUNDFONT);
-                            midiHandler.loadSoundFont(GeneralComponents.getDefinitivePath(GeneralComponents.Type.SOUNDFONT, activity, soundfont));
-                        }
+                    final MIDIHandler handler = midiHandler;
+                    handler.open(() -> {
+                        String soundfont = activity.getPreferences().getString("soundfont", DefaultVersion.SOUNDFONT);
+                        handler.prepareSynth(GeneralComponents.getDefinitivePath(GeneralComponents.Type.SOUNDFONT, activity, soundfont));
                     });
                 }
                 else {

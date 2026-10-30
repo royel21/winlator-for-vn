@@ -97,6 +97,7 @@ static void MIDIHandler_pitchBend(MIDIHandler* midiHandler, int channel, int val
 
 static void MIDIHandler_loadSoundFont(MIDIHandler* midiHandler, const char* path) {
     if (!midiHandler) return;
+    if (midiHandler->soundfontId != -1) fluid_synth_sfunload(midiHandler->synth, midiHandler->soundfontId, 1);
     midiHandler->soundfontId = -1;
     int id = fluid_synth_sfload(midiHandler->synth, path, 0);
     if (id != FLUID_FAILED) {
@@ -137,6 +138,7 @@ Java_com_winlator_winhandler_MIDIHandler_loadSoundFont(JNIEnv *env, jobject obj,
                                                        jstring soundfontPath) {
     const char* path = (*env)->GetStringUTFChars(env, soundfontPath, NULL);
     MIDIHandler_loadSoundFont((MIDIHandler*)nativePtr, path);
+    (*env)->ReleaseStringUTFChars(env, soundfontPath, path);
 }
 
 JNIEXPORT void JNICALL

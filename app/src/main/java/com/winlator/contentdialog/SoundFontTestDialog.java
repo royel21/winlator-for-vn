@@ -20,8 +20,7 @@ public class SoundFontTestDialog extends ContentDialog {
         String soundfontPath = GeneralComponents.getDefinitivePath(GeneralComponents.Type.SOUNDFONT, context, soundfont);
 
         final MIDIHandler midiHandler = new MIDIHandler(null);
-        midiHandler.init();
-        midiHandler.loadSoundFont(soundfontPath);
+        midiHandler.prepareSynth(soundfontPath);
 
         int[] channel = {0};
         final Spinner sInstrument = findViewById(R.id.SInstrument);
