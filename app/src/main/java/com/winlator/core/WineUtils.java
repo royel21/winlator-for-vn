@@ -98,6 +98,11 @@ public abstract class WineUtils {
             registryEditor.setStringValue("Software\\Classes\\WineDiscImage", null, "Disc Image");
             registryEditor.setStringValue("Software\\Classes\\WineDiscImage\\DefaultIcon", null, "C:\\windows\\system32\\winecdrom.ico");
 
+            // SDL can't reach Android input devices; gamepads go through winhandler instead
+            String controlSetPath = registryEditor.getSymlinkValue("System\\CurrentControlSet", "SymbolicLinkValue");
+            if (controlSetPath == null) controlSetPath = "System\\CurrentControlSet";
+            registryEditor.setDwordValue(controlSetPath+"\\Services\\winebus", "Enable SDL", 0);
+
             File corefontsAddedFile = new File(userConfigDir, "corefonts.added");
             if (!corefontsAddedFile.isFile()) {
                 setupSystemFonts(registryEditor, wineInfo.path);
