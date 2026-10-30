@@ -177,6 +177,7 @@ public class PresentExtension extends Extension implements WindowManager.OnWindo
 
         synchronized (content.renderLock) {
             sendCompleteNotify(window, serial, CompleteKind.PIXMAP, CompleteMode.COPY, ust, msc);
+            content.setAwaitingFirstPresent(false);
 
             if (pixmap != null) {
                 Texture srcTexture = pixmap.drawable.getTexture();
@@ -206,6 +207,9 @@ public class PresentExtension extends Extension implements WindowManager.OnWindo
         if (window == null) throw new BadWindow(windowId);
 
         window.removeTag("lastIdleTime");
+        // A fresh buffer has no frame yet; keep the window hidden until the first
+        // present so it doesn't cover GDI drawing in the parent window.
+        if (!(window.getContent().getTexture() instanceof GPUImage)) window.getContent().setAwaitingFirstPresent(true);
         GPUImage.createOrObtain(xServer, window.getContent(), true, true);
 
         if (eventId > 0) {

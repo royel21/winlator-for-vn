@@ -1,5 +1,6 @@
 package com.winlator.xserver.extensions;
 
+import android.util.Log;
 import static com.winlator.xserver.XClientRequestHandler.RESPONSE_CODE_SUCCESS;
 
 import com.winlator.renderer.Texture;
@@ -77,6 +78,7 @@ public class XComposite extends Extension {
         if (window.isSurface()) updateMode = (byte)UpdateMode.REDIRECT_AUTOMATIC.ordinal();
 
         Window parent = window.getParent();
+        Log.d("WINDBG", "redirect 0x" + Integer.toHexString(window.id) + " parent 0x" + Integer.toHexString(parent.id) + " mode " + updateMode + " surface " + window.isSurface()); // TEMP DEBUG
         window.setTag("compositeRedirectParent", parent);
         setWindowsToOffscreenStorage(window, true);
         parent.attributes.setRenderSubwindows(false);
@@ -103,6 +105,7 @@ public class XComposite extends Extension {
         if (oldParent == null) throw new BadValue(windowId);
         if (window.isSurface()) updateMode = (byte)UpdateMode.REDIRECT_AUTOMATIC.ordinal();
 
+        Log.d("WINDBG", "unredirect 0x" + Integer.toHexString(window.id) + " parent 0x" + Integer.toHexString(oldParent.id)); // TEMP DEBUG
         window.removeTag("compositeRedirectParent");
         setWindowsToOffscreenStorage(window, false);
         oldParent.attributes.setRenderSubwindows(true);

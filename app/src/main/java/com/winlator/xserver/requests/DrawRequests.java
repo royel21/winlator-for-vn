@@ -114,6 +114,8 @@ public abstract class DrawRequests {
         if (exposures) window.sendEvent(new Expose(window));
     }
 
+    private static int lastCopySrc, lastCopyDst; // TEMP DEBUG
+
     public static void copyArea(XClient client, XInputStream inputStream, XOutputStream outputStream) throws XRequestError {
         int srcDrawableId = inputStream.readInt();
         int dstDrawableId = inputStream.readInt();
@@ -130,6 +132,13 @@ public abstract class DrawRequests {
 
         Drawable dstDrawable =  client.xServer.drawableManager.getDrawable(dstDrawableId);
         if (dstDrawable == null) throw new BadDrawable(dstDrawableId);
+
+        // TEMP DEBUG
+        if (srcDrawable.isOffscreenStorage() && (srcDrawableId != lastCopySrc || dstDrawableId != lastCopyDst)) {
+            lastCopySrc = srcDrawableId; lastCopyDst = dstDrawableId;
+            android.util.Log.d("WINDBG", "copyArea 0x" + Integer.toHexString(srcDrawableId) + " -> 0x" + Integer.toHexString(dstDrawableId) + " " + width + "x" + height
+                    + " srcData=" + (srcDrawable.getData() != null) + " shared=" + srcDrawable.isUseSharedData() + " srcTex=" + (srcDrawable.getTexture() != null ? srcDrawable.getTexture().getClass().getSimpleName() : "null"));
+        }
 
         if (srcDrawable.isOffscreenStorage() && (srcDrawable.getData() == null || srcDrawable.isUseSharedData())) {
             dstDrawable.setData(null);

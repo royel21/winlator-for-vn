@@ -1,8 +1,10 @@
 package com.winlator.renderer;
 
+import android.util.Log;
 import androidx.annotation.Keep;
 
 import com.winlator.xserver.Drawable;
+import com.winlator.xserver.Window;
 import com.winlator.xserver.XServer;
 
 import java.nio.ByteBuffer;
@@ -98,6 +100,13 @@ public class GPUImage extends Texture {
             xServer.getRenderer().xServerView.queueEvent(texture::destroy);
             GPUImage gpuImage = new GPUImage(drawable, cpuAccess, useHALPixelFormatBGRA8888);
             drawable.setTexture(gpuImage);
+
+            // A composite-redirected surface shares its texture with the parent
+            // window (see XComposite), keep the parent on the new image.
+            Window window = xServer.windowManager.getWindow(drawable.id);
+            Window redirectParent = window != null ? (Window)window.getTag("compositeRedirectParent") : null;
+            if (redirectParent != null && window.isSurface()) redirectParent.getContent().setTexture(gpuImage);
+            Log.d("WINDBG", "gpuimage 0x" + Integer.toHexString(drawable.id) + " cpu " + cpuAccess + " redirectParent " + (redirectParent != null ? "0x" + Integer.toHexString(redirectParent.id) : "none")); // TEMP DEBUG
             return gpuImage;
         }
         else return (GPUImage)texture;

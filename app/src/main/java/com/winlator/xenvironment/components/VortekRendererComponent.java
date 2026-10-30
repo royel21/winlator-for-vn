@@ -111,6 +111,9 @@ public class VortekRendererComponent extends EnvironmentComponent implements Con
     private long getWindowHardwareBuffer(int windowId, boolean useHALPixelFormatBGRA8888) {
         Window window = xServer.windowManager.getWindow(windowId);
         if (window != null) {
+            // A fresh swapchain buffer has no frame yet; keep the window hidden until the
+            // first present so it doesn't cover GDI drawing in the parent window.
+            if (!(window.getContent().getTexture() instanceof GPUImage)) window.getContent().setAwaitingFirstPresent(true);
             GPUImage texture = GPUImage.createOrObtain(xServer, window.getContent(), false, useHALPixelFormatBGRA8888);
             return texture.getHardwareBufferPtr();
         }
@@ -123,6 +126,7 @@ public class VortekRendererComponent extends EnvironmentComponent implements Con
         if (window != null) {
             Drawable drawable = window.getContent();
             synchronized (drawable.renderLock) {
+                drawable.setAwaitingFirstPresent(false);
                 drawable.forceUpdate();
             }
         }

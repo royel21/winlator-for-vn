@@ -21,6 +21,7 @@ public class Drawable extends XResource {
     private boolean useSharedData;
     private Runnable onDrawListener;
     private boolean offscreenStorage = false;
+    private boolean awaitingFirstPresent = false;
     private Callback<Drawable> onDestroyListener;
     public final Object renderLock = new Object();
 
@@ -48,6 +49,14 @@ public class Drawable extends XResource {
 
     public void setOffscreenStorage(boolean offscreenStorage) {
         this.offscreenStorage = offscreenStorage;
+    }
+
+    public boolean isAwaitingFirstPresent() {
+        return awaitingFirstPresent;
+    }
+
+    public void setAwaitingFirstPresent(boolean awaitingFirstPresent) {
+        this.awaitingFirstPresent = awaitingFirstPresent;
     }
 
     public Texture getTexture() {
