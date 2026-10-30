@@ -1,6 +1,5 @@
 package com.winlator.renderer;
 
-import android.util.Log;
 import androidx.annotation.Keep;
 
 import com.winlator.xserver.Drawable;
@@ -106,7 +105,6 @@ public class GPUImage extends Texture {
             Window window = xServer.windowManager.getWindow(drawable.id);
             Window redirectParent = window != null ? (Window)window.getTag("compositeRedirectParent") : null;
             if (redirectParent != null && window.isSurface()) redirectParent.getContent().setTexture(gpuImage);
-            Log.d("WINDBG", "gpuimage 0x" + Integer.toHexString(drawable.id) + " cpu " + cpuAccess + " redirectParent " + (redirectParent != null ? "0x" + Integer.toHexString(redirectParent.id) : "none")); // TEMP DEBUG
             return gpuImage;
         }
         else return (GPUImage)texture;

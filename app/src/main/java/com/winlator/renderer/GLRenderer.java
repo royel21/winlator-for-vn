@@ -304,29 +304,7 @@ public class GLRenderer implements GLSurfaceView.Renderer, WindowManager.OnWindo
         try (XLock lock = xServer.lock(XServer.Lockable.WINDOW_MANAGER, XServer.Lockable.DRAWABLE_MANAGER)) {
             renderableWindows.clear();
             collectRenderableWindows(xServer.windowManager.rootWindow, xServer.windowManager.rootWindow.getX(), xServer.windowManager.rootWindow.getY());
-            // TEMP DEBUG
-            StringBuilder sb = new StringBuilder("scene:");
-            for (RenderableWindow rw : renderableWindows) sb.append(" 0x").append(Integer.toHexString(rw.content.id)).append(rw.transparent ? "(T)" : "");
-            Log.d("WINDBG", sb.toString());
-            dumpWindowTree(xServer.windowManager.rootWindow, "");
         }
-    }
-
-    // TEMP DEBUG
-    private void dumpWindowTree(Window window, String indent) {
-        if (!window.attributes.isMapped()) return;
-        Drawable content = window.getContent();
-        Texture texture = content != null ? content.getTexture() : null;
-        Object redirectParent = window.getTag("compositeRedirectParent");
-        if (window != xServer.windowManager.rootWindow && (!window.getName().isEmpty() || window.isSurface() || window.getWidth() > 64)) {
-            Log.d("WINDBG", indent + "0x" + Integer.toHexString(window.id) + " '" + window.getName() + "' " + window.getWidth() + "x" + window.getHeight()
-                    + " surface=" + window.isSurface() + " viewable=" + window.attributes.isViewable() + " renderSub=" + window.attributes.isRenderSubwindows()
-                    + " offscreen=" + (content != null && content.isOffscreenStorage()) + " awaiting=" + (content != null && content.isAwaitingFirstPresent())
-                    + " redirected=" + (redirectParent != null) + " layered=" + window.isLayered()
-                    + " tex=" + (texture != null ? texture.getClass().getSimpleName() + "@" + Integer.toHexString(System.identityHashCode(texture)) : "null")
-                    + " data=" + (content != null && content.getData() != null));
-        }
-        for (Window child : window.getChildren()) dumpWindowTree(child, indent + "  ");
     }
 
     private void collectRenderableWindows(Window window, int x, int y) {

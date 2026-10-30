@@ -12,6 +12,7 @@ import android.graphics.PointF;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.util.Log;
+import android.util.SparseBooleanArray;
 import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -53,6 +54,7 @@ public class InputControlsView extends View {
     private float offsetY;
     private ControlElement selectedElement;
     private ControlsProfile profile;
+    private final SparseBooleanArray controlPointers = new SparseBooleanArray(); // pointers that started on a control
     private float overlayOpacity = DEFAULT_OVERLAY_OPACITY;
     private TouchpadView touchpadView;
     private XServer xServer;
@@ -389,17 +391,26 @@ public class InputControlsView extends View {
                         //    touchpadView.setPointerButtonLeftEnabled(false);
                         //}
                     }
-                    if (!handled) touchpadView.onTouchEvent(event);
+                    if (handled) controlPointers.put(pointerId, true);
+                    else touchpadView.onTouchEvent(event);
                     break;
                 }
                 case MotionEvent.ACTION_MOVE: {
                     for (byte i = 0, count = (byte)event.getPointerCount(); i < count; i++) {
                         float x = event.getX(i);
                         float y = event.getY(i);
+                        int movePointerId = event.getPointerId(i);
 
                         handled = false;
                         for (ControlElement element : profile.getElements()) {
-                            if (element.handleTouchMove(i, x, y)) handled = true;
+                            if (element.handleTouchMove(movePointerId, x, y)) handled = true;
+                        }
+
+                        // a finger that started on the controls and no longer holds anything
+                        // (it slid off a button) presses the next button it slides onto
+                        if (controlPointers.get(movePointerId)) {
+                            if (!isPointerCaptured(movePointerId)) pressSwipeTargetAt(movePointerId, x, y);
+                            handled = true;
                         }
                         if (!handled) touchpadView.onTouchEvent(event);
                     }
@@ -411,12 +422,31 @@ public class InputControlsView extends View {
                     float x = event.getX(actionIndex);
                     float y = event.getY(actionIndex);
                     for (ControlElement element : profile.getElements()) if (element.handleTouchUp(pointerId, x, y)) handled = true;
+                    // the finger may have slid off its last button, the touchpad never saw it
+                    if (controlPointers.get(pointerId)) handled = true;
+                    controlPointers.delete(pointerId);
+                    if (actionMasked == MotionEvent.ACTION_CANCEL) controlPointers.clear();
                     if (!handled) touchpadView.onTouchEvent(event);
                     break;
                 }
             }
         }
         return true;
+    }
+
+    private boolean isPointerCaptured(int pointerId) {
+        for (ControlElement element : profile.getElements()) {
+            if (element.isCapturing(pointerId)) return true;
+        }
+        return false;
+    }
+
+    private void pressSwipeTargetAt(int pointerId, float x, float y) {
+        List<ControlElement> elements = profile.getElements();
+        for (int i = elements.size() - 1; i >= 0; i--) {
+            ControlElement element = elements.get(i);
+            if (element.isSwipeTarget() && element.handleTouchDown(pointerId, x, y)) return;
+        }
     }
 
     public boolean onKeyEvent(KeyEvent event) {

@@ -972,7 +972,21 @@ public class ControlElement {
             inputControlsView.getTouchpadView().mouseMove(x, y, MotionEvent.ACTION_MOVE);
             return true;
         }
+        else if (pointerId == currentPointerId && isSwipeTarget()) {
+            // release as soon as the finger slides off, so it can press the next button (see InputControlsView)
+            if (!containsPoint(x, y)) handleTouchUp(pointerId, x, y);
+            return true;
+        }
         else return false;
+    }
+
+    /** A plain button a sliding finger can press, and which releases when the finger slides off it. */
+    public boolean isSwipeTarget() {
+        return type == Type.BUTTON && !propertyFlags.isSet(FLAG_TOGGLE_SWITCH) && !propertyFlags.isSet(FLAG_MOUSE_MOVE_MODE);
+    }
+
+    public boolean isCapturing(int pointerId) {
+        return currentPointerId == pointerId;
     }
 
     public boolean handleTouchUp(int pointerId, float x, float y) {

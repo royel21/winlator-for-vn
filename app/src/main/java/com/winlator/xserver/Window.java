@@ -146,6 +146,10 @@ public class Window extends XResource {
         if (property == null) {
             addProperty((property = new Property(atom, type, format, data)));
             modified = true;
+
+            // Wine creates client surfaces without a background, so until something draws into
+            // them they must not cover the parent (e.g. when the app falls back to GDI present).
+            if (atom == Atom._NET_WM_SURFACE && content != null) content.setAwaitingFirstPresent(true);
         }
         else if (mode == Property.Mode.REPLACE) {
             if (property.format == format) {

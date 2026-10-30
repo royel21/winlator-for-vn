@@ -338,6 +338,7 @@ public class GLXExtension extends Extension {
             if (drawable.width != width || drawable.height != height) return false;
 
             drawable.setData(null);
+            drawable.setAwaitingFirstPresent(false);
             Texture texture = drawable.getTexture();
             texture.setFlipY(flipY);
             texture.copyFromReadBuffer(width, height);

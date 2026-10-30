@@ -9,6 +9,8 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.collection.ArrayMap;
+
 import com.winlator.R;
 import com.winlator.XServerDisplayActivity;
 import com.winlator.core.ImageUtils;
@@ -23,6 +25,7 @@ import java.util.ArrayList;
 
 public class ActiveWindowsDialog extends ContentDialog {
     private final XServerDisplayActivity activity;
+    private final ArrayMap<Window, Window> surfaceWindows = new ArrayMap<>();
 
     public ActiveWindowsDialog(XServerDisplayActivity activity) {
         super(activity, R.layout.active_windows_dialog);
@@ -77,7 +80,9 @@ public class ActiveWindowsDialog extends ContentDialog {
             if (icon != null) ivIcon.setImageBitmap(icon);
 
             if (!window.isIconic()) {
-                Drawable content = window.getContent();
+                Window surfaceWindow = surfaceWindows.get(window);
+                boolean useSurface = surfaceWindow != null && !surfaceWindow.getContent().isAwaitingFirstPresent();
+                Drawable content = (useSurface ? surfaceWindow : window).getContent();
                 int[] scaledSize = ImageUtils.getScaledSize(content.width, content.height, 0, imageHeight);
                 tvName.setMaxWidth((int)(scaledSize[0] - iconSize));
                 ivWindow.setLayoutParams(new FrameLayout.LayoutParams(scaledSize[0], scaledSize[1]));
@@ -104,7 +109,11 @@ public class ActiveWindowsDialog extends ContentDialog {
         if (!window.isRenderable()) return;
 
         XServer xServer = activity.getXServer();
-        if ((window != xServer.windowManager.rootWindow && !window.isDesktopWindow() && !window.getName().isEmpty()) || window.isSurface()) {
+        if (window.isSurface() && result.contains(window.getParent())) {
+            // Vulkan/GL client surface of an already listed window: show it as that window's content
+            surfaceWindows.put(window.getParent(), window);
+        }
+        else if ((window != xServer.windowManager.rootWindow && !window.isDesktopWindow() && !window.getName().isEmpty()) || window.isSurface()) {
             result.add(window);
         }
 

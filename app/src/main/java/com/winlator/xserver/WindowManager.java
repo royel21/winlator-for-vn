@@ -209,6 +209,13 @@ public class WindowManager extends XResourceManager {
             drawableManager.removeDrawable(oldContent.id);
             Drawable newContent = drawableManager.createDrawable(oldContent.id, width, height, oldContent.visual);
             newContent.setOffscreenStorage(oldContent.isOffscreenStorage());
+
+            // Wine's client surfaces use NorthWest bit gravity and aren't redrawn after a resize
+            // (e.g. GDI drawn directly into them), so keep their contents like an X server does.
+            if (window.isSurface() && window.attributes.getBitGravity() == WindowAttributes.BitGravity.NORTH_WEST) {
+                newContent.copyArea((short)0, (short)0, (short)0, (short)0, (short)Math.min(oldContent.width, width), (short)Math.min(oldContent.height, height), oldContent);
+            }
+            newContent.setAwaitingFirstPresent(oldContent.isAwaitingFirstPresent());
             newContent.setOnDrawListener(() -> triggerOnUpdateWindowContent(window));
             window.setContent(newContent);
         }
@@ -296,6 +303,14 @@ public class WindowManager extends XResourceManager {
         Window oldParent = window.getParent();
         if (oldParent != null) oldParent.removeChild(window);
         newParent.addChild(window);
+    }
+
+    public void reparentWindow(Window window, Window newParent, short x, short y) {
+        reparentWindow(window, newParent);
+        window.setX(x);
+        window.setY(y);
+        // the window moved to another place in the tree, so the renderer must rebuild its scene
+        triggerOnChangeWindowZOrder(window);
     }
 
     public Window findPointWindow(short rootX, short rootY) {

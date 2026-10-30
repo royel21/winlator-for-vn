@@ -78,6 +78,7 @@ public class VirGLRendererComponent extends EnvironmentComponent implements Conn
 
         synchronized (drawable.renderLock) {
             drawable.setData(null);
+            drawable.setAwaitingFirstPresent(false);
             Texture texture = drawable.getTexture();
             GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, framebuffer);
             texture.copyFromReadBuffer(drawable.width, drawable.height);
