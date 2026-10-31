@@ -128,6 +128,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
     private KeyValueSet[] graphicsDriverConfig;
     private KeyValueSet audioDriverConfig;
     private String wincomponents;
+    private String winVersion;
     private WineInfo wineInfo;
     private final EnvVars envVars = new EnvVars();
     private EnvVars overrideEnvVars;
@@ -256,6 +257,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             audioDriver = container.getAudioDriver();
             String dxwrapper = container.getDXWrapper();
             wincomponents = container.getWinComponents();
+            winVersion = container.getWinVersion();
             String dxwrapperConfig = container.getDXWrapperConfig();
             String graphicsDriverConfig = container.getGraphicsDriverConfig();
             audioDriverConfig = new KeyValueSet(container.getAudioDriverConfig());
@@ -276,6 +278,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
                 audioDriver = shortcut.getExtra("audioDriver", container.getAudioDriver());
                 dxwrapper = shortcut.getExtra("dxwrapper", container.getDXWrapper());
                 wincomponents = shortcut.getExtra("wincomponents", container.getWinComponents());
+                winVersion = shortcut.getExtra("winVersion", container.getWinVersion());
                 dxwrapperConfig = shortcut.getExtra("dxwrapperConfig", container.getDXWrapperConfig());
                 graphicsDriverConfig = shortcut.getExtra("graphicsDriverConfig", container.getGraphicsDriverConfig());
                 audioDriverConfig = new KeyValueSet(shortcut.getExtra("audioDriverConfig", container.getAudioDriverConfig()));
@@ -578,6 +581,10 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             container.putExtra("wincomponents", wincomponents);
             containerDataChanged = true;
         }
+
+        // written on every start: a shortcut's version must not stick to the container, and the
+        // container's version must not stick to the next shortcut
+        WineUtils.setWinVersion(container, winVersion);
 
         String desktopTheme = container.getDesktopTheme();
         if (!(desktopTheme+","+xServer.screenInfo).equals(container.getExtra("desktopTheme"))) {

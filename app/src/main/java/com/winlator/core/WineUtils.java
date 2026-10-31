@@ -363,6 +363,36 @@ public static void setWinVersion(Container container, String winVersionIdentifie
         try (WineRegistryEditor registryEditor = new WineRegistryEditor(systemRegFile)) {
             String key64 = "Software\\Microsoft\\Windows NT\\CurrentVersion";
             String key32 = "Software\\Wow6432Node\\Microsoft\\Windows NT\\CurrentVersion";
+            String key9x64 = "Software\\Microsoft\\Windows\\CurrentVersion";
+            String key9x32 = "Software\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion";
+            String keyEnv = "System\\CurrentControlSet\\Control\\Session Manager\\Environment";
+
+            // Wine only falls back to the Windows 9x keys when the NT CurrentVersion value is missing,
+            // so a 9x version removes the NT values (same as winecfg) and an NT version removes the 9x ones.
+            if (winVersion.win9x) {
+                String versionNumber = winVersion.majorVersion+"."+winVersion.minorVersion+"."+winVersion.buildNumber;
+                for (String key : new String[]{key9x64, key9x32}) {
+                    registryEditor.setStringValue(key, "VersionNumber", versionNumber);
+                    registryEditor.setStringValue(key, "SubVersionNumber", winVersion.csdVersion);
+                    registryEditor.setStringValue(key, "ProductName", "Microsoft "+winVersion.description);
+                }
+
+                for (String key : new String[]{key64, key32}) {
+                    for (String name : new String[]{"CurrentVersion", "CurrentMajorVersionNumber", "CurrentMinorVersionNumber",
+                                                    "CSDVersion", "CurrentBuild", "CurrentBuildNumber", "ProductName", "UBR"}) {
+                        registryEditor.removeValue(key, name);
+                    }
+                }
+                registryEditor.removeValue(keyEnv, "OS");
+                return;
+            }
+
+            for (String key : new String[]{key9x64, key9x32}) {
+                registryEditor.removeValue(key, "VersionNumber");
+                registryEditor.removeValue(key, "SubVersionNumber");
+                registryEditor.removeValue(key, "ProductName");
+            }
+            registryEditor.setStringValue(keyEnv, "OS", "Windows_NT");
 
             registryEditor.setStringValue(key32, "CurrentVersion", currentVersion);
             registryEditor.setDwordValue(key32, "CurrentMajorVersionNumber", winVersion.majorVersion);

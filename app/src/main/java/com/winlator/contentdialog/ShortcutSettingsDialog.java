@@ -26,6 +26,7 @@ import com.winlator.core.WineInfo;
 import com.winlator.inputcontrols.ControlsProfile;
 import com.winlator.inputcontrols.InputControlsManager;
 import com.winlator.widget.EnvVarsView;
+import com.winlator.win32.WinVersions;
 import com.winlator.winhandler.GamepadHandler;
 
 import java.io.File;
@@ -111,6 +112,9 @@ public class ShortcutSettingsDialog extends ContentDialog {
         final Spinner sPreferredInputApi = findViewById(R.id.SPreferredInputApi);
         sPreferredInputApi.setSelection(Byte.parseByte(shortcut.getExtra("preferredInputApi", String.valueOf(GamepadHandler.PreferredInputApi.AUTO.ordinal()))));
 
+        final Spinner sWinVersion = findViewById(R.id.SWinVersion);
+        WinVersions.loadSpinner(sWinVersion, shortcut.getExtra("winVersion", shortcut.container.getWinVersion()));
+
         ContainerDetailFragment.createWinComponentsTab(getContentView(), shortcut.getExtra("wincomponents", shortcut.container.getWinComponents()));
         final EnvVarsView envVarsView = createEnvVarsTab();
 
@@ -184,6 +188,9 @@ public class ShortcutSettingsDialog extends ContentDialog {
 
                 int preferredInputApi = sPreferredInputApi.getSelectedItemPosition();
                 shortcut.putExtra("preferredInputApi", preferredInputApi != GamepadHandler.PreferredInputApi.AUTO.ordinal() ? String.valueOf(preferredInputApi): null);
+
+                String winVersion = ((WinVersions.WinVersion)sWinVersion.getSelectedItem()).version;
+                shortcut.putExtra("winVersion", !winVersion.equals(shortcut.container.getWinVersion()) ? winVersion : null);
 
                 shortcut.saveData();
 
