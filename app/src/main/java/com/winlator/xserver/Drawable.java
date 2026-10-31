@@ -173,6 +173,52 @@ public class Drawable extends XResource {
         forceUpdate();
     }
 
+    /**
+     * Fills a polygon given as absolute x,y pairs with the even-odd rule, which is the X11 default
+     * fill rule and matches the GDI default ALTERNATE mode. A pixel is filled when its center lies
+     * inside the polygon.
+     */
+    public void fillPolygon(int color, short[] points) {
+        if (this.data == null || points.length < 6) return;
+        int count = points.length / 2;
+
+        int minY = Integer.MAX_VALUE, maxY = Integer.MIN_VALUE;
+        for (int i = 0; i < count; i++) {
+            minY = Math.min(minY, points[i*2+1]);
+            maxY = Math.max(maxY, points[i*2+1]);
+        }
+        minY = Math.max(minY, 0);
+        maxY = Math.min(maxY, this.height-1);
+
+        int[] crossings = new int[count];
+        short stride = this.getStride();
+        for (int y = minY; y <= maxY; y++) {
+            float centerY = y + 0.5f;
+            int crossingCount = 0;
+
+            for (int i = 0; i < count; i++) {
+                int j = (i + 1) % count;
+                float x0 = points[i*2], y0 = points[i*2+1];
+                float x1 = points[j*2], y1 = points[j*2+1];
+                if (y0 == y1) continue;
+                if ((centerY >= y0 && centerY < y1) || (centerY >= y1 && centerY < y0)) {
+                    float x = x0 + (centerY - y0) * (x1 - x0) / (y1 - y0);
+                    crossings[crossingCount++] = (int)Math.ceil(x - 0.5f);
+                }
+            }
+
+            java.util.Arrays.sort(crossings, 0, crossingCount);
+            for (int k = 0; k + 1 < crossingCount; k += 2) {
+                int startX = Math.max(crossings[k], 0);
+                int endX = Math.min(crossings[k+1], this.width);
+                if (endX > startX) fillRect((short)startX, (short)y, (short)(endX - startX), (short)1, color, stride, this.data);
+            }
+        }
+
+        this.data.rewind();
+        forceUpdate();
+    }
+
     public void drawLines(int color, int lineWidth, short... points) {
         for (int i = 2; i < points.length; i += 2) {
             drawLine(points[i-2], points[i-1], points[i+0], points[i+1], color, (short)lineWidth);

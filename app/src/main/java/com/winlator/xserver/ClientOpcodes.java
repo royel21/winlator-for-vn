@@ -42,6 +42,7 @@ public abstract class ClientOpcodes {
     public static final byte POLY_LINE = 65;
     public static final byte POLY_SEGMENT = 66;
     public static final byte POLY_RECTANGLE = 67;
+    public static final byte FILL_POLY = 69;
     public static final byte POLY_FILL_RECTANGLE = 70;
     public static final byte PUT_IMAGE = 72;
     public static final byte GET_IMAGE = 73;

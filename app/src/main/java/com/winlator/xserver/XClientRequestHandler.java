@@ -1,10 +1,13 @@
 package com.winlator.xserver;
 
+import android.util.Log;
+
 import com.winlator.xconnector.ConnectedClient;
 import com.winlator.xconnector.RequestHandler;
 import com.winlator.xconnector.XInputStream;
 import com.winlator.xconnector.XOutputStream;
 import com.winlator.xconnector.XStreamLock;
+import com.winlator.xserver.errors.BadImplementation;
 import com.winlator.xserver.errors.XRequestError;
 import com.winlator.xserver.extensions.Extension;
 import com.winlator.xserver.requests.AtomRequests;
@@ -354,6 +357,11 @@ public class XClientRequestHandler implements RequestHandler {
                     case ClientOpcodes.POLY_RECTANGLE:
                         client.skipRequest();
                         break;
+                    case ClientOpcodes.FILL_POLY:
+                        try (XLock lock = client.xServer.lock(XServer.Lockable.DRAWABLE_MANAGER, XServer.Lockable.GRAPHIC_CONTEXT_MANAGER)) {
+                            DrawRequests.fillPoly(client, inputStream, outputStream);
+                        }
+                        break;
                     case ClientOpcodes.POLY_FILL_RECTANGLE:
                         try (XLock lock = client.xServer.lock(XServer.Lockable.DRAWABLE_MANAGER, XServer.Lockable.GRAPHIC_CONTEXT_MANAGER)) {
                             DrawRequests.polyFillRectangle(client, inputStream, outputStream);
@@ -425,6 +433,13 @@ public class XClientRequestHandler implements RequestHandler {
         catch (XRequestError e) {
             client.skipRequest();
             e.sendError(client, opcode);
+        }
+        catch (RuntimeException e) {
+            // an unimplemented or malformed request must fail on its own instead of taking down
+            // the whole app: the exception would otherwise escape the native epoll loop
+            Log.w("XClientRequestHandler", "Request with opcode "+opcode+" failed", e);
+            if (client.getRemainingRequestLength() > 0) client.skipRequest();
+            new BadImplementation().sendError(client, opcode);
         }
 
         return true;

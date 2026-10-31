@@ -174,6 +174,33 @@ public abstract class DrawRequests {
         }
     }
 
+    public static void fillPoly(XClient client, XInputStream inputStream, XOutputStream outputStream) throws XRequestError {
+        int drawableId = inputStream.readInt();
+        int gcId = inputStream.readInt();
+        inputStream.skip(1); // shape: only a hint, the fill handles every shape
+        // unlike PolyLine, FillPoly carries the coordinate mode after the GC, not in the request data
+        CoordinateMode coordinateMode = inputStream.readByte() == 1 ? CoordinateMode.PREVIOUS : CoordinateMode.ORIGIN;
+        inputStream.skip(2);
+
+        Drawable drawable = client.xServer.drawableManager.getDrawable(drawableId);
+        if (drawable == null) throw new BadDrawable(drawableId);
+        GraphicsContext graphicsContext = client.xServer.graphicsContextManager.getGraphicsContext(gcId);
+        if (graphicsContext == null) throw new BadGraphicsContext(gcId);
+        int length = client.getRemainingRequestLength();
+
+        short[] points = new short[length / 2];
+        for (int i = 0; i < points.length; i += 2) {
+            points[i] = inputStream.readShort();
+            points[i+1] = inputStream.readShort();
+            if (coordinateMode == CoordinateMode.PREVIOUS && i > 0) {
+                points[i] += points[i-2];
+                points[i+1] += points[i-1];
+            }
+        }
+
+        drawable.fillPolygon(graphicsContext.getForeground(), points);
+    }
+
     public static void polyFillRectangle(XClient client, XInputStream inputStream, XOutputStream outputStream) throws XRequestError {
         int drawableId = inputStream.readInt();
         int gcId = inputStream.readInt();
