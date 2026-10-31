@@ -50,6 +50,9 @@
     <string name="do_you_want_to_duplicate_this_container">Вы хотите дублировать контейнер?</string>
     <string name="do_you_want_to_remove_this_file">Вы хотите удалить этот файл?</string>
     <string name="do_you_want_to_remove_this_controller">Вы хотите удалить контроллер?</string>
+    <string name="controller_id">ID контроллера</string>
+    <string name="enter_id_manually">Ввести ID вручную</string>
+    <string name="this_controller_id_is_already_in_use">Этот ID контроллера уже используется в этом профиле</string>
     <string name="do_you_want_to_remove_this_wine_version">Вы хотите удалить эту версию Wine?</string>
     <string name="all_associated_containers_will_be_removed">Все связанные контейнеры будут удалены.</string>
     <string name="do_you_want_to_remove_this_preset">Вы хотите удалить предустановку?</string>

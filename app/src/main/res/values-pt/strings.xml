@@ -50,6 +50,9 @@
     <string name="do_you_want_to_duplicate_this_container">Você deseja duplicar este container?</string>
     <string name="do_you_want_to_remove_this_file">Você deseja remover este arquivo?</string>
     <string name="do_you_want_to_remove_this_controller">Você deseja remover este controlador?</string>
+    <string name="controller_id">ID do controlador</string>
+    <string name="enter_id_manually">Inserir ID manualmente</string>
+    <string name="this_controller_id_is_already_in_use">Este ID de controlador já está em uso neste perfil</string>
     <string name="do_you_want_to_remove_this_wine_version">Você deseja remover esta versão do Wine?</string>
     <string name="all_associated_containers_will_be_removed">Todos os containers associados serão removidos.</string>
     <string name="do_you_want_to_remove_this_preset">Você deseja remover esta predefinição?</string>

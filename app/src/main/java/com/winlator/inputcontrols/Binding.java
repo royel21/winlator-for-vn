@@ -118,6 +118,13 @@ public enum Binding {
         return this == MOUSE_MOVE_UP || this == MOUSE_MOVE_RIGHT || this == MOUSE_MOVE_DOWN || this == MOUSE_MOVE_LEFT;
     }
 
+    public static Binding fromXKeycode(XKeycode keycode) {
+        for (Binding binding : values()) {
+            if (binding != NONE && binding.isKeyboard() && binding.keycode == keycode) return binding;
+        }
+        return NONE;
+    }
+
     public static String[] mouseBindingLabels() {
         ArrayList<String> names = new ArrayList<>();
         for (Binding binding : values()) if (binding.isMouse()) names.add(binding.toString());

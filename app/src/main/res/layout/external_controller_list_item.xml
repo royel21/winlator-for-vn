@@ -44,6 +44,12 @@
 
         <ImageButton
             style="@style/ListMenuButton"
+            android:id="@+id/BTEdit"
+            android:src="@drawable/icon_edit"
+            android:visibility="gone" />
+
+        <ImageButton
+            style="@style/ListMenuButton"
             android:id="@+id/BTRemove"
             android:src="@drawable/icon_remove"
             android:visibility="gone" />

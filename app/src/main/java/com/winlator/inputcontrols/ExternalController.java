@@ -73,6 +73,13 @@ public class ExternalController implements GamepadSlot {
         this.id = id;
     }
 
+    /** Moves this controller and its bindings to another device id, dropping the cached device lookups. */
+    public void changeId(String id) {
+        this.id = id;
+        deviceId = -1;
+        vibration = null;
+    }
+
     public int getDeviceId() {
         if (this.deviceId == -1) {
             for (int deviceId : InputDevice.getDeviceIds()) {

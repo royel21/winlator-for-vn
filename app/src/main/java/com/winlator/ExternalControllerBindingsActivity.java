@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -35,6 +36,8 @@ import com.winlator.inputcontrols.ExternalControllerBinding;
 import com.winlator.inputcontrols.GamepadState;
 import com.winlator.inputcontrols.InputControlsManager;
 import com.winlator.math.Mathf;
+import com.winlator.xserver.Keyboard;
+import com.winlator.xserver.XKeycode;
 
 public class ExternalControllerBindingsActivity extends AppCompatActivity {
     private TextView emptyTextView;
@@ -114,17 +117,23 @@ public class ExternalControllerBindingsActivity extends AppCompatActivity {
         byte sign;
         for (int i = 0; i < axes.length; i++) {
             if ((sign = Mathf.sign(values[i])) != 0) {
-                if (axes[i] == MotionEvent.AXIS_X || axes[i] == MotionEvent.AXIS_Z) {
-                    binding = sign > 0 ? Binding.MOUSE_MOVE_RIGHT : Binding.MOUSE_MOVE_LEFT;
+                if (axes[i] == MotionEvent.AXIS_X) {
+                    binding = sign > 0 ? Binding.GAMEPAD_LEFT_THUMB_RIGHT : Binding.GAMEPAD_LEFT_THUMB_LEFT;
                 }
-                else if (axes[i] == MotionEvent.AXIS_Y || axes[i] == MotionEvent.AXIS_RZ) {
-                    binding = sign > 0 ? Binding.MOUSE_MOVE_DOWN : Binding.MOUSE_MOVE_UP;
+                else if (axes[i] == MotionEvent.AXIS_Y) {
+                    binding = sign > 0 ? Binding.GAMEPAD_LEFT_THUMB_DOWN : Binding.GAMEPAD_LEFT_THUMB_UP;
+                }
+                else if (axes[i] == MotionEvent.AXIS_Z) {
+                    binding = sign > 0 ? Binding.GAMEPAD_RIGHT_THUMB_RIGHT : Binding.GAMEPAD_RIGHT_THUMB_LEFT;
+                }
+                else if (axes[i] == MotionEvent.AXIS_RZ) {
+                    binding = sign > 0 ? Binding.GAMEPAD_RIGHT_THUMB_DOWN : Binding.GAMEPAD_RIGHT_THUMB_UP;
                 }
                 else if (axes[i] == MotionEvent.AXIS_HAT_X) {
-                    binding = sign > 0 ? Binding.KEY_D : Binding.KEY_A;
+                    binding = sign > 0 ? Binding.GAMEPAD_DPAD_RIGHT : Binding.GAMEPAD_DPAD_LEFT;
                 }
                 else if (axes[i] == MotionEvent.AXIS_HAT_Y) {
-                    binding = sign > 0 ? Binding.KEY_S : Binding.KEY_W;
+                    binding = sign > 0 ? Binding.GAMEPAD_DPAD_DOWN : Binding.GAMEPAD_DPAD_UP;
                 }
 
                 keyCode = ExternalControllerBinding.getKeyCodeForAxis(axes[i], sign);
@@ -139,8 +148,8 @@ public class ExternalControllerBindingsActivity extends AppCompatActivity {
     public boolean dispatchGenericMotionEvent(MotionEvent event) {
         if (event.getDeviceId() == controller.getDeviceId() && controller.updateStateFromMotionEvent(event)) {
             GamepadState state = controller.getGamepadState();
-            if (state.isPressed(ExternalController.IDX_BUTTON_L2)) updateControllerBinding(KeyEvent.KEYCODE_BUTTON_L2, Binding.NONE);
-            if (state.isPressed(ExternalController.IDX_BUTTON_R2)) updateControllerBinding(KeyEvent.KEYCODE_BUTTON_R2, Binding.NONE);
+            if (state.isPressed(ExternalController.IDX_BUTTON_L2)) updateControllerBinding(KeyEvent.KEYCODE_BUTTON_L2, Binding.GAMEPAD_BUTTON_L2);
+            if (state.isPressed(ExternalController.IDX_BUTTON_R2)) updateControllerBinding(KeyEvent.KEYCODE_BUTTON_R2, Binding.GAMEPAD_BUTTON_R2);
             processJoystickInput();
             return true;
         }
@@ -150,10 +159,44 @@ public class ExternalControllerBindingsActivity extends AppCompatActivity {
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         if (event.getDeviceId() == controller.getDeviceId() && event.getRepeatCount() == 0) {
-            if (event.getAction() == KeyEvent.ACTION_DOWN) updateControllerBinding(event.getKeyCode(), Binding.NONE);
+            if (event.getAction() == KeyEvent.ACTION_DOWN) updateControllerBinding(event.getKeyCode(), getAutoBinding(event));
             return true;
         }
         else return super.dispatchKeyEvent(event);
+    }
+
+    /** The binding a newly pressed key starts with: the same gamepad button, or the same keyboard key. */
+    private static Binding getAutoBinding(KeyEvent event) {
+        int keyCode = event.getKeyCode();
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_BUTTON_A: return Binding.GAMEPAD_BUTTON_A;
+            case KeyEvent.KEYCODE_BUTTON_B: return Binding.GAMEPAD_BUTTON_B;
+            case KeyEvent.KEYCODE_BUTTON_X: return Binding.GAMEPAD_BUTTON_X;
+            case KeyEvent.KEYCODE_BUTTON_Y: return Binding.GAMEPAD_BUTTON_Y;
+            case KeyEvent.KEYCODE_BUTTON_L1: return Binding.GAMEPAD_BUTTON_L1;
+            case KeyEvent.KEYCODE_BUTTON_R1: return Binding.GAMEPAD_BUTTON_R1;
+            case KeyEvent.KEYCODE_BUTTON_L2: return Binding.GAMEPAD_BUTTON_L2;
+            case KeyEvent.KEYCODE_BUTTON_R2: return Binding.GAMEPAD_BUTTON_R2;
+            case KeyEvent.KEYCODE_BUTTON_SELECT: return Binding.GAMEPAD_BUTTON_SELECT;
+            case KeyEvent.KEYCODE_BUTTON_START: return Binding.GAMEPAD_BUTTON_START;
+            case KeyEvent.KEYCODE_BUTTON_THUMBL: return Binding.GAMEPAD_BUTTON_L3;
+            case KeyEvent.KEYCODE_BUTTON_THUMBR: return Binding.GAMEPAD_BUTTON_R3;
+        }
+
+        // arrow keys arrive as DPAD key codes from both gamepads and keyboards
+        InputDevice device = event.getDevice();
+        boolean fromGamepad = device != null && (device.supportsSource(InputDevice.SOURCE_GAMEPAD) || device.supportsSource(InputDevice.SOURCE_JOYSTICK));
+        if (fromGamepad) {
+            switch (keyCode) {
+                case KeyEvent.KEYCODE_DPAD_UP: return Binding.GAMEPAD_DPAD_UP;
+                case KeyEvent.KEYCODE_DPAD_RIGHT: return Binding.GAMEPAD_DPAD_RIGHT;
+                case KeyEvent.KEYCODE_DPAD_DOWN: return Binding.GAMEPAD_DPAD_DOWN;
+                case KeyEvent.KEYCODE_DPAD_LEFT: return Binding.GAMEPAD_DPAD_LEFT;
+            }
+        }
+
+        XKeycode xKeycode = Keyboard.getXKeycode(keyCode);
+        return xKeycode != null ? Binding.fromXKeycode(xKeycode) : Binding.NONE;
     }
 
     @Override

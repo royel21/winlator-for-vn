@@ -129,6 +129,14 @@ public class Keyboard {
         return true;
     }
 
+    private static XKeycode[] sharedKeycodeMap;
+
+    /** Returns the X keycode for an Android key code, or null when the key is not mapped. */
+    public static XKeycode getXKeycode(int keyCode) {
+        if (sharedKeycodeMap == null) sharedKeycodeMap = createKeycodeMap();
+        return keyCode >= 0 && keyCode < sharedKeycodeMap.length ? sharedKeycodeMap[keyCode] : null;
+    }
+
     private static XKeycode[] createKeycodeMap() {
         XKeycode[] keycodeMap = new XKeycode[256];
         keycodeMap[KeyEvent.KEYCODE_ENTER] = XKeycode.KEY_ENTER;

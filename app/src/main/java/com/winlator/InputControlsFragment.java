@@ -1,15 +1,18 @@
 package com.winlator;
 
 import android.app.Activity;
+import android.content.ClipData;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.hardware.input.InputManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -75,14 +78,30 @@ public class InputControlsFragment extends Fragment implements InputManager.Inpu
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        if (requestCode == MainActivity.OPEN_FILE_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
-            try {
-                ControlsProfile importedProfile = manager.importProfile(new JSONObject(FileUtils.readString(getContext(), data.getData())));
-                if (importProfileCallback != null) importProfileCallback.call(importedProfile);
+        if (requestCode == MainActivity.OPEN_FILE_REQUEST_CODE && resultCode == Activity.RESULT_OK && data != null) {
+            // several files come back in the clip data, a single one in getData()
+            ArrayList<Uri> uris = new ArrayList<>();
+            ClipData clipData = data.getClipData();
+            if (clipData != null) {
+                for (int i = 0; i < clipData.getItemCount(); i++) uris.add(clipData.getItemAt(i).getUri());
             }
-            catch (Exception e) {
-                AppUtils.showToast(getContext(), R.string.unable_to_import_profile);
+            else if (data.getData() != null) uris.add(data.getData());
+
+            ControlsProfile lastImportedProfile = null;
+            boolean failed = false;
+            for (Uri uri : uris) {
+                try {
+                    ControlsProfile importedProfile = manager.importProfile(new JSONObject(FileUtils.readString(getContext(), uri)));
+                    if (importedProfile != null) lastImportedProfile = importedProfile;
+                    else failed = true;
+                }
+                catch (Exception e) {
+                    failed = true;
+                }
             }
+
+            if (failed) AppUtils.showToast(getContext(), R.string.unable_to_import_profile);
+            if (lastImportedProfile != null && importProfileCallback != null) importProfileCallback.call(lastImportedProfile);
             importProfileCallback = null;
         }
     }
@@ -232,6 +251,7 @@ public class InputControlsFragment extends Fragment implements InputManager.Inpu
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("*/*");
+        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
         getActivity().startActivityFromFragment(this, intent, MainActivity.OPEN_FILE_REQUEST_CODE);
     }
 
@@ -345,6 +365,10 @@ public class InputControlsFragment extends Fragment implements InputManager.Inpu
                 ImageViewCompat.setImageTintList(imageView, ColorStateList.valueOf(tintColor));
 
                 if (controllerBindingCount > 0) {
+                    ImageButton editButton = itemView.findViewById(R.id.BTEdit);
+                    editButton.setVisibility(View.VISIBLE);
+                    editButton.setOnClickListener((v) -> showEditControllerIdMenu(view, v, controller, connectedControllers));
+
                     ImageButton removeButton = itemView.findViewById(R.id.BTRemove);
                     removeButton.setVisibility(View.VISIBLE);
                     removeButton.setOnClickListener((v) -> ContentDialog.confirm(getContext(), R.string.do_you_want_to_remove_this_controller, () -> {
@@ -368,6 +392,49 @@ public class InputControlsFragment extends Fragment implements InputManager.Inpu
             }
         }
         else view.findViewById(R.id.TVEmptyText).setVisibility(View.VISIBLE);
+    }
+
+    private void showEditControllerIdMenu(final View view, View anchor, final ExternalController controller, final ArrayList<ExternalController> connectedControllers) {
+        final Context context = getContext();
+        PopupMenu popupMenu = new PopupMenu(context, anchor);
+        Menu menu = popupMenu.getMenu();
+
+        // connected controllers first, so bindings made for one controller can be moved to another
+        for (int i = 0; i < connectedControllers.size(); i++) {
+            ExternalController connectedController = connectedControllers.get(i);
+            if (!connectedController.getId().equals(controller.getId())) menu.add(0, i, 0, connectedController.getName());
+        }
+        menu.add(0, connectedControllers.size(), 0, R.string.enter_id_manually);
+
+        popupMenu.setOnMenuItemClickListener((item) -> {
+            int index = item.getItemId();
+            if (index < connectedControllers.size()) {
+                ExternalController connectedController = connectedControllers.get(index);
+                changeControllerId(view, controller, connectedController.getId(), connectedController.getName());
+            }
+            else ContentDialog.prompt(context, R.string.controller_id, controller.getId(), (id) -> changeControllerId(view, controller, id.trim(), null));
+            return true;
+        });
+        popupMenu.show();
+    }
+
+    private void changeControllerId(View view, ExternalController controller, String newId, String newName) {
+        if (currentProfile == null || newId.isEmpty() || newId.equals(controller.getId())) return;
+
+        ExternalController existingController = currentProfile.getController(newId);
+        if (existingController != null) {
+            if (existingController.getControllerBindingCount() > 0) {
+                AppUtils.showToast(getContext(), R.string.this_controller_id_is_already_in_use);
+                return;
+            }
+            // only the placeholder for a connected controller without bindings
+            currentProfile.removeController(existingController);
+        }
+
+        controller.changeId(newId);
+        if (newName != null) controller.setName(newName);
+        currentProfile.save();
+        loadExternalControllers(view);
     }
 
     @Override
