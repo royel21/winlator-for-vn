@@ -267,7 +267,7 @@ public class TouchpadView extends View implements View.OnCapturedPointerListener
                 }
                 scrolling = true;
             }
-            else if (currDistance >= MAX_TWO_FINGERS_SCROLL_DISTANCE && !xServer.pointer.isButtonPressed(Pointer.Button.BUTTON_LEFT) &&
+            else if (currDistance >= MAX_TWO_FINGERS_SCROLL_DISTANCE && !xServer.isInjectedButtonPressed(Pointer.Button.BUTTON_LEFT) &&
                      finger2.travelDistance() < MAX_TAP_TRAVEL_DISTANCE) {
                 pressPointerButtonLeft(finger1);
                 skipPointerMove = true;
@@ -317,21 +317,21 @@ public class TouchpadView extends View implements View.OnCapturedPointerListener
     }
 
     private void pressPointerButtonLeft(Finger finger) {
-        if (isEnabled() && pointerButtonLeftEnabled && !xServer.pointer.isButtonPressed(Pointer.Button.BUTTON_LEFT)) {
+        if (isEnabled() && pointerButtonLeftEnabled && !xServer.isInjectedButtonPressed(Pointer.Button.BUTTON_LEFT)) {
             xServer.injectPointerButtonPress(Pointer.Button.BUTTON_LEFT);
             fingerPointerButtonLeft = finger;
         }
     }
 
     private void pressPointerButtonRight(Finger finger) {
-        if (isEnabled() && pointerButtonRightEnabled && !xServer.pointer.isButtonPressed(Pointer.Button.BUTTON_RIGHT)) {
+        if (isEnabled() && pointerButtonRightEnabled && !xServer.isInjectedButtonPressed(Pointer.Button.BUTTON_RIGHT)) {
             xServer.injectPointerButtonPress(Pointer.Button.BUTTON_RIGHT);
             fingerPointerButtonRight = finger;
         }
     }
 
     private void releasePointerButtonLeft(final Finger finger) {
-        if (isEnabled() && pointerButtonLeftEnabled && finger == fingerPointerButtonLeft && xServer.pointer.isButtonPressed(Pointer.Button.BUTTON_LEFT)) {
+        if (isEnabled() && pointerButtonLeftEnabled && finger == fingerPointerButtonLeft && xServer.isInjectedButtonPressed(Pointer.Button.BUTTON_LEFT)) {
             postDelayed(() -> {
                 xServer.injectPointerButtonRelease(Pointer.Button.BUTTON_LEFT);
                 fingerPointerButtonLeft = null;
@@ -340,7 +340,7 @@ public class TouchpadView extends View implements View.OnCapturedPointerListener
     }
 
     private void releasePointerButtonRight(final Finger finger) {
-        if (isEnabled() && pointerButtonRightEnabled && finger == fingerPointerButtonRight && xServer.pointer.isButtonPressed(Pointer.Button.BUTTON_RIGHT)) {
+        if (isEnabled() && pointerButtonRightEnabled && finger == fingerPointerButtonRight && xServer.isInjectedButtonPressed(Pointer.Button.BUTTON_RIGHT)) {
             postDelayed(() -> {
                 xServer.injectPointerButtonRelease(Pointer.Button.BUTTON_RIGHT);
                 fingerPointerButtonRight = null;

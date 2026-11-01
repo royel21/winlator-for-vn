@@ -16,6 +16,9 @@ import com.winlator.xserver.extensions.XComposite;
 
 import java.nio.charset.Charset;
 import java.util.EnumMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class XServer {
@@ -43,6 +46,14 @@ public class XServer {
     private WinHandler winHandler;
     private final EnumMap<Lockable, ReentrantLock> locks = new EnumMap<>(Lockable.class);
     private boolean relativeMouseMovement = false;
+    /* Input is delivered on its own thread: sending the X event blocks while a client
+     * isn't reading its socket, and doing that on the UI thread triggers an Android ANR. */
+    private final ExecutorService inputExecutor = Executors.newSingleThreadExecutor(runnable -> {
+        Thread thread = new Thread(runnable, "XServerInput");
+        thread.setDaemon(true);
+        return thread;
+    });
+    private final AtomicInteger injectedButtonMask = new AtomicInteger();
 
     public XServer(XServerDisplayActivity activity, ScreenInfo screenInfo) {
         this.activity = activity;
@@ -143,27 +154,44 @@ public class XServer {
     }
 
     public void injectPointerMove(int x, int y) {
-        try (XLock lock = lock(Lockable.WINDOW_MANAGER, Lockable.INPUT_DEVICE)) {
-            pointer.setPosition(x, y);
-        }
+        inputExecutor.execute(() -> {
+            try (XLock lock = lock(Lockable.WINDOW_MANAGER, Lockable.INPUT_DEVICE)) {
+                pointer.setPosition(x, y);
+            }
+        });
     }
 
     public void injectPointerMoveDelta(int dx, int dy) {
-        try (XLock lock = lock(Lockable.WINDOW_MANAGER, Lockable.INPUT_DEVICE)) {
-            pointer.setPosition(pointer.getX() + dx, pointer.getY() + dy);
-        }
+        inputExecutor.execute(() -> {
+            try (XLock lock = lock(Lockable.WINDOW_MANAGER, Lockable.INPUT_DEVICE)) {
+                pointer.setPosition(pointer.getX() + dx, pointer.getY() + dy);
+            }
+        });
     }
 
     public void injectPointerButtonPress(Pointer.Button buttonCode) {
-        try (XLock lock = lock(Lockable.WINDOW_MANAGER, Lockable.INPUT_DEVICE)) {
-            pointer.setButton(buttonCode, true);
-        }
+        int bit = 1 << buttonCode.ordinal();
+        injectedButtonMask.getAndUpdate(mask -> mask | bit);
+        inputExecutor.execute(() -> {
+            try (XLock lock = lock(Lockable.WINDOW_MANAGER, Lockable.INPUT_DEVICE)) {
+                pointer.setButton(buttonCode, true);
+            }
+        });
     }
 
     public void injectPointerButtonRelease(Pointer.Button buttonCode) {
-        try (XLock lock = lock(Lockable.WINDOW_MANAGER, Lockable.INPUT_DEVICE)) {
-            pointer.setButton(buttonCode, false);
-        }
+        int bit = 1 << buttonCode.ordinal();
+        injectedButtonMask.getAndUpdate(mask -> mask & ~bit);
+        inputExecutor.execute(() -> {
+            try (XLock lock = lock(Lockable.WINDOW_MANAGER, Lockable.INPUT_DEVICE)) {
+                pointer.setButton(buttonCode, false);
+            }
+        });
+    }
+
+    /* Button state as last injected, before the input thread has applied it. */
+    public boolean isInjectedButtonPressed(Pointer.Button button) {
+        return (injectedButtonMask.get() & (1 << button.ordinal())) != 0;
     }
 
     public void injectKeyPress(XKeycode xKeycode) {
@@ -171,15 +199,19 @@ public class XServer {
     }
 
     public void injectKeyPress(XKeycode xKeycode, int keysym) {
-        try (XLock lock = lock(Lockable.WINDOW_MANAGER, Lockable.INPUT_DEVICE)) {
-            keyboard.setKeyPress(xKeycode.id, keysym);
-        }
+        inputExecutor.execute(() -> {
+            try (XLock lock = lock(Lockable.WINDOW_MANAGER, Lockable.INPUT_DEVICE)) {
+                keyboard.setKeyPress(xKeycode.id, keysym);
+            }
+        });
     }
 
     public void injectKeyRelease(XKeycode xKeycode) {
-        try (XLock lock = lock(Lockable.WINDOW_MANAGER, Lockable.INPUT_DEVICE)) {
-            keyboard.setKeyRelease(xKeycode.id);
-        }
+        inputExecutor.execute(() -> {
+            try (XLock lock = lock(Lockable.WINDOW_MANAGER, Lockable.INPUT_DEVICE)) {
+                keyboard.setKeyRelease(xKeycode.id);
+            }
+        });
     }
 
     private Extension[] setupExtensions() {
