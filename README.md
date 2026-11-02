@@ -10,7 +10,28 @@ This is a clone from https://github.com/moze30/winlator-zmod repository
 - Export/Import Shortcut Configuration
 - By default external mouse/keyboard input
 
-# Acknowledgements 
+
+These programs are separate works, shipped next to ("mere aggregation" in GPL terms) and started as
+separate processes. Each keeps its own license; they are redistributed unmodified.
+
+| Component | Location | License | Link |
+|---|---|---|---|
+| otvdm / winevdm (otya128), includes Wine code | `opt/apps/otvdm` | GPL-2.0 (Wine parts LGPL-2.1-or-later) | https://github.com/otya128/winevdm |
+| 7-Zip (Igor Pavlov) | `opt/apps/7-Zip` | GNU LGPL-2.1-or-later, BSD-3-Clause parts, unRAR restriction | https://www.7-zip.org/license.txt |
+| AkelPad | `opt/apps/AkelPad.exe`, `opt/apps/AkelFiles` | BSD | https://akelpad.sourceforge.net/ |
+| cnc-ddraw (FunkyFr3sh) | `opt/apps/d7d8tod9/cncddraw.7z`, `ra2.7z` | MIT | https://github.com/FunkyFr3sh/cnc-ddraw |
+| libretro glsl-shaders (in cnc-ddraw `Shaders`) | `opt/apps/d7d8tod9/cncddraw.7z`, `ra2.7z` | per shader, see the shader headers | https://github.com/libretro/glsl-shaders |
+| CnCNet `wsock32.dll` (Toni Spets) | `opt/apps/d7d8tod9/ra2.7z` | see the CnCNet project | https://github.com/CnCNet |
+| dxwrapper (Elisha Riedlinger), includes DDrawCompat and zlib | `opt/apps/d7d8tod9/dxwrapper.7z` | zlib | https://github.com/elishacloud/dxwrapper |
+| dgVoodoo 2 v2.81.3 (Dege) | `opt/apps/d7d8tod9/dgvoodoo.7z` | freeware, © 2013-2023 Dege | http://dege.freeweb.hu/ |
+| Mesa `opengl32.dll` (Gallium WGL) | `opt/apps/d7d8tod9/opengl32.7z` | MIT | https://www.mesa3d.org/ |
+| Mozilla CA certificate bundle (`cacert.pem`, from curl) | `etc/ca-certificates` | MPL-2.0 | https://curl.se/docs/caextract.html |
+| DMZ cursor theme | `usr/share/icons/dmz` | CC-BY-SA-3.0 | https://packages.debian.org/sid/dmz-cursor-theme |
+
+When redistributing, keep each component's license file next to it; for the GPL/LGPL components
+(otvdm, 7-Zip) the source of the shipped version is available at the links above.
+
+# Acknowledgements
 
 ### Credits for some of the component used on this project
 
@@ -34,5 +55,6 @@ This is a clone from https://github.com/moze30/winlator-zmod repository
 - VKD3D ([gitlab.winehq.org/wine/vkd3d](https://gitlab.winehq.org/wine/vkd3d))
 - CNC DDraw ([github.com/FunkyFr3sh/cnc-ddraw](https://github.com/FunkyFr3sh/cnc-ddraw))
 - Icon Search ([Icon Search](https://www.flaticon.com/free-icons/search))
+
 
 Special thanks to all the developers involved in these projects.
