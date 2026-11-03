@@ -13,6 +13,8 @@ This is a clone from https://github.com/moze30/winlator-zmod repository
 - Export/Import Container Configuretion
 - Export/Import Shortcut Configuration
 - By default external mouse/keyboard input
+- Virtual CD/DVD Support with cd-audio
+- Formats bin/cue, img/ccd, mdf/mds, cdi, Iso (ISO9660)/Udf(ISO DVD)
 
 
 These programs are separate works, shipped next to ("mere aggregation" in GPL terms) and started as
