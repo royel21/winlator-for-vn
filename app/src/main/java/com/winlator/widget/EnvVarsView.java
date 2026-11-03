@@ -35,6 +35,7 @@ public class EnvVarsView extends FrameLayout {
         {"ZINK_CONTEXT_THREADED", "CHECKBOX", "0", "1"},
         {"WINEESYNC", "CHECKBOX", "0", "1"},
         {"WINE_FIXED_MEM_PADDING", "CHECKBOX", "0", "1"},
+        {"BOX64_DYNAREC_DIRTY", "SELECT", "0", "1", "2"},
         {"WINEDLLOVERRIDES", "TEXT"},
         {"WINEDEBUG", "TEXT"},
         {"TU_DEBUG", "SELECT_MULTIPLE", "startup", "nir", "nobin", "sysmem", "gmem", "forcebin", "layout", "noubwc", "nomultipos", "nolrz", "nolrzfc", "perf", "perfc", "flushall", "syncdraw", "push_consts_per_stage", "rast_order", "unaligned_store", "log_skip_gmem_ops", "dynamic", "bos", "3d_load", "fdm", "noconform", "rd"},
