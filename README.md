@@ -4,6 +4,8 @@
 
 # Winlator-RC
 
+## Use under your own risk, not warranty of use for this app. is completed open source, you can modify for your own need.
+
 This is a clone from https://github.com/moze30/winlator-zmod repository
 - External storage support was restored (SD CARD/HDD/SSD)
 - Export/Import Container Configuretion
