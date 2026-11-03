@@ -6,6 +6,8 @@
 
 ## Use under your own risk, not warranty of use for this app. is completed open source, you can modify for your own need.
 
+## Most Code is IA Edited (Claude Code Opus 5.5) review by me but I'm not a pro, just an enthusiast trying to add what I want from winlator.
+
 This is a clone from https://github.com/moze30/winlator-zmod repository
 - External storage support was restored (SD CARD/HDD/SSD)
 - Export/Import Container Configuretion
