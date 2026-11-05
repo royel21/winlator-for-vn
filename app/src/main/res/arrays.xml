@@ -2,7 +2,6 @@
 <resources>
     <string-array name="screen_size_entries">
         <item>Custom</item>
-        <item>320x240 (4:3)</item>
         <item>640x480 (4:3)</item>
         <item>800x600 (4:3)</item>
         <item>1024x768 (4:3)</item>
