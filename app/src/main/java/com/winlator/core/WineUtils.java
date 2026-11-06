@@ -151,10 +151,12 @@ public abstract class WineUtils {
             registryEditor.setStringValue("Software\\Winlator\\WFM\\ContextMenu\\7-Zip", "Open Archive", "Z:\\opt\\apps\\7-Zip\\7zFM.exe \"%FILE%\"");
             registryEditor.setStringValue("Software\\Winlator\\WFM\\ContextMenu\\7-Zip", "Extract Here", "Z:\\opt\\apps\\7-Zip\\7zG.exe x \"%FILE%\" -r -o\"%DIR%\" -y");
             registryEditor.setStringValue("Software\\Winlator\\WFM\\ContextMenu\\7-Zip", "Extract to Folder", "Z:\\opt\\apps\\7-Zip\\7zG.exe x \"%FILE%\" -r -o\"%DIR%\\%BASENAME%\" -y");
-            registryEditor.setStringValue("Software\\Wine\\AddonsURL", null, "http://cdn4.52emu.cn/wlt/v10/wine_addons/");
+            registryEditor.setStringValue("Software\\Winlator\\WFM\\ContextMenu\\7-Zip", "Compress to 7z", "Z:\\opt\\apps\\7-Zip\\7z.exe a \"%DIR%\\%BASENAME%.7z\" \"%FILE%\"");
             registryEditor.setStringValue("Software\\Wine\\Drivers", "Graphics", "x11");
             registryEditor.setStringValue("Software\\Wine\\X11 Driver", "UseEGL", "y");
-            registryEditor.setStringValue("Software\\Akelsoft\\AkelPad\\Options", "LanguageModule", "Japanese.dll");
+            registryEditor.setStringValue("Software\\Akelsoft\\AkelPad\\Options", "LanguageModule", "English.dll");
+            registryEditor.setStringValue("Software\\Akelsoft\\AkelPad\\Options", "LanguageModule", "English.dll");
+            registryEditor.setStringValue("Software\\7-Zip", "Lang", "-");
         }
     }
 
@@ -258,7 +260,7 @@ public abstract class WineUtils {
     public static boolean isWineprefixWasUpdated(Container container) {
         File file = new File(container.getRootDir(), "/.wine/.update-timestamp");
         String content = FileUtils.readString(file);
-        
+
         if (!content.startsWith("disable")) {
             content = content.replaceAll("[\r\n]+", "");
             try {
